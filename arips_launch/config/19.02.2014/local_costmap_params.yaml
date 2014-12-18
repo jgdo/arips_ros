@@ -1,0 +1,15 @@
+local_costmap:
+   global_frame: /odom
+   robot_base_frame: /base_link
+   update_frequency: 11.0
+   publish_frequency: 2.5
+   static_map: false
+   rolling_window: true
+   width: 3.0
+   height: 3.0
+   resolution: 0.03
+   publish_voxel_map: true
+   map_type: costmap
+   z_resolution: 0.1
+   z_voxels: 9
+   unknown_threshold: 8

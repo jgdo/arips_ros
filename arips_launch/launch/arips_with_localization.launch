@@ -1,0 +1,7 @@
+<launch>
+  <!-- arips -->
+  <include file="$(find arips_launch)/launch/arips.launch" />
+  
+  <!-- localization -->
+  <include file="$(find arips_launch)/launch/localization.launch" />
+</launch>

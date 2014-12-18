@@ -1,0 +1,57 @@
+controller_frequency: 5.0
+planner_patience: 2.0
+controller_patience: 2.0
+clearing_rotation_allowed: false
+recovery_behavior_enabled: true
+planner_frequency: 1.5
+
+base_local_planner: base_local_planner/TrajectoryPlannerROS
+# base_local_planner: pose_follower/PoseFollower
+# base_local_planner: eband_local_planner/EBandPlannerROS
+
+PoseFollower:
+  holonomic: false
+  tolerance_trans: 0.1
+  tolerance_ros: 1.0
+
+TrajectoryPlannerROS:
+  max_vel_x: 0.25
+  min_vel_x: 0.05
+  max_rotational_vel: 1.0
+  min_in_place_rotational_vel: 0.8
+  acc_lim_th: 0.50
+  acc_lim_x: 0.30
+  acc_lim_y: 0.30
+  
+  holonomic_robot: false
+  yaw_goal_tolerance: 0.6
+  xy_goal_tolerance: 0.15
+  goal_distance_bias: 0.8
+  path_distance_bias: 0.6
+  sim_time: 1.5
+  heading_lookahead: 0.325
+  oscillation_reset_dist: 0.05
+  occdist_scale: 0.1
+
+  meter_scoring: true
+  vx_samples: 6
+  vtheta_samples: 20
+  dwa: false
+
+EBandPlannerROS:
+  #Set the acceleration limits of the robot
+  max_acceleration: 0.5
+  virtual_mass: 0.75
+  max_translational_acceleration: 0.5
+  max_rotational_acceleration: 1.5
+
+  #Set the velocity limits of the robot
+  max_vel_lin: 0.6
+  max_vel_th: 0.8
+  min_vel_lin: 0.1
+  min_vel_th: 0.0
+  min_in_place_vel_th: 0.0
+  in_place_trans_vel: 0.0
+
+  rotation_correction_threshold: 0.2
+  

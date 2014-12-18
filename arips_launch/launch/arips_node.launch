@@ -1,0 +1,9 @@
+<launch>
+  <machine name="arips" address="arips" env-loader="/home/jgdo/loader.sh" user="jgdo">
+  </machine>
+  
+  <param name="/arips/kinect_fact" value="-134.0" />
+  <param name="/arips/kinect_offset" value="108.0" />
+  <param name="/arips/wheel_dist" value="0.325" />
+  <node machine="arips" name="arips" pkg="arips_node" type="arips_node" output="screen"/>
+</launch>

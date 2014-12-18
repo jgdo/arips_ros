@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot name="arips">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_body.dae" />
+      </geometry>
+      <origin rpy="0 0 -1.57075"/>
+    </visual>
+  </link>
+  
+    <link name="arm_shoulder_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_shoulder_link.dae" />
+      </geometry>
+      <origin rpy="0 0 -1.57075"/>
+    </visual>    
+  </link>
+  
+    <link name="arm_hand_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_hand_link.dae" />
+      </geometry>
+    </visual>
+  </link>
+  
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_kinect.dae" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="shoulder_joint" type="revolute">
+  <limit effort="1000.0" lower="-0.8" upper="1.7" velocity="0.5"/>
+    <parent link="base_link"/>
+    <child link="arm_shoulder_link"/>
+    <origin xyz="0.143 0 .14" rpy="1.57075 0 0"/>
+    <axis xyz="0 0 1" />
+  </joint>
+  
+  <joint name="hand_joint" type="revolute">
+  <limit effort="1000.0" lower="-1.5" upper="1.5" velocity="0.5"/>
+    <parent link="arm_shoulder_link"/>
+    <child link="arm_hand_link"/>
+    <origin xyz=".17 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1" />
+  </joint>
+  
+  <joint name="camera_joint" type="revolute">
+  <limit effort="1000.0" lower="-1" upper="1" velocity="0.5"/>
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="-0.14 0 0.74" rpy="0 0 0"/>
+    <axis xyz="0 1 0" />
+  </joint>
+</robot>

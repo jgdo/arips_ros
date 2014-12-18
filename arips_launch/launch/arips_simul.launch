@@ -1,0 +1,6 @@
+<launch>
+  <param name="/arips/pid_p" value="300.0" />
+  <param name="/arips/pid_i" value="0.0" />
+  <param name="/arips/pid_d" value="0.0" />
+  <node name="arips" pkg="arips_node" type="arips_node" args="--simul" output="screen"/>
+</launch>
