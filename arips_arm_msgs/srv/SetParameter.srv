@@ -1,0 +1,5 @@
+uint32 id
+string value
+---
+uint32 result
+
