@@ -48,9 +48,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  control_raw_stamped.msg
-  control_raw_array.msg
+  JointState.msg
+  JointStates.msg
   parameter.msg
+  joint_setpoint.msg
 )
 
 ## Generate services in the 'srv' folder
