@@ -49,7 +49,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   JointState.msg
-  JointStates.msg
+  TrajectoryState.msg
+  MotionState.msg
   parameter.msg
   joint_setpoint.msg
 )
