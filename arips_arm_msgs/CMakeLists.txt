@@ -52,7 +52,9 @@ add_message_files(
   TrajectoryState.msg
   MotionState.msg
   parameter.msg
-  joint_setpoint.msg
+  MotionCommand.msg
+  TrajectoryPoint.msg
+  TrajectoryBufferCommand.msg
 )
 
 ## Generate services in the 'srv' folder
