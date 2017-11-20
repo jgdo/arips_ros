@@ -1,4 +1,4 @@
-float32[1] position
-float32[1] velocity
-float32[1] acceleration
+float32[1] positions
+float32[1] velocities
+float32[1] accelerations
 
