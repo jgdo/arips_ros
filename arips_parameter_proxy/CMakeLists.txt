@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(arips_arm_msgs)
+project(arips_parameter_proxy)
 
-## Add support for C++11, supported in ROS Kinetic and newer
-# add_definitions(-std=c++11)
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
+  arips_arm_msgs
+  dynamic_reconfigure
+  roscpp
   std_msgs
 )
 
@@ -46,22 +48,18 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  JointState.msg
-  TrajectoryState.msg
-  MotionState.msg
-  MotionCommand.msg
-  TrajectoryPoint.msg
-  TrajectoryBufferCommand.msg
-  ParameterValue.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  GetParameter.srv
-)
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -71,10 +69,10 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   arips_arm_msgs#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -101,14 +99,14 @@ generate_messages(
 ###################################
 ## The catkin_package macro generates cmake config files for your package
 ## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
+## INCLUDE_DIRS: uncomment this if your package contains header files
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES arips_arm_msgs
-   CATKIN_DEPENDS message_runtime std_msgs
+#  LIBRARIES arips_parameter_proxy
+#  CATKIN_DEPENDS arips_arm_msgs dynamic_reconfigure roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -118,14 +116,14 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
+# include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/arips_arm_msgs.cpp
+#   src/${PROJECT_NAME}/arips_parameter_proxy.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -136,7 +134,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/arips_arm_msgs_node.cpp)
+add_executable(parameter_proxy src/parameter_proxy.cpp)
+add_executable(test_client src/test_parameter_client.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,12 +145,18 @@ include_directories(
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(parameter_proxy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(test_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(parameter_proxy
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(test_client
+    ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##
@@ -193,7 +198,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_arm_msgs.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_parameter_proxy.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
