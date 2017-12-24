@@ -1,5 +1,6 @@
-uint32 id
-string value
+uint16 id
+int32 int_value
+float64 double_value
 ---
 uint32 result
 

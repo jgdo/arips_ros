@@ -54,6 +54,7 @@ add_message_files(
   MotionCommand.msg
   TrajectoryPoint.msg
   TrajectoryBufferCommand.msg
+  ParameterType.msg
   ParameterValue.msg
 )
 
@@ -61,6 +62,7 @@ add_message_files(
 add_service_files(
   FILES
   GetParameter.srv
+  SetParameter.srv
 )
 
 ## Generate actions in the 'action' folder
