@@ -123,8 +123,8 @@ private:
     }
     
     mSetParamsService = mNh.advertiseService(mNamespace + "/set_parameters", &ParameterProxy::onSetParametersFromServer, this);
-    mConfigDescriptionPub = mNh.advertise<dynamic_reconfigure::ConfigDescription>(mNamespace + "/parameter_descriptions", 1, true);
-    mConfigUpdatePub = mNh.advertise<dynamic_reconfigure::Config>(mNamespace + "/parameter_updates", 1, true);
+    mConfigDescriptionPub = mNh.advertise<dynamic_reconfigure::ConfigDescription>(mNamespace + "/parameter_descriptions", 10, true);
+    mConfigUpdatePub = mNh.advertise<dynamic_reconfigure::Config>(mNamespace + "/parameter_updates", 10, true);
     
     dynamic_reconfigure::ConfigDescription cd;
     cd.groups.resize(1);
@@ -132,8 +132,6 @@ private:
     cd.groups.at(0).type = "";
     cd.groups.at(0).id = 0;
     cd.groups.at(0).parent = 0;
-    
-    
     
     cd.groups.at(0).parameters.resize(mParameterList.size());
     for(size_t i = 0; i < mParameterList.size(); i++) {
@@ -243,22 +241,31 @@ private:
       if(def.type.type != param.type.type) {
         ROS_WARN_STREAM("Parameter type of '" << mNamespace << "[" << def.name << "]' changed on value update, ignoring.");
       } else {
+        // ROS_INFO_STREAM("Got parameter update '" << mNamespace << "[" << def.name << "]'");
+        
+        bool updated = false;
         if(def.type.type == arips_arm_msgs::ParameterType::TYPE_INT) {
           def.int_value = param.int_value;
+          updated = true;
         } else if(def.type.type == arips_arm_msgs::ParameterType::TYPE_DOUBLE) {
           def.double_value = param.double_value;
+          updated = true;
         }
         // else ignore, warning was printed already
+        
+        if(updated) {
+          publishParameterValues();
+        }
       }
     }
-    
-    publishParameterValues();
   }
   
   bool onSetParametersFromServer(dynamic_reconfigure::Reconfigure::Request  &req,
                                  dynamic_reconfigure::Reconfigure::Response &res)
   {
     res.config = req.config;
+    
+    ROS_INFO_STREAM("Called onSetParametersFromServer() from " << mNamespace);
   
     for(auto const& int_value: req.config.ints) {
       size_t id = mParamNameToId.at(int_value.name);
@@ -302,7 +309,8 @@ private:
         ROS_WARN_STREAM("Received wrong parameter type of '" << mNamespace << "[" << def.name << "]' from dynamic_reconfigure, ignoring.");
       }
     }
-    
+  
+    ROS_INFO_STREAM("onSetParametersFromServer() done");
     // TODO: check min/max range, if parameters actually exist, ...
     return true;
   }
