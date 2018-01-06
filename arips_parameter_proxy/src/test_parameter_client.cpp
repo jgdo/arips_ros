@@ -1,35 +1,58 @@
 #include "ros/ros.h"
-#include "arips_arm_msgs/GetParameter.h"
+#include "arips_arm_msgs/GetParameterGroups.h"
+#include <arips_arm_msgs/GetParameterGroupDef.h>
 #include <arips_arm_msgs/SetParameter.h>
 #include <arips_arm_msgs/ParameterValue.h>
 
 int int_param = 0;
 double double_param = 0.0;
 
-bool getParamCb(arips_arm_msgs::GetParameter::Request &req,
-                arips_arm_msgs::GetParameter::Response &res)
+bool getParamGroupDefCb(arips_arm_msgs::GetParameterGroupDef::Request &req,
+                arips_arm_msgs::GetParameterGroupDef::Response &res)
 {
-  res.num_total_parameters = 2;
-  if(req.parameter_id == 0) {
-    res.name = "int_param_0";
-    res.type.type = arips_arm_msgs::ParameterType::TYPE_INT;
-    res.int_value = int_param;
-    res.max_int = 100;
-    res.min_int = 0;
-    res.dfl_int = 42;
-  } else {
-    if(req.parameter_id == 1) {
-      res.name = "double_param_1";
-      res.type.type = arips_arm_msgs::ParameterType::TYPE_DOUBLE;
-      res.double_value = double_param;
-      res.max_double = 1.0;
-      res.min_double = 0.0;
-      res.dfl_double = 0.5;
-    }
+  if(req.group_id == 0) {
+    res.param_defs.resize(2);
+    
+    res.param_defs.at(0).name = "int_param_0";
+    res.param_defs.at(0).type.type = arips_arm_msgs::ParameterType::TYPE_INT;
+    res.param_defs.at(0).current_int_value = int_param;
+    res.param_defs.at(0).max_int = 100;
+    res.param_defs.at(0).min_int = 0;
+    res.param_defs.at(0).dfl_int = 42;
+  
+    res.param_defs.at(1).name = "double_param_1";
+    res.param_defs.at(1).type.type = arips_arm_msgs::ParameterType::TYPE_DOUBLE;
+    res.param_defs.at(1).current_double_value = double_param;
+    res.param_defs.at(1).max_double = 1.0;
+    res.param_defs.at(1).min_double = 0.0;
+    res.param_defs.at(1).dfl_double = 0.5;
   }
   
+  if(req.group_id == 1) {
+    res.param_defs.resize(2);
+    
+    res.param_defs.at(1).name = "int_param_2";
+    res.param_defs.at(1).type.type = arips_arm_msgs::ParameterType::TYPE_INT;
+    res.param_defs.at(1).current_int_value = int_param;
+    res.param_defs.at(1).max_int = 1000;
+    res.param_defs.at(1).min_int = 0;
+    res.param_defs.at(1).dfl_int = 42;
+    
+    res.param_defs.at(0).name = "double_param_3";
+    res.param_defs.at(0).type.type = arips_arm_msgs::ParameterType::TYPE_DOUBLE;
+    res.param_defs.at(0).current_double_value = double_param;
+    res.param_defs.at(0).max_double = 5.0;
+    res.param_defs.at(0).min_double = 0.0;
+    res.param_defs.at(0).dfl_double = 0.5;
+  }
   
   return true;
+}
+
+bool getParamGroupsCb(arips_arm_msgs::GetParameterGroups::Request& req, arips_arm_msgs::GetParameterGroups::Response& res) {
+  res.groups.resize(2);
+  res.groups.at(0).groupname = "group1";
+  res.groups.at(1).groupname = "group2";
 }
 
 bool setParamCb(arips_arm_msgs::SetParameter::Request &req,
@@ -54,7 +77,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "add_two_ints_server");
   ros::NodeHandle n;
   
-  ros::ServiceServer service = n.advertiseService("/myclient/tr_get_param", getParamCb);
+  ros::ServiceServer service_groups = n.advertiseService("/myclient/tr_get_groups", getParamGroupsCb);
+  ros::ServiceServer service = n.advertiseService("/myclient/tr_get_group_def", getParamGroupDefCb);
   ros::ServiceServer service_set = n.advertiseService("/myclient/tr_set_param", setParamCb);
   ros::Publisher pub = n.advertise<arips_arm_msgs::ParameterValue>("/myclient/tr_param_updates", 10, false);
   

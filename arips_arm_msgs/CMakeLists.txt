@@ -56,13 +56,17 @@ add_message_files(
   TrajectoryBufferCommand.msg
   ParameterType.msg
   ParameterValue.msg
+  ParameterDef.msg
+  ParameterGroupDef.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  GetParameter.srv
+  #GetParameter.srv
   SetParameter.srv
+  GetParameterGroupDef.srv
+  GetParameterGroups.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -1,16 +1,11 @@
-uint16 parameter_id
----
-uint16 num_total_parameters
-# for this parameter_id
-string group
 string name
 ParameterType type
 int32 min_int
 int32 max_int
 int32 dfl_int
-int32 int_value
+int32 current_int_value
 float64 min_double
 float64 max_double
 float64 dfl_double
-float64 double_value
+float64 current_double_value
 
