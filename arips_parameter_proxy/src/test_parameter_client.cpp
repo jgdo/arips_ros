@@ -58,13 +58,24 @@ bool getParamGroupsCb(arips_arm_msgs::GetParameterGroups::Request& req, arips_ar
 bool setParamCb(arips_arm_msgs::SetParameter::Request &req,
                 arips_arm_msgs::SetParameter::Response &res)
 {
-  ROS_INFO_STREAM("Set client parameter for id " << req.id);
+  for(const auto& param: req.parameters) {
+    ROS_INFO_STREAM("Set client parameter for group " << param.group_id << " param " << param.parameter_id);
   
-  if(req.id == 0) {
-    int_param = req.int_value;
-  } else if(req.id == 1) {
-    double_param = req.double_value;
+    if(param.group_id == 0) {
+      if(param.parameter_id == 0) {
+        int_param = param.int_value;
+      } else if(param.group_id == 1) {
+        double_param = param.double_value;
+      }
+    } else if(param.group_id == 1) {
+      if(param.parameter_id == 1) {
+        int_param = param.int_value;
+      } else if(param.group_id == 0) {
+        double_param = param.double_value;
+      }
+    }
   }
+  
   
   res.result = 0;
   
@@ -79,7 +90,7 @@ int main(int argc, char **argv)
   
   ros::ServiceServer service_groups = n.advertiseService("/myclient/tr_get_groups", getParamGroupsCb);
   ros::ServiceServer service = n.advertiseService("/myclient/tr_get_group_def", getParamGroupDefCb);
-  ros::ServiceServer service_set = n.advertiseService("/myclient/tr_set_param", setParamCb);
+  ros::ServiceServer service_set = n.advertiseService("/myclient/tr_set_params", setParamCb);
   ros::Publisher pub = n.advertise<arips_arm_msgs::ParameterValue>("/myclient/tr_param_updates", 10, false);
   
   ROS_INFO("Ready to getParamCb two ints.");
@@ -97,7 +108,8 @@ int main(int argc, char **argv)
     if(double_param > 1) {
       double_param = 0;
     }
-  
+    
+    /*
     pv.id = 0;
     pv.int_value = int_param;
     pv.type.type = arips_arm_msgs::ParameterType::TYPE_INT;
@@ -109,6 +121,8 @@ int main(int argc, char **argv)
     pv.type.type = arips_arm_msgs::ParameterType::TYPE_DOUBLE;
     pub.publish(pv);
   
+    */
+    
     ros::spinOnce();
     r.sleep();
     

@@ -99,62 +99,73 @@ GroupProxyClient::GroupProxyClient(ParameterProxyServer &server, const std::stri
   
 }
 
+
+template <class T>
+bool hasValueChanged(T v1, T v2) {
+  return v1 != v2;
+}
+
+template <>
+bool hasValueChanged<double>(double v1, double v2) {
+  return std::fabs(v1 - v2) > (v1 / 1000000.0);
+}
+
+
 bool GroupProxyClient::onSetParametersFromServer(dynamic_reconfigure::Reconfigure::Request &req,
                                                  dynamic_reconfigure::Reconfigure::Response &res)
 {
-  /*
   res.config = req.config;
   
-  ROS_INFO_STREAM("Called onSetParametersFromServer() from " << mNamespace);
+  ROS_INFO_STREAM("Called onSetParametersFromServer() from " << mProxyServer.getNamespace());
+  
+  arips_arm_msgs::SetParameter setParam;
   
   for(auto const& int_value: req.config.ints) {
-    size_t id = mParamNameToId.at(int_value.name);
-    auto& def = mParameterList.at(id).definition;
-    if(def.type.type == arips_arm_msgs::ParameterType_::TYPE_INT) {
-      if(hasValueChanged(def.int_value, int_value.value)) {
-        def.int_value = int_value.value;
+    size_t id = mGroupDef.paramNameToId.at(int_value.name);
+    auto& def = mGroupDef.parameterList.at(id).definition;
+    if(def.type.type == arips_arm_msgs::ParameterType::TYPE_INT) {
+      if(hasValueChanged(def.current_int_value, int_value.value)) {
+        def.current_int_value = int_value.value;
         
-        arips_arm_msgs::SetParameter setParam;
-        setParam.request.id = id;
-        setParam.request.int_value = def.int_value;
-        if(!mClientSetParamsServer.call(setParam)) {
-          ROS_WARN_STREAM("Failed to call tr_set_param service for parameter '" << mNamespace << "[" << def.name << "]'");
-        }
-        // TODO check response
+        setParam.request.parameters.emplace_back();
+        auto& param = setParam.request.parameters.back();
+        param.parameter_id = id;
+        param.group_id = mGroupDef.group_id;
+        param.int_value = def.current_int_value;
       }
       // else ignore changes
     } else {
-      ROS_WARN_STREAM("Received wrong parameter type of '" << mNamespace << "[" << def.name << "]' from dynamic_reconfigure, ignoring.");
+      ROS_WARN_STREAM("Received wrong parameter type of " << paramPrintName(def.name) << " from dynamic_reconfigure, ignoring.");
     }
   }
   
   for(auto const& double_value: req.config.doubles) {
-    size_t id = mParamNameToId.at(double_value.name);
-    auto& def = mParameterList.at(id).definition;
-    if(def.type.type == arips_arm_msgs::ParameterType_::TYPE_DOUBLE) {
-      if(hasValueChanged(def.double_value, double_value.value)) {
-        def.double_value = double_value.value;
-        
-        arips_arm_msgs::SetParameter setParam;
-        setParam.request.id = id;
-        setParam.request.int_value = def.double_value;
-        if(!mClientSetParamsServer.call(setParam)) {
-          ROS_WARN_STREAM("Failed to call tr_set_param service for parameter '" << mNamespace << "[" << def.name << "]'");
-        }
-        
-        // TODO check response
+    size_t id = mGroupDef.paramNameToId.at(double_value.name);
+    auto& def = mGroupDef.parameterList.at(id).definition;
+    if(def.type.type == arips_arm_msgs::ParameterType::TYPE_DOUBLE) {
+      if(hasValueChanged(def.current_double_value, double_value.value)) {
+        def.current_double_value = double_value.value;
+  
+        setParam.request.parameters.emplace_back();
+        auto& param = setParam.request.parameters.back();
+        param.parameter_id = id;
+        param.group_id = mGroupDef.group_id;
+        param.double_value = def.current_int_value;
       }
       // else ignore changes
     } else {
-      ROS_WARN_STREAM("Received wrong parameter type of '" << mNamespace << "[" << def.name << "]' from dynamic_reconfigure, ignoring.");
+      ROS_WARN_STREAM("Received wrong parameter type of " << paramPrintName(def.name) << " from dynamic_reconfigure, ignoring.");
     }
   }
   
+  if(!mProxyServer.getClientSetParamService().call(setParam)) {
+    ROS_WARN_STREAM("Failed to call tr_set_param service for group '" << mProxyServer.getNamespace() << "/" << mGroupDef.group_name << "'");
+  }
+  // TODO check response
+  
   ROS_INFO_STREAM("onSetParametersFromServer() done");
   // TODO: check min/max range, if parameters actually exist, ...
-   
-   
-   */
+  
   return true;
 }
 
@@ -185,4 +196,9 @@ void GroupProxyClient::publishParameterValues()
   config.groups.at(0).parent = 0;
   
   mConfigUpdatePub.publish(config);
+}
+
+std::string GroupProxyClient::paramPrintName(std::string const& paramName) const
+{
+  return mProxyServer.getNamespace() + "/" + mGroupDef.group_name + "[" + paramName + "]";
 }

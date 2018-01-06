@@ -1,6 +1,4 @@
-uint16 id
-int32 int_value
-float64 double_value
+ParameterValue[] parameters
 ---
-uint32 result
+uint8 result
 

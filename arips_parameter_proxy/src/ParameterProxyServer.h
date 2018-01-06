@@ -32,7 +32,7 @@ public:
     mClientParameterValueSub = mNh.subscribe(ns + clientParamUpdateTopic, 10, &ParameterProxyServer::clientParameterValuesCb, this);
     mClientGetGroupsClient = mNh.serviceClient<arips_arm_msgs::GetParameterGroups>(ns + "/tr_get_groups");
     mClientGetGroupDefClient = mNh.serviceClient<arips_arm_msgs::GetParameterGroupDef>(ns + "/tr_get_group_def");
-    mClientSetParamsServer = mNh.serviceClient<arips_arm_msgs::SetParameter>(ns + "/tr_set_param");
+    mClientSetParamsService = mNh.serviceClient<arips_arm_msgs::SetParameter>(ns + "/tr_set_params");
   }
   
   ParameterProxyServer(const ParameterProxyServer&) = delete;
@@ -48,6 +48,10 @@ public:
   inline std::string const& getNamespace() const {
     return mNamespace;
   }
+  
+  inline ros::ServiceClient& getClientSetParamService() {
+    return mClientSetParamsService;
+  }
 
 private:
   State mState = WAITING_PARAMS;
@@ -61,7 +65,7 @@ private:
   ros::Subscriber mClientParameterValueSub;
   ros::ServiceClient mClientGetGroupsClient;
   ros::ServiceClient mClientGetGroupDefClient;
-  ros::ServiceClient mClientSetParamsServer;
+  ros::ServiceClient mClientSetParamsService;
   
   std::vector<std::unique_ptr<GroupProxyClient>> mGroupsList;
   std::map<std::string, uint16_t> mGroupNameToId;

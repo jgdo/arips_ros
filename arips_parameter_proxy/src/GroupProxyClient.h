@@ -36,6 +36,8 @@ public:
   GroupProxyClient(ParameterProxyServer& server, const std::string& groupName, uint16_t groupId, arips_arm_msgs::GetParameterGroupDef::Response const& clientGroupDef);
 
 private:
+  inline std::string paramPrintName(std::string const& paramName) const;
+  
   void publishParameterValues();
   
   bool onSetParametersFromServer(dynamic_reconfigure::Reconfigure::Request  &req,

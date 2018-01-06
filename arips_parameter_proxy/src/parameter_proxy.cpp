@@ -10,18 +10,6 @@
 
 #include "ParameterProxyServer.h"
 
-
-template <class T>
-bool hasValueChanged(T v1, T v2) {
-  return v1 != v2;
-}
-
-template <>
-bool hasValueChanged<double>(double v1, double v2) {
-  return std::fabs(v1 - v2) > (v1 / 1000000.0);
-}
-
-
 inline bool ends_with(std::string const & value, std::string const & ending)
 {
   if (ending.size() > value.size()) return false;
