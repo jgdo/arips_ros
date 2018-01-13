@@ -117,31 +117,14 @@ private:
   }
   
   void clientParameterValuesCb(const arips_arm_msgs::ParameterValue& param) {
-    /*
     if(mState == INITIALIZED) {
-      auto& def = mParameterList.at(param.id).definition;
-      if(def.type.type != param.type.type) {
-        ROS_WARN_STREAM("Parameter type of '" << mNamespace << "[" << def.name << "]' changed on value update, ignoring.");
+      if (param.group_id >= mGroupsList.size()) {
+        ROS_WARN_STREAM("Could not update parameter '" << mNamespace << "[group_id = " << param.group_id
+                                                       << "]' since group does not exist. Ignoring.");
       } else {
-        // ROS_INFO_STREAM("Got parameter update '" << mNamespace << "[" << def.name << "]'");
-        
-        bool updated = false;
-        if(def.type.type == arips_arm_msgs::ParameterType::TYPE_INT) {
-          def.int_value = param.int_value;
-          updated = true;
-        } else if(def.type.type == arips_arm_msgs::ParameterType::TYPE_DOUBLE) {
-          def.double_value = param.double_value;
-          updated = true;
-        }
-        // else ignore, warning was printed already
-        
-        if(updated) {
-          publishParameterValues();
-        }
+        mGroupsList.at(param.group_id)->updateParameter(param);
       }
-      
     }
-     */
   }
   
 };

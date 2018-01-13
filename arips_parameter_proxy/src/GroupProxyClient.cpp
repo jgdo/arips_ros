@@ -202,3 +202,22 @@ std::string GroupProxyClient::paramPrintName(std::string const& paramName) const
 {
   return mProxyServer.getNamespace() + "/" + mGroupDef.group_name + "[" + paramName + "]";
 }
+
+void GroupProxyClient::updateParameter(const arips_arm_msgs::ParameterValue &param) {
+  auto& def = mGroupDef.parameterList.at(param.parameter_id).definition;
+    // ROS_INFO_STREAM("Got parameter update '" << mNamespace << "[" << def.name << "]'");
+    
+  bool updated = false;
+  if(def.type.type == arips_arm_msgs::ParameterType::TYPE_INT) {
+    def.current_int_value = param.int_value;
+    updated = true;
+  } else if(def.type.type == arips_arm_msgs::ParameterType::TYPE_DOUBLE) {
+    def.current_double_value = param.double_value;
+    updated = true;
+  }
+  // else ignore, warning was printed already
+  
+  if(updated) {
+    publishParameterValues();
+  }
+}

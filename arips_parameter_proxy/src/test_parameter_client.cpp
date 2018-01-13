@@ -109,19 +109,17 @@ int main(int argc, char **argv)
       double_param = 0;
     }
     
-    /*
-    pv.id = 0;
+    
+    pv.parameter_id = 0;
+    pv.group_id = 0;
     pv.int_value = int_param;
-    pv.type.type = arips_arm_msgs::ParameterType::TYPE_INT;
   
     pub.publish(pv);
     
-    pv.id = 1;
+    pv.parameter_id = 1;
+    pv.group_id = 0;
     pv.double_value = double_param;
-    pv.type.type = arips_arm_msgs::ParameterType::TYPE_DOUBLE;
     pub.publish(pv);
-  
-    */
     
     ros::spinOnce();
     r.sleep();
