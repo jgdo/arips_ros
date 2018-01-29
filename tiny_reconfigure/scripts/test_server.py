@@ -13,10 +13,10 @@ def handle_get_def(req):
 
     groupDefs = ["group 0", "group 1"]
     
-    paramDefs = [[["param_0_0", ParameterDef.TYPE_INT]],
-                 [["param_1_0", ParameterDef.TYPE_FLOAT],
-                  ["param_1_1", ParameterDef.TYPE_INT],
-                  ["param_1_2", ParameterDef.TYPE_FLOAT]]]
+    paramDefs = [[["param_0_0", ParameterDef.TYPE_INT, 42, 0]],
+                 [["param_1_0", ParameterDef.TYPE_FLOAT, 0, 0.123],
+                  ["param_1_1", ParameterDef.TYPE_INT, 13, 0],
+                  ["param_1_2", ParameterDef.TYPE_FLOAT, 0, 2.34]]]
     
     if req.cmd == GetDef.CMD_LIST_ALL:
         print "handle_get_def CMD_LIST_ALL"
@@ -81,9 +81,10 @@ def handle_get_def(req):
                                       num_params=len(paramDefs[req.group_id]),
                                       param_name=paramDefs[req.group_id][req.param_id][0],
                                       type=paramDefs[req.group_id][req.param_id][1],
-                                      value_int=23,
-                                      value_float=2.34))
-        
+                                      value_int=paramDefs[req.group_id][req.param_id][2],
+                                      value_float=paramDefs[req.group_id][req.param_id][3]))
+
+# TODO def handleSetParam()
 
 def add_two_ints_server():
     rospy.init_node('add_two_ints_server')

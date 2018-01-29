@@ -76,8 +76,7 @@ class ReconfigureWidget(QWidget):
         group = self.getCreateGroupItem(msg.group_id)
         if not group is None:
             item = self.getCreateParamItem(group, msg)
-            item.setText(0, msg.param_name)
-            item.setText(1, "type")
+            item.value = msg
 
     def getCreateGroupItem(self, index, num = None):
         if not num is None:
@@ -146,6 +145,12 @@ class GroupTreeItem(QTreeWidgetItem):
 # Custom QTreeWidgetItem
 # ------------------------------------------------------------------------------
 class ParameterTreeItem(QTreeWidgetItem):
+    paramTypeNames = {
+        0: "<undefined>",
+        tiny_reconfigure.msg.ParameterDef.TYPE_FLOAT: "float",
+        tiny_reconfigure.msg.ParameterDef.TYPE_INT: "int",
+    }
+    
     '''
     Custom QTreeWidgetItem with Widgets
     '''
@@ -165,10 +170,8 @@ class ParameterTreeItem(QTreeWidgetItem):
         ## Column 1 - typeStr:
         self.setText(1, typeStr)
 
-        ## Column 2 - SpinBox:
-        self.spinBox = QSpinBox()
-        self.spinBox.setValue(0)
-        self.treeWidget().setItemWidget(self, 2, self.spinBox)
+        ## Column 2 - value
+        self.spinBox = None
 
         ## Column 3 - Send Button:
         self.btnSend = QPushButton()
@@ -196,3 +199,24 @@ class ParameterTreeItem(QTreeWidgetItem):
         Return value ( 2nd column int)
         '''
         return self.spinBox.value()
+
+    @value.setter
+    def value(self, msg):
+        self.setText(0, msg.param_name)
+        self.setText(1, self.paramTypeNames[msg.type])
+        
+        if msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_FLOAT:
+            if not self.spinBox is QDoubleSpinBox:
+                self.spinBox = QDoubleSpinBox()
+                self.treeWidget().setItemWidget(self, 2, self.spinBox)
+
+            self.spinBox.setValue(msg.value_float)
+        elif msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_INT:
+            if not self.spinBox is QSpinBox:
+                self.spinBox = QSpinBox()
+                self.treeWidget().setItemWidget(self, 2, self.spinBox)
+
+            self.spinBox.setValue(msg.value_int)
+        else:
+            self.spinBox = None
+            self.treeWidget().setItemWidget(self, 2, self.spinBox)
