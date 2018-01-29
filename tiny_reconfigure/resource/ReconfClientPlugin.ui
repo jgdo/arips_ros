@@ -27,9 +27,12 @@
    <item row="1" column="0" colspan="2">
     <widget class="QTreeWidget" name="parameterTree">
      <property name="columnCount">
-      <number>4</number>
+      <number>5</number>
      </property>
      <attribute name="headerVisible">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="headerCascadingSectionResizes">
       <bool>true</bool>
      </attribute>
      <column>
@@ -50,6 +53,11 @@
      <column>
       <property name="text">
        <string notr="true">4</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">5</string>
       </property>
      </column>
     </widget>
