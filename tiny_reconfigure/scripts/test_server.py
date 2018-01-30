@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#from tiny_reconfigure.srv import *
+from tiny_reconfigure.srv import *
 from tiny_reconfigure.msg import *
 import rospy
 import random
@@ -8,15 +8,15 @@ import random
 groupPub = None
 paramPub = None
 
-def handle_get_def(req):
-    global groupPub, paramPub
+groupDefs = ["group 0", "group 1"]
 
-    groupDefs = ["group 0", "group 1"]
-    
-    paramDefs = [[["param_0_0", ParameterDef.TYPE_INT, 42, 0]],
-                 [["param_1_0", ParameterDef.TYPE_FLOAT, 0, 0.123],
-                  ["param_1_1", ParameterDef.TYPE_INT, 13, 0],
-                  ["param_1_2", ParameterDef.TYPE_FLOAT, 0, 2.34]]]
+paramDefs = [[["param_0_0", ParameterDef.TYPE_INT, 42, 0]],
+             [["param_1_0", ParameterDef.TYPE_FLOAT, 0, 0.123],
+              ["param_1_1", ParameterDef.TYPE_INT, 13, 0],
+              ["param_1_2", ParameterDef.TYPE_FLOAT, 0, 2.34]]]
+
+def handle_get_def(req):
+    global groupPub, paramPub, groupDefs, paramDefs
     
     if req.cmd == GetDef.CMD_LIST_ALL:
         print "handle_get_def CMD_LIST_ALL"
@@ -84,11 +84,20 @@ def handle_get_def(req):
                                       value_int=paramDefs[req.group_id][req.param_id][2],
                                       value_float=paramDefs[req.group_id][req.param_id][3]))
 
-# TODO def handleSetParam()
+
+def handleSetParam(req):
+    global paramDefs
+    print "handleSetParam group_id={} param_id={} int={} float={}".format(req.group_id, req.param_id, req.value_int, req.value_float)
+    paramDefs[req.group_id][req.param_id][2] = req.value_int
+    paramDefs[req.group_id][req.param_id][3] = req.value_float
+    print paramDefs[req.group_id][req.param_id][2]
+    return SetParamResponse(0, paramDefs[req.group_id][req.param_id][2], paramDefs[req.group_id][req.param_id][3])
+
 
 def add_two_ints_server():
     rospy.init_node('add_two_ints_server')
     s = rospy.Subscriber('get_def', GetDef, handle_get_def)
+    servSetParam = rospy.Service('set_param', SetParam, handleSetParam)
     global groupPub, paramPub
     groupPub = rospy.Publisher('group_def', GroupDef, queue_size=10)
     paramPub = rospy.Publisher('param_def', ParameterDef, queue_size=10)

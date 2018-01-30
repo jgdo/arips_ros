@@ -4,6 +4,7 @@ import rospkg
 
 from python_qt_binding import loadUi
 
+from python_qt_binding.QtWidgets import *
 from python_qt_binding.QtGui import *
 from python_qt_binding.QtCore import *
 
@@ -13,21 +14,25 @@ import tiny_reconfigure.srv
 class ReconfigureWidget(QWidget):
     sigGroupDefReceived = Signal(tiny_reconfigure.msg.GroupDef)
     sigParamDefReceived = Signal(tiny_reconfigure.msg.ParameterDef)
+
+    pkgpath = rospkg.RosPack().get_path('tiny_reconfigure')
     
     def __init__(self, parent=None):        
         super(ReconfigureWidget, self).__init__(parent)
         # Get path to UI file which should be in the "resource" folder of this package
-        ui_file = os.path.join(rospkg.RosPack().get_path('tiny_reconfigure'), 'resource', 'ReconfClientPlugin.ui')
+        ui_file = os.path.join(self.pkgpath, 'resource', 'ReconfClientPlugin.ui')
         # Extend the widget with all attributes and children from UI file
         loadUi(ui_file, self)
         # Give QObjects reasonable names
         self.setObjectName('ReconfClientPluginUi')
-        self.btnReload.clicked.connect(self.onReloadPressed);
-        
+        self.btnReload.clicked.connect(self.onReloadPressed)
+        self.btnSendAll.clicked.connect(self.onSendAllPressed)
+
         self.currentTopicRoot = None
         self.pubGetParamDef = None
         self.subGroupDef = None
         self.subParamDef = None
+        self.srvSetParam = None
         
         self.sigGroupDefReceived.connect(self.onGroupDefReceivedQt)
         self.sigParamDefReceived.connect(self.onParameterDefReceivedQt)
@@ -35,9 +40,10 @@ class ReconfigureWidget(QWidget):
         self.onReloadPressed()
 
     def onReloadPressed(self):
-        self.parameterTree.clear()
         if self.currentTopicRoot != self.editTopicRoot.text():
             self.currentTopicRoot = self.editTopicRoot.text()
+
+            self.parameterTree.clear()
     
             if not self.pubGetParamDef is None:
                 self.pubGetParamDef.unregister()
@@ -49,8 +55,9 @@ class ReconfigureWidget(QWidget):
                 self.subParamDef.unregister()
             
             self.pubGetParamDef = rospy.Publisher(self.currentTopicRoot + "get_def", tiny_reconfigure.msg.GetDef, queue_size=10)
-            self.subGroupDef = rospy.Subscriber("group_def", tiny_reconfigure.msg.GroupDef, self.onGroupDefReceived, queue_size=10)
-            self.subParamDef = rospy.Subscriber("param_def", tiny_reconfigure.msg.ParameterDef, self.onParameterDefReceived, queue_size=10)
+            self.subGroupDef = rospy.Subscriber(self.currentTopicRoot + "group_def", tiny_reconfigure.msg.GroupDef, self.onGroupDefReceived, queue_size=10)
+            self.subParamDef = rospy.Subscriber(self.currentTopicRoot + "param_def", tiny_reconfigure.msg.ParameterDef, self.onParameterDefReceived, queue_size=10)
+            self.srvSetParam = rospy.ServiceProxy(self.currentTopicRoot + "set_param", tiny_reconfigure.srv.SetParam)
 
         rospy.sleep(0.5)
         #try:
@@ -87,6 +94,7 @@ class ReconfigureWidget(QWidget):
                 group = GroupTreeItem(self.parameterTree, "<undefined>")
                 self.parameterTree.addTopLevelItem(group)
                 self.parameterTree.expandItem(group)
+                group.btnRefresh.setIcon(QIcon(os.path.join(self.pkgpath, 'resource', 'reload.png')))
                 group.btnRefresh.clicked.connect(lambda clicked, group=group: self.onRefreshGroupPressed(group))
 
         return self.parameterTree.topLevelItem(index)
@@ -98,6 +106,8 @@ class ReconfigureWidget(QWidget):
 
             while group.childCount() < msg.num_params:
                 item = ParameterTreeItem(group, "<undefined>", "<none>")
+                item.btnSend.setIcon(QIcon(os.path.join(self.pkgpath, 'resource', 'send.png')))
+                item.btnRefresh.setIcon(QIcon(os.path.join(self.pkgpath, 'resource', 'reload.png')))
                 item.btnSend.clicked.connect(lambda clicked, item=item, group=group: self.onSendPressed(group, item))
                 item.btnRefresh.clicked.connect(lambda clicked, item=item, group=group: self.onRefreshParamPressed(group, item))
 
@@ -109,7 +119,22 @@ class ReconfigureWidget(QWidget):
                                                                 0))
     
     def onSendPressed(self, group, item):
-        print "send group:%s item:%s value:%i" % (group.text(0), item.name, item.value)
+        value = item.value
+        if (value is not None) and (item.valueChanged()):
+            print "send group:%s item:%s value:%i" % (group.text(0), item.name, value)
+            try:
+                res = self.srvSetParam(self.parameterTree.indexOfTopLevelItem(group), group.indexOfChild(item), value, value)
+                item.value = res
+            except (rospy.ServiceException, rospy.ROSException) as ex:
+                print("srvSetParam did not process request: " + str(ex))
+
+    def onSendAllPressed(self):
+        for group_id in xrange(self.parameterTree.topLevelItemCount()):
+            group = self.parameterTree.topLevelItem(group_id)
+            for param_id in xrange(group.childCount()):
+                item = group.child(param_id)
+                self.onSendPressed(group, item)
+
     
     def onRefreshParamPressed(self, group, item):
         self.pubGetParamDef.publish(tiny_reconfigure.msg.GetDef(tiny_reconfigure.msg.GetDef.CMD_GET_PARAM_DEF, self.parameterTree.indexOfTopLevelItem(group), group.indexOfChild(item)))
@@ -176,12 +201,15 @@ class ParameterTreeItem(QTreeWidgetItem):
         ## Column 3 - Send Button:
         self.btnSend = QPushButton()
         self.btnSend.setText("Send")
+        self.btnSend.setEnabled(False)
         self.treeWidget().setItemWidget(self, 3, self.btnSend)
 
         ## Column 4 - Refresh Button:
         self.btnRefresh = QPushButton()
         self.btnRefresh.setText("Refresh")
         self.treeWidget().setItemWidget(self, 4, self.btnRefresh)
+
+        self.remoteValue = None
 
         ## Signals
         # self.treeWidget().connect( self.button, SIGNAL("clicked()"), self.buttonPressed )
@@ -193,30 +221,70 @@ class ParameterTreeItem(QTreeWidgetItem):
         '''
         return self.text(0)
 
+    def resetChanged(self):
+        if not self.spinBox is None:
+            self.spinBox.setStyleSheet("")
+
+    def setupSpinBox(self, spinBox):
+        if isinstance(spinBox, QDoubleSpinBox):
+            spinBox.setDecimals(5)
+        self.spinBox = spinBox
+        self.treeWidget().setItemWidget(self, 2, self.spinBox)
+        self.spinBox.valueChanged.connect(self.onSpinboxValueChanged)
+
+    def onSpinboxValueChanged(self):
+        print "spinbox changed spin={} remote={}".format(self.spinBox.value(), self.remoteValue)
+        if not self.spinBox is None:
+            if self.valueChanged():
+                self.spinBox.setStyleSheet("background-color: #CCFFCC")
+            else:
+                self.spinBox.setStyleSheet("")
+
+    def valueChanged(self):
+        if not self.spinBox is None:
+            return abs(self.spinBox.value() - self.remoteValue) > 0.00001
+        else:
+            return False
+
     @property
     def value(self):
-        '''
-        Return value ( 2nd column int)
-        '''
+        if self.spinBox is None:
+            return None
         return self.spinBox.value()
 
     @value.setter
     def value(self, msg):
-        self.setText(0, msg.param_name)
-        self.setText(1, self.paramTypeNames[msg.type])
-        
-        if msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_FLOAT:
-            if not self.spinBox is QDoubleSpinBox:
-                self.spinBox = QDoubleSpinBox()
-                self.treeWidget().setItemWidget(self, 2, self.spinBox)
+        if isinstance(msg, tiny_reconfigure.msg.ParameterDef):
+            self.setText(0, msg.param_name)
+            self.setText(1, self.paramTypeNames[msg.type])
 
-            self.spinBox.setValue(msg.value_float)
-        elif msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_INT:
-            if not self.spinBox is QSpinBox:
-                self.spinBox = QSpinBox()
-                self.treeWidget().setItemWidget(self, 2, self.spinBox)
+            if msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_FLOAT:
+                if not isinstance(self.spinBox, QDoubleSpinBox):
+                    self.setupSpinBox(QDoubleSpinBox())
 
-            self.spinBox.setValue(msg.value_int)
-        else:
-            self.spinBox = None
-            self.treeWidget().setItemWidget(self, 2, self.spinBox)
+                self.remoteValue = msg.value_float
+                self.spinBox.setValue(self.remoteValue)
+                self.onSpinboxValueChanged()
+                self.btnSend.setEnabled(True)
+            elif msg.type == tiny_reconfigure.msg.ParameterDef.TYPE_INT:
+                if not isinstance(self.spinBox, QSpinBox):
+                    self.setupSpinBox(QSpinBox())
+
+                self.remoteValue = msg.value_int
+                self.spinBox.setValue(self.remoteValue)
+                self.onSpinboxValueChanged()
+                self.btnSend.setEnabled(True)
+            else:
+                self.spinBox = None
+                self.treeWidget().setItemWidget(self, 2, self.spinBox)
+                self.remoteValue = None
+                self.btnSend.setEnabled(False)
+        elif isinstance(msg, tiny_reconfigure.srv.SetParamResponse):
+            if isinstance(self.spinBox, QDoubleSpinBox):
+                self.remoteValue = msg.value_float
+            elif isinstance(self.spinBox, QSpinBox):
+                self.remoteValue = msg.value_int
+
+            self.spinBox.setValue(self.remoteValue)
+            self.onSpinboxValueChanged()
+            self.btnSend.setEnabled(True)
