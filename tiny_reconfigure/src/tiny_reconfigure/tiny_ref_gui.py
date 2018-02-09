@@ -87,6 +87,7 @@ class ReconfigureWidget(QWidget):
 
     def getCreateGroupItem(self, index, num = None):
         if not num is None:
+            num = max(num, index+1)
             while self.parameterTree.topLevelItemCount() > num:
                 self.parameterTree.takeTopLevelItem(self.parameterTree.topLevelItemCount() - 1)
         
@@ -101,10 +102,11 @@ class ReconfigureWidget(QWidget):
 
     def getCreateParamItem(self, group, msg):
         if not msg.num_params is None:
-            while group.childCount() > msg.num_params:
+            num = max(msg.num_params, msg.param_id+1)
+            while group.childCount() > num:
                 group.takeChild(group.childCount() - 1)
 
-            while group.childCount() < msg.num_params:
+            while group.childCount() < num:
                 item = ParameterTreeItem(group, "<undefined>", "<none>")
                 item.btnSend.setIcon(QIcon(os.path.join(self.pkgpath, 'resource', 'send.png')))
                 item.btnRefresh.setIcon(QIcon(os.path.join(self.pkgpath, 'resource', 'reload.png')))
