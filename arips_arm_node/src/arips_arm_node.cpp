@@ -43,10 +43,10 @@ private:
         }
 
         for(size_t i = 0; i < size; i++) {
-            for(size_t j = 0; j < arips_arm_msgs::TrajectoryPoint::_positions_type::size(); j++) {
-                bufCmd->traj_points.at(i).positions.at(j) = mCurrentTrajectory.points.at(startIndex + i).positions.at(j);
-                bufCmd->traj_points.at(i).velocities.at(j) = mCurrentTrajectory.points.at(startIndex + i).velocities.at(j);
-                bufCmd->traj_points.at(i).accelerations.at(j) = mCurrentTrajectory.points.at(startIndex + i).accelerations.at(j);
+            for(size_t j = 0; j < arips_arm_msgs::TrajectoryPoint::_goals_type::size(); j++) {
+                bufCmd->traj_points.at(i).goals.at(j).position = mCurrentTrajectory.points.at(startIndex + i).positions.at(j);
+                bufCmd->traj_points.at(i).goals.at(j).velocity = mCurrentTrajectory.points.at(startIndex + i).velocities.at(j);
+                bufCmd->traj_points.at(i).goals.at(j).acceleration = mCurrentTrajectory.points.at(startIndex + i).accelerations.at(j);
             }
         }
         mBufferPublisher.publish(bufCmd);

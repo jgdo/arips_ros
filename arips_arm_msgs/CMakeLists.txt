@@ -52,6 +52,7 @@ add_message_files(
   TrajectoryState.msg
   MotionState.msg
   MotionCommand.msg
+  JointGoal.msg
   TrajectoryPoint.msg
   TrajectoryBufferCommand.msg
   ParameterType.msg

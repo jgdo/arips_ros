@@ -1,3 +1,3 @@
 time stamp
-arips_arm_msgs/JointState[1] state
+arips_arm_msgs/JointState[5] state
 
