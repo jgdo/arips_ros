@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot name="arips_arm" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="base_height" value="0.7" />
+  <xacro:property name="base_radius" value="0.5" />
+	
+  <link name="base_link">
+  	<visual>
+      <geometry>
+        <cylinder length="${base_height}" radius="${base_radius}"/>
+      </geometry>
+    </visual>
+  </link>
+  
+  <link name="link2" >
+  	
+  </link>
+  <link name="link3" >
+  </link>
+  <link name="link4" >
+  </link>
+  <link name="link5" >
+  </link>
+  <link name="link6" >
+  </link>
+
+  <joint name="joint1" type="continuous">
+    <parent link="base_link"/>
+    <child link="link2"/>
+  </joint>
+
+  <joint name="joint2" type="continuous">
+    <parent link="link2"/>
+    <child link="link3"/>
+  </joint>
+
+  <joint name="joint3" type="continuous">
+    <parent link="link3"/>
+    <child link="link4"/>
+  </joint>
+  
+  <joint name="joint4" type="continuous">
+    <parent link="link4"/>
+    <child link="link5"/>
+  </joint>
+  
+  <joint name="joint5" type="continuous">
+    <parent link="link5"/>
+    <child link="link6"/>
+  </joint>
+</robot>
