@@ -106,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES arips_arm_node
-#  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs
+  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs arips_arm_msgs
 #  DEPENDS system_lib
 )
 

@@ -229,9 +229,10 @@ class ParameterTreeItem(QTreeWidgetItem):
 
     def setupSpinBox(self, spinBox):
         if isinstance(spinBox, QDoubleSpinBox):
-            spinBox.setDecimals(5)
+            spinBox.setDecimals(7)
         self.spinBox = spinBox
         self.treeWidget().setItemWidget(self, 2, self.spinBox)
+        self.spinBox.setRange(-5000, 5000)
         self.spinBox.valueChanged.connect(self.onSpinboxValueChanged)
 
     def onSpinboxValueChanged(self):
@@ -244,7 +245,7 @@ class ParameterTreeItem(QTreeWidgetItem):
 
     def valueChanged(self):
         if not self.spinBox is None:
-            return abs(self.spinBox.value() - self.remoteValue) > 0.00001
+            return abs(self.spinBox.value() - self.remoteValue) > 0.000001
         else:
             return False
 
