@@ -92,6 +92,10 @@
       <material name="orange"/>
     </visual>
   </link>
+  
+  <link name="tool0">
+    
+  </link>
 
   <joint name="joint1" type="continuous">
     <parent link="base_link"/>
@@ -132,4 +136,10 @@
     <axis xyz="0 0 1"/>
     <origin xyz="0 0 ${link5_len / 2}"/>
   </joint>
+  
+  <joint name="link6-tool0" type="fixed">
+  <parent link="link6" />
+  <child link="tool0" />
+  <origin xyz="0 0 ${link6_len}" rpy="0 -1.57075 0" />
+</joint>
 </robot>

@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: arips_arm_description
+    relative_path: urdf/arips_arm.xacro
+    use_jade_xacro: true
+  SRDF:
+    relative_path: config/arips_arm.srdf
+  CONFIG:
+    author_name: Mark Prediger
+    author_email: markprediger@gmail.com
+    generated_timestamp: 1518949164
