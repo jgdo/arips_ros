@@ -1,50 +1,135 @@
 <?xml version="1.0"?>
 <robot name="arips_arm" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:property name="base_height" value="0.7" />
-  <xacro:property name="base_radius" value="0.5" />
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+  
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+  
+  <material name="orange">
+    <color rgba="1 0.6 0 1"/>
+  </material>
+  
+  <xacro:property name="link1_sidelen" value="0.05" />
+  <xacro:property name="link1_height" value="0.01" />
+  
+  <xacro:property name="link2_height" value="0.07" />
+  <xacro:property name="link2_radius" value="0.025" />
+  
+  <xacro:property name="link3_len" value="0.12" />
+  <xacro:property name="link3_thick" value="0.02" />
+  <xacro:property name="link3_width" value="0.05" />
+  
+  <xacro:property name="link4_len" value="0.15" />
+  <xacro:property name="link4_thick" value="0.02" />
+  <xacro:property name="link4_width" value="0.04" />
+  
+  <xacro:property name="link5_len" value="0.03" />
+  <xacro:property name="link5_thick" value="0.01" />
+  <xacro:property name="link5_width" value="0.04" />
+  
+  <xacro:property name="link6_len" value="0.025" />
+  <xacro:property name="link6_radius" value="0.01" />
 	
   <link name="base_link">
   	<visual>
       <geometry>
-        <cylinder length="${base_height}" radius="${base_radius}"/>
+        <box size="${link1_sidelen} ${link1_sidelen} ${link1_height}"/>
       </geometry>
+      <origin xyz="0 0 ${link1_height/2}"/>
+      <material name="black"/>
     </visual>
   </link>
   
   <link name="link2" >
-  	
+  	<visual>
+      <geometry>
+        <cylinder length="${link2_height}" radius="${link2_radius}"/>
+      </geometry>
+      <origin xyz="0 0 ${link2_height/2}"/>
+      <material name="white"/>
+    </visual>
   </link>
+  
   <link name="link3" >
+    <visual>
+      <geometry>
+        <box size="${link3_thick} ${link3_width} ${link3_len}"/>
+      </geometry>
+      <origin xyz="0 0 ${link3_len/2}"/>
+      <material name="white"/>
+    </visual>
   </link>
+  
   <link name="link4" >
+    <visual>
+      <geometry>
+        <box size="${link4_thick} ${link4_width} ${link4_len}"/>
+      </geometry>
+      <origin xyz="0 0 ${link4_len/2}"/>
+      <material name="orange"/>
+    </visual>
   </link>
+  
   <link name="link5" >
+    <visual>
+      <geometry>
+        <box size="${link5_thick} ${link5_width} ${link5_len}"/>
+      </geometry>
+      <origin xyz="0 0 0"/>
+      <material name="orange"/>
+    </visual>
   </link>
+  
   <link name="link6" >
+    <visual>
+      <geometry>
+        <cylinder length="${link6_len}" radius="${link6_radius}"/>
+      </geometry>
+      <origin xyz="0 0 ${link6_len/2}"/>
+      <material name="orange"/>
+    </visual>
   </link>
 
   <joint name="joint1" type="continuous">
     <parent link="base_link"/>
     <child link="link2"/>
+    
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 ${link1_height}"/>
   </joint>
 
   <joint name="joint2" type="continuous">
     <parent link="link2"/>
     <child link="link3"/>
+    
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0 ${link2_height}"/>
   </joint>
 
   <joint name="joint3" type="continuous">
     <parent link="link3"/>
     <child link="link4"/>
+    
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0 ${link3_len}"/>
   </joint>
   
   <joint name="joint4" type="continuous">
     <parent link="link4"/>
     <child link="link5"/>
+    
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0 ${link4_len}"/>
   </joint>
   
   <joint name="joint5" type="continuous">
     <parent link="link5"/>
     <child link="link6"/>
+    
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 ${link5_len / 2}"/>
   </joint>
 </robot>
