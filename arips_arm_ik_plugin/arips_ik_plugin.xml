@@ -1,0 +1,7 @@
+<library path="lib/libarips_arm_ik_plugin">
+  <class name="arips_arm_plugins/AripsArmIkPlugin" type="arips_arm_plugins::AripsArmIkPlugin" base_class_type="kinematics::KinematicsBase">
+  <description>
+  This is a rectangle plugin
+  </description>
+  </class>
+</library>
