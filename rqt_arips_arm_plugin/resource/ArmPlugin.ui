@@ -336,7 +336,7 @@
      </item>
      <item row="0" column="5">
       <property name="text">
-       <string/>
+       <string>0</string>
       </property>
       <property name="foreground">
        <brush brushstyle="SolidPattern">
@@ -348,12 +348,32 @@
        </brush>
       </property>
      </item>
+     <item row="1" column="5">
+      <property name="text">
+       <string>0</string>
+      </property>
+     </item>
+     <item row="2" column="5">
+      <property name="text">
+       <string>0</string>
+      </property>
+     </item>
+     <item row="3" column="5">
+      <property name="text">
+       <string>0</string>
+      </property>
+     </item>
      <item row="4" column="5">
       <property name="text">
-       <string>sdfsdf</string>
+       <string>0</string>
       </property>
       <property name="flags">
        <set>ItemIsEditable|ItemIsEnabled</set>
+      </property>
+     </item>
+     <item row="5" column="5">
+      <property name="text">
+       <string>0</string>
       </property>
      </item>
     </widget>
