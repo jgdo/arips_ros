@@ -3,6 +3,18 @@
 #include <arips_arm_msgs/MotionState.h>
 #include <arips_arm_msgs/MotionCommand.h>
 
+#include <sensor_msgs/JointState.h>
+
+template<typename>
+struct array_size;
+
+template<typename T, size_t N>
+struct array_size<boost::array<T,N> > {
+static size_t constexpr size = N;
+};
+
+static const size_t NUM_JOINTS = array_size<arips_arm_msgs::MotionState::_jointStates_type>::size;
+
 class TrajectoryBufferHandler {
 public:
     TrajectoryBufferHandler() {
@@ -97,7 +109,9 @@ public:
         }
 
         void onMotionState(const arips_arm_msgs::MotionState &msg) override {
-
+            if(msg.mode == arips_arm_msgs::MotionState::M_TRAJECTORY) {
+                mArmNode->switchState(mArmNode->mStateTrajExec);
+            }
         }
     };
 
@@ -129,6 +143,7 @@ public:
         filter.configure();
         pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 1, false);
         mMotionCmdPub = nh.advertise<arips_arm_msgs::MotionCommand>("motion_command", 1, false);
+        mJointStatePub = nh.advertise<sensor_msgs::JointState>("joint_states", 1, false);
         mTrajectorySub = nh.subscribe("trajectory", 1, &AripsArmNode::trajectoryCb, this);
         mMotionStateSub = nh.subscribe("motion_state", 1, &AripsArmNode::motionStateCb, this);
 
@@ -146,6 +161,7 @@ private:
     ros::Subscriber mTrajectorySub, mMotionStateSub;
     ros::Publisher pub;
     ros::Publisher mMotionCmdPub;
+    ros::Publisher mJointStatePub;
     industrial_trajectory_filters::UniformSampleFilter filter;
     arips_arm_msgs::MotionState mLastMotionState;
 
@@ -159,13 +175,31 @@ private:
             arips_arm_msgs::MotionCommand cmd;
             cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
             mMotionCmdPub.publish(cmd);
-            switchState(mStateTrajExec);
+            switchState(mStateTrajWait);
         }
     }
 
     void motionStateCb(const arips_arm_msgs::MotionState& msg) {
         if(mCurrentState)
             mCurrentState->onMotionState(msg);
+
+        sensor_msgs::JointState jointState;
+
+        jointState.header.stamp = ros::Time::now();
+
+        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5" };
+
+        jointState.position.resize(NUM_JOINTS);
+        jointState.velocity.resize(NUM_JOINTS);
+        jointState.effort.resize(NUM_JOINTS);
+
+        for(size_t i = 0; i < NUM_JOINTS; i++) {
+            jointState.position.at(i) = msg.jointStates.at(i).position;
+            jointState.velocity.at(i) = msg.jointStates.at(i).velocity;
+            jointState.effort.at(i) = msg.jointStates.at(i).torque;
+        }
+
+        mJointStatePub.publish(jointState);
     }
 
     void timerCb(const ros::TimerEvent& event)
