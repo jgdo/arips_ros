@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   trajectory_msgs
   genmsg
+        control_msgs
+        actionlib
+        actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES arips_arm_node
-  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs arips_arm_msgs
+  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs arips_arm_msgs control_msgs actionlib_msgs
 #  DEPENDS system_lib
 )
 

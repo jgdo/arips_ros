@@ -5,6 +5,9 @@
 
 #include <sensor_msgs/JointState.h>
 
+#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <actionlib/server/simple_action_server.h>
+
 template<typename>
 struct array_size;
 
@@ -128,6 +131,12 @@ public:
 
         void onMotionState(const arips_arm_msgs::MotionState &msg) override {
             if(msg.mode == arips_arm_msgs::MotionState::M_BREAK) {
+                // trajectory was from action
+                if(mArmNode->mJointTrajActionServer.isActive()) {
+                    control_msgs::FollowJointTrajectoryResult res;
+                    res.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
+                    mArmNode->mJointTrajActionServer.setSucceeded(res);
+                }
                 mArmNode->switchState(mArmNode->mStateIdle);
             } else {
                 mArmNode->mTrajBuffHandler.updateBuffer(msg.trajState);
@@ -138,7 +147,8 @@ public:
     AripsArmNode():
         mStateIdle(this),
         mStateTrajWait(this),
-        mStateTrajExec(this)
+        mStateTrajExec(this),
+        mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false)
     {
         filter.configure();
         pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 1, false);
@@ -149,6 +159,11 @@ public:
 
         mTimer = nh.createTimer(ros::Duration(0.3), &AripsArmNode::timerCb, this);
         switchState(mStateIdle);
+
+        mJointTrajActionServer.registerGoalCallback(boost::bind(&AripsArmNode::trajectoryActionGoalCB, this));
+        mJointTrajActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::trajectoryActionPreemptCB, this));
+
+        mJointTrajActionServer.start();
     }
 private:
     ros::NodeHandle nh;
@@ -167,16 +182,30 @@ private:
 
     ros::Timer mTimer;
 
+    actionlib::SimpleActionServer<control_msgs::FollowJointTrajectoryAction> mJointTrajActionServer;
+    control_msgs::FollowJointTrajectoryGoalConstPtr mCurrentTrajGoal;
+
     void trajectoryCb(const trajectory_msgs::JointTrajectory& trajOrig) {
         trajectory_msgs::JointTrajectory trajSampled;
         if(filter.update(trajOrig, trajSampled)) {
-            pub.publish(trajSampled);
-            mTrajBuffHandler.setNewTrajectory(trajSampled);
-            arips_arm_msgs::MotionCommand cmd;
-            cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
-            mMotionCmdPub.publish(cmd);
-            switchState(mStateTrajWait);
+            if(mJointTrajActionServer.isActive()) {
+                control_msgs::FollowJointTrajectoryResult res;
+                res.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_GOAL;
+                res.error_string = ros::this_node::getName() + ": Aborted goal since started new trajectory over message cb.";
+                mJointTrajActionServer.setAborted(res, res.error_string);
+            }
+
+            startNewSampledTrajectory(trajSampled);
         }
+    }
+
+    void startNewSampledTrajectory(const trajectory_msgs::JointTrajectory& trajSampled) {
+        pub.publish(trajSampled);
+        mTrajBuffHandler.setNewTrajectory(trajSampled);
+        arips_arm_msgs::MotionCommand cmd;
+        cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
+        mMotionCmdPub.publish(cmd);
+        switchState(mStateTrajWait);
     }
 
     void motionStateCb(const arips_arm_msgs::MotionState& msg) {
@@ -211,6 +240,33 @@ private:
     void switchState(State& state) {
         mCurrentState = &state;
         mCurrentState->enterState();
+    }
+
+    void trajectoryActionGoalCB() {
+        mCurrentTrajGoal = mJointTrajActionServer.acceptNewGoal();
+
+        trajectory_msgs::JointTrajectory trajSampled;
+        if(filter.update(mCurrentTrajGoal->trajectory, trajSampled)) {
+            startNewSampledTrajectory(trajSampled);
+        } else {
+            control_msgs::FollowJointTrajectoryResult res;
+            res.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_GOAL;
+            res.error_string = ros::this_node::getName() + ": Aborted goal since could not resample the trajectory.";
+            mJointTrajActionServer.setAborted(res, res.error_string);
+            cancelCurrentTrajectory();
+        }
+    }
+
+    void trajectoryActionPreemptCB() {
+        cancelCurrentTrajectory();
+        mJointTrajActionServer.setAborted();
+    }
+
+    void cancelCurrentTrajectory() {
+        arips_arm_msgs::MotionCommand cmd;
+        cmd.command = arips_arm_msgs::MotionCommand::CMD_RELEASE;
+        mMotionCmdPub.publish(cmd);
+        switchState(mStateIdle);
     }
 };
 
