@@ -110,7 +110,7 @@ catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES arips_arm_ik_plugin
   CATKIN_DEPENDS moveit_core moveit_ros_planning pluginlib roscpp roscpp tf tf_conversions
-  DEPENDS system_lib
+#  DEPENDS system_lib
 )
 
 ###########
