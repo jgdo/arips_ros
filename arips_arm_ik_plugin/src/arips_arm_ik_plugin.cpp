@@ -12,6 +12,8 @@
 
 #include <tf/tf.h>
 
+#include <arips_arm_ik_plugin/IKComputations.h>
+
 
 
 namespace arips_arm_plugins {
@@ -53,7 +55,7 @@ public:
   const std::vector<std::string> &getLinkNames() const override;
 
 private:
-    std::vector<float> mLinkLength;
+    std::vector<double> mLinkLength;
   
 };
 
@@ -100,44 +102,17 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
 
 
     using v3 = tf::Vector3;
+    using quat = tf::Quaternion;
 
-    v3 pos;
-    tf::pointMsgToTF(ik_pose.position, pos);
+    v3 posOrig;
+    quat rotOrig;
 
-    ROS_INFO_STREAM("pos = " << pos.x() << " " << pos.y() << " " << pos.z());
+    tf::pointMsgToTF(ik_pose.position, posOrig);
+    tf::quaternionMsgToTF(ik_pose.orientation, rotOrig);
 
-    v3 posJ2Diff = pos - v3(0, 0, mLinkLength.at(0) + mLinkLength.at(1));
-    ROS_INFO_STREAM("posJ2Diff = " << posJ2Diff.x() << " " << posJ2Diff.y() << " " << posJ2Diff.z());
+    IKComputations::computeIK(posOrig, rotOrig, mLinkLength, solution);
 
-
-    float len2 = mLinkLength.at(2);
-    float len3 = mLinkLength.at(3) + mLinkLength.at(4) + mLinkLength.at(5);
-    float dist = posJ2Diff.length();
-
-    ROS_INFO_STREAM("len2 = " << len2 << ", len3 = " << len3 << ", dist = " << dist);
-
-
-    float j3 = 0;
-    float offsetj2 = 0;
-
-    if(std::abs(dist) < len2 + len3) {
-        j3 = M_PI - std::acos((len2*len2 + len3*len3 - dist*dist) / (2*len2*len3));
-        offsetj2 = std::acos((len2*len2 + dist*dist - len3*len3) / (2*len2*dist));
-    }
-
-    float basej2 = std::acos(posJ2Diff.z() / dist);
-
-    ROS_INFO_STREAM("offsetj2 = " << offsetj2 << ", basej2 = " << basej2);
-
-    float j2 = basej2 - offsetj2;
-
-    float j1 = std::atan2(posJ2Diff.y(), posJ2Diff.x());
-
-    solution = {j1, j2, j3, 0, 0};
     error_code.val = moveit_msgs::MoveItErrorCodes::SUCCESS;
-
-    ROS_INFO_STREAM("j1 = " << ", j2 = " << j2 << ", j3 = " << j3);
-    ROS_INFO_STREAM("");
   return true;
 }
 
