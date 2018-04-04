@@ -7,6 +7,3 @@ uint8 CMD_DIRECT_CONTROLLER = 22  # apply controller on direct setpoints without
 uint8 CMD_START_TRAJECTORY = 30	# start a new trajectory
 
 uint8 command
-
-float32 st_position
-

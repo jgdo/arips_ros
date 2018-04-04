@@ -1,1 +1,1 @@
-float32[5] raw_motor_power # [-1, 1]
+float32[6] raw_motor_power # [-1, 1]

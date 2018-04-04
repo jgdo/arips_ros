@@ -16,7 +16,10 @@ struct array_size<boost::array<T,N> > {
 static size_t constexpr size = N;
 };
 
-static const size_t NUM_JOINTS = array_size<arips_arm_msgs::MotionState::_jointStates_type>::size;
+static const size_t NUM_JOINTS = 5;
+
+static_assert(array_size<arips_arm_msgs::MotionState::_jointStates_type>::size == NUM_JOINTS + 1,
+    "This node is designed for a 5dof + gripper robot");
 
 class TrajectoryBufferHandler {
 public:
@@ -24,8 +27,9 @@ public:
         mBufferPublisher = nh.advertise<arips_arm_msgs::TrajectoryBufferCommand>("traj_buffer_command", 1, false);
     }
 
-    void setNewTrajectory(trajectory_msgs::JointTrajectory const& traj) {
+    void setNewTrajectory(trajectory_msgs::JointTrajectory const& traj, float targetGripperPosition) {
         mCurrentTrajectory = traj;
+        mTargetGripperPosition = targetGripperPosition;
 
         publishPoints(0);
     }
@@ -43,6 +47,7 @@ private:
     ros::Publisher mBufferPublisher;
 
     trajectory_msgs::JointTrajectory mCurrentTrajectory;
+    float mTargetGripperPosition = 0;
 
     void publishPoints(size_t startIndex) {
         startIndex = std::min(startIndex, mCurrentTrajectory.points.size());
@@ -57,14 +62,24 @@ private:
             bufCmd->size = size;
         }
 
-        for(size_t i = 0; i < size; i++) {
-            for(size_t j = 0; j < arips_arm_msgs::TrajectoryPoint::_goals_type::size(); j++) {
-                bufCmd->traj_points.at(i).goals.at(j).position = mCurrentTrajectory.points.at(startIndex + i).positions.at(j);
-                bufCmd->traj_points.at(i).goals.at(j).velocity = mCurrentTrajectory.points.at(startIndex + i).velocities.at(j);
-                bufCmd->traj_points.at(i).goals.at(j).acceleration = mCurrentTrajectory.points.at(startIndex + i).accelerations.at(j);
+        if(bufCmd->size > 0) {
+            for (size_t i = 0; i < size; i++) {
+                for (size_t j = 0; j < NUM_JOINTS; j++) {
+                    bufCmd->traj_points.at(i).goals.at(j).position = mCurrentTrajectory.points.at(
+                            startIndex + i).positions.at(j);
+                    bufCmd->traj_points.at(i).goals.at(j).velocity = mCurrentTrajectory.points.at(
+                            startIndex + i).velocities.at(j);
+                    bufCmd->traj_points.at(i).goals.at(j).acceleration = mCurrentTrajectory.points.at(
+                            startIndex + i).accelerations.at(j);
+                }
+
+                // fill gripper
+                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).position = mTargetGripperPosition;
+                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).velocity = 0;
+                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).acceleration = 0;
             }
+            mBufferPublisher.publish(bufCmd);
         }
-        mBufferPublisher.publish(bufCmd);
     }
 };
 
@@ -201,7 +216,7 @@ private:
 
     void startNewSampledTrajectory(const trajectory_msgs::JointTrajectory& trajSampled) {
         pub.publish(trajSampled);
-        mTrajBuffHandler.setNewTrajectory(trajSampled);
+        mTrajBuffHandler.setNewTrajectory(trajSampled, mLastMotionState.jointStates.at(NUM_JOINTS).position);
         arips_arm_msgs::MotionCommand cmd;
         cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
         mMotionCmdPub.publish(cmd);
@@ -212,17 +227,19 @@ private:
         if(mCurrentState)
             mCurrentState->onMotionState(msg);
 
+        mLastMotionState = msg;
+
         sensor_msgs::JointState jointState;
 
         jointState.header.stamp = ros::Time::now();
 
-        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5" };
+        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper" };
 
-        jointState.position.resize(NUM_JOINTS);
-        jointState.velocity.resize(NUM_JOINTS);
-        jointState.effort.resize(NUM_JOINTS);
+        jointState.position.resize(NUM_JOINTS+1);
+        jointState.velocity.resize(NUM_JOINTS+1);
+        jointState.effort.resize(NUM_JOINTS+1);
 
-        for(size_t i = 0; i < NUM_JOINTS; i++) {
+        for(size_t i = 0; i < NUM_JOINTS + 1; i++) {
             jointState.position.at(i) = msg.jointStates.at(i).position;
             jointState.velocity.at(i) = msg.jointStates.at(i).velocity;
             jointState.effort.at(i) = msg.jointStates.at(i).torque;

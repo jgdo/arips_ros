@@ -1,2 +1,2 @@
-JointGoal[5] goals
+JointGoal[6] goals
 

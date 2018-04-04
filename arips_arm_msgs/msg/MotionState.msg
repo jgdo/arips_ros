@@ -10,6 +10,6 @@ uint32 mode
 
 time stamp
 
-JointState[5] jointStates
+JointState[6] jointStates
 TrajectoryState trajState
 
