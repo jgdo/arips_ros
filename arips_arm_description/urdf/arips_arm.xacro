@@ -12,6 +12,8 @@
     <color rgba="1 0.6 0 1"/>
   </material>
   
+  <xacro:property name="pi" value="3.14159265359" />
+  
   <xacro:property name="link1_sidelen" value="0.05" />
   <xacro:property name="link1_height" value="0.01" />
   
@@ -26,12 +28,14 @@
   <xacro:property name="link4_thick" value="0.02" />
   <xacro:property name="link4_width" value="0.04" />
   
-  <xacro:property name="link5_len" value="0.03" />
+  <xacro:property name="link5_len" value="0.035" />
   <xacro:property name="link5_thick" value="0.01" />
   <xacro:property name="link5_width" value="0.04" />
   
-  <xacro:property name="link6_len" value="0.025" />
+  <xacro:property name="link6_len" value="0.085" />
   <xacro:property name="link6_radius" value="0.01" />
+  
+  <xacro:property name="gripper_open_angle" value="0.3" />
 	
   <link name="base_link">
   	<visual>
@@ -86,60 +90,130 @@
   <link name="link6" >
     <visual>
       <geometry>
-        <cylinder length="${link6_len}" radius="${link6_radius}"/>
+        <cylinder length="${link6_len-0.04}" radius="${link6_radius}"/>
       </geometry>
-      <origin xyz="0 0 ${link6_len/2}"/>
+      <origin xyz="0 0 ${link6_len/2-0.02}"/>
       <material name="orange"/>
     </visual>
   </link>
   
   <link name="tool0">
-    
+  <visual>
+      <geometry>
+        <box size="0.012 0.022 0.02"/>
+      </geometry>
+      <origin xyz="-0.04 0 0.02"/>
+      <material name="orange"/>
+    </visual>
   </link>
+  
 
-  <joint name="joint1" type="continuous">
+  <joint name="joint1" type="revolute">
     <parent link="base_link"/>
     <child link="link2"/>
     
     <axis xyz="0 0 1"/>
     <origin xyz="0 0 ${link1_height}"/>
+    
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
   </joint>
 
-  <joint name="joint2" type="continuous">
+  <joint name="joint2" type="revolute">
     <parent link="link2"/>
     <child link="link3"/>
     
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link2_height}"/>
+    
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
   </joint>
 
-  <joint name="joint3" type="continuous">
+  <joint name="joint3" type="revolute">
     <parent link="link3"/>
     <child link="link4"/>
     
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link3_len}"/>
+    
+    <limit effort="1000.0" lower="${-pi*0.48}" upper="${pi*0.75}" velocity="0.5"/>
   </joint>
   
-  <joint name="joint4" type="continuous">
+  <joint name="joint4" type="revolute">
     <parent link="link4"/>
     <child link="link5"/>
     
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link4_len}"/>
+    
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
   </joint>
   
-  <joint name="joint5" type="continuous">
+  <joint name="joint5" type="revolute">
     <parent link="link5"/>
     <child link="link6"/>
     
     <axis xyz="0 0 1"/>
     <origin xyz="0 0 ${link5_len / 2}"/>
+    
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
   </joint>
   
   <joint name="link6-tool0" type="fixed">
-  <parent link="link6" />
-  <child link="tool0" />
-  <origin xyz="0 0 ${link6_len}" rpy="0 -1.57075 0" />
-</joint>
+      <parent link="link6" />
+      <child link="tool0" />
+      <origin xyz="0 0 ${link6_len}" rpy="0 -1.57075 0" />
+    </joint>
+    
+    
+    <joint name="tool0_gripper" type="fixed">
+      <parent link="tool0" />
+      <child link="gripper_base" />
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+    </joint>
+    
+  <joint name="gripper_joint" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_link_left"/>
+    
+    <axis xyz="0 0 1"/>
+    <origin xyz="-0.055 0.02 0"/>
+    
+    <limit effort="1000.0" lower="0" upper="${gripper_open_angle}" velocity="0.5"/>
+  </joint>
+  
+  <joint name="gripper_joint_right" type="revolute">
+    <mimic joint="gripper_joint" multiplier="-1"/>
+  
+    <parent link="gripper_base"/>
+    <child link="gripper_link_right"/>
+    
+    <axis xyz="0 0 1"/>
+    <origin xyz="-0.055 -0.02 0"/>
+    
+    <limit effort="1000.0" lower="${gripper_open_angle}" upper="0" velocity="0.5"/>
+  </joint>
+    
+    <link name="gripper_base">
+   </link>
+    
+  <link name="gripper_link_left" >
+    <visual>
+      <geometry>
+        <box size="0.06 0.005 0.02"/>
+      </geometry>
+      <origin xyz="0.03 0 0"/>
+      <material name="orange"/>
+    </visual>
+  </link>
+  
+  <link name="gripper_link_right" >
+    <visual>
+      <geometry>
+        <box size="0.06 0.005 0.02"/>
+      </geometry>
+      <origin xyz="0.03 0 0"/>
+      <material name="orange"/>
+    </visual>
+  </link>
+ 
 </robot>

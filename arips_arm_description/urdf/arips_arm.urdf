@@ -105,5 +105,27 @@
     <child link="tool0"/>
     <origin rpy="0 -1.57075 0" xyz="0 0 0.025"/>
   </joint>
+  <joint name="tool0_gripper" type="fixed">
+    <parent link="tool0"/>
+    <child link="gripper_base"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </joint>
+  <joint name="xgripper_joint" type="continuous">
+    <parent link="gripper_base"/>
+    <child link="gripper_link"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+  <link name="gripper_base">
+   </link>
+  <link name="gripper_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <origin xyz="0 0 0"/>
+      <material name="orange"/>
+    </visual>
+  </link>
 </robot>
 

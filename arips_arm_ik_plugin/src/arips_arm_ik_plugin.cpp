@@ -123,6 +123,12 @@ AripsArmIkPlugin::getPositionFK(const std::vector<std::string> &link_names, cons
   return false;
 }
 
+    float getLinkLength(urdf::Vector3 pos) {
+        tf::Vector3 postf(pos.x, pos.y, pos.z);
+        return postf.length();
+        // ROS_INFO_STREAM_NAMED("arips_ik","joint " << e.second->name << " len = " << postf.length());
+    }
+
 bool AripsArmIkPlugin::initialize(const std::string &robot_description, const std::string &group_name,
                                   const std::string &base_frame, const std::string &tip_frame,
                                   double search_discretization) {
@@ -148,14 +154,22 @@ bool AripsArmIkPlugin::initialize(const std::string &robot_description, const st
   
   ROS_DEBUG_STREAM_NAMED("arips_ik","Reading joints and links from URDF");
 
-    mLinkLength.reserve(robot_model.joints_.size());
+    mLinkLength.reserve(6);
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint1")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint2")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint3")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint4")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint5")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("link6-tool0")->parent_to_joint_origin_transform.position));
 
+    /*
   for(auto& e: robot_model.joints_) {
     auto& pos = e.second->parent_to_joint_origin_transform.position;
     tf::Vector3 postf(pos.x, pos.y, pos.z);
     ROS_INFO_STREAM_NAMED("arips_ik","joint " << e.second->name << " len = " << postf.length());
       mLinkLength.push_back(postf.length());
   }
+     */
   
   return true;
 }

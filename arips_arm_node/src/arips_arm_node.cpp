@@ -233,7 +233,7 @@ private:
 
         jointState.header.stamp = ros::Time::now();
 
-        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper" };
+        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper_joint" };
 
         jointState.position.resize(NUM_JOINTS+1);
         jointState.velocity.resize(NUM_JOINTS+1);
