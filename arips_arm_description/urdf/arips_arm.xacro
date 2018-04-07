@@ -103,7 +103,7 @@
         <box size="0.012 0.022 0.02"/>
       </geometry>
       <origin xyz="-0.04 0 0.02"/>
-      <material name="orange"/>
+      <material name="black"/>
     </visual>
   </link>
   

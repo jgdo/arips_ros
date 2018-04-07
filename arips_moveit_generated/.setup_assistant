@@ -7,4 +7,4 @@ moveit_setup_assistant_config:
   CONFIG:
     author_name: Mark Prediger
     author_email: markprediger@gmail.com
-    generated_timestamp: 1523087528
+    generated_timestamp: 1523093078
