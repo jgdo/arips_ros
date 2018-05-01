@@ -22,12 +22,7 @@ find_package(catkin REQUIRED COMPONENTS nav_msgs std_msgs message_generation)
 ## Generate messages in the 'msg' folder
 add_message_files(
    FILES
-   SensorState.msg
-   ServoPosition.msg
-   MotorPWMRaw.msg
-   MotorPWMRawArray.msg
-   Parameter.msg
-   ParameterArray.msg
+   AripsHwState.msg
 )
 
 ## Generate services in the 'srv' folder

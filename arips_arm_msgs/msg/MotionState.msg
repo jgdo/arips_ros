@@ -13,3 +13,5 @@ time stamp
 JointState[6] jointStates
 TrajectoryState trajState
 
+float32 controlLoopTime
+
