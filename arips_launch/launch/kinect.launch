@@ -9,117 +9,77 @@
   horsepower for your application.
   
   For an example of disabling processing modules, check
-  any of the turtlebot_core_apps (e.g. android_make_a_map.launch
+  any of the turtlebot_rapps (e.g. android_make_a_map.launch
   only enables scan_processing for depthimage_to_laserscan and
   rgb_processing for the android tele-view).
 -->
 <launch>
-  <machine name="arips" address="arips" env-loader="/home/jgdo/loader.sh" user="jgdo">
-  </machine>
-  
-  
-  <include file="$(find rgbd_launch)/launch/kinect_frames.launch" />
+  <!-- "camera" should uniquely identify the device. All topics are pushed down
+       into the "camera" namespace, and it is prepended to tf frame ids. -->
+  <arg name="camera"      default="kinect"/>
+  <arg name="publish_tf"  default="true"/>
+  <arg name="3d_sensor"   default="kinect"/>  <!-- kinect, asus_xtion_pro -->
 
-  <arg name="camera"  value="camera"/>
-  <arg name="respawn" default="false" />
-  <arg     if="$(arg respawn)" name="bond" value="" />
-  <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
-  <arg name="manager" value="$(arg camera)_nodelet_manager" />
-
-  <!-- Depth registration -->
-  <arg name="depth_registration" default="true"/>
+  <!-- Factory-calibrated depth registration -->
+  <arg name="depth_registration"              default="true"/>
   <arg     if="$(arg depth_registration)" name="depth" value="depth_registered" />
   <arg unless="$(arg depth_registration)" name="depth" value="depth" />
-  
+
   <!-- Processing Modules -->
-  <arg name="rgb_processing"     default="true"/>
-  <arg name="depth_processing"   default="true"/>
-  <arg name="scan_processing"    default="false"/>
+  <arg name="rgb_processing"                  default="true"/>
+  <arg name="ir_processing"                   default="true"/>
+  <arg name="depth_processing"                default="true"/>
+  <arg name="depth_registered_processing"     default="true"/>
+  <arg name="disparity_processing"            default="false"/>
+  <arg name="disparity_registered_processing" default="false"/>
+  <arg name="scan_processing"                 default="true"/>
 
-  <group ns="$(arg camera)">
-    <node machine="arips" pkg="nodelet" type="nodelet" name="$(arg manager)" respawn="true" args="manager" output="screen"/>
-    <node machine="arips" pkg="nodelet" type="nodelet" name="openni_camera_loader" args="load openni_camera/driver $(arg manager)" respawn="true" output="screen">
-        <rosparam file="$(find turtlebot_bringup)/param/3dsensor.yaml" command="load"/>
-        <param name="depth_registration" value="$(arg depth_registration)"/>
-        <param name="image_mode" value="8" />
-   		<param name="depth_mode" value="8" />
-    </node>
+  <!-- Worker threads for the nodelet manager -->
+  <arg name="num_worker_threads" default="4" />
 
-    <group if="$(arg rgb_processing)">
-      <include file="$(find image_proc)/launch/image_proc.launch" ns="rgb">
-        <arg name="manager" value="/$(arg camera)/$(arg manager)" /> <!--  Image proc can't seem to resolve if only $(arg manager) is set -->
-        <arg name="respawn" value="$(arg respawn)" />
-      </include>
-    </group>
-
-    <!--                  Depth image processing 
-      Look in $(find openni_launch)/launch/includes/depth.launch for hints
-      Here we set things up for point cloud processing (follower mainly).
-      At some point we may want the xyzrgb point cloud processing nodelet. 
-    -->
-    <group if="$(arg depth_processing)">
-      <node machine="arips" pkg="nodelet" type="nodelet" name="rectify_depth"
-            args="load image_proc/rectify /$(arg camera)/$(arg manager) $(arg bond)"
-            respawn="$(arg respawn)"
-            ns="$(arg depth)" output="screen">
-        <remap from="image_mono"  to="image_raw" />   <!-- Input -->
-        <remap from="image_rect"  to="image_rect_raw" />  <!-- Output -->
-        <!-- Use nearest neighbor (0) interpolation so we don't streak across depth boundaries -->
-        <param name="interpolation" value="0" />
-      </node>
-
-       <!-- XYZ point cloud (optional, disable if publishing XYZRGB instead) -->
-      <node machine="arips" unless="$(arg depth_registration)" pkg="nodelet" type="nodelet" name="points"
-            args="load depth_image_proc/point_cloud_xyz /$(arg camera)/$(arg manager) $(arg bond)"
-            respawn="$(arg respawn)"
-            ns="$(arg depth)" output="screen">
-        <remap from="image_rect" to="image_rect_raw"/>
-      </node>
-      <!-- Instead publish registered XYZRGB point cloud --> 
-      <node machine="arips" if="$(arg depth_registration)" pkg="nodelet" type="nodelet" name="points_xyzrgb"
-            args="load depth_image_proc/point_cloud_xyzrgb /$(arg camera)/$(arg manager) $(arg bond)"
-            respawn="$(arg respawn)" output="screen"
-            >
-        <remap from="$(arg depth)/image_rect" to="$(arg depth)/image_rect_raw"/>
-      </node>
-    </group>
-    
-    <!--                        Laserscan 
-      This uses lazy subscribing, so will not activate until scan is requested.
-    -->
-    <group if="$(arg scan_processing)">
-      <node machine="arips" pkg="nodelet" type="nodelet" name="depthimage_to_laserscan_loader" 
-      		args="load depthimage_to_laserscan/DepthImageToLaserScanNodelet $(arg manager)" output="screen">
-		    <!-- Pixel rows to use to generate the laserscan. For each column, the scan will
-		         return the minimum value for those pixels centered vertically in the image. -->
-		    <param name="scan_height" value="10"/>
-        <param name="output_frame_id" value="/$(arg camera)_depth_frame"/>
-        <param name="range_min" value="0.45"/>
-        <remap from="image" to="/$(arg camera)/$(arg depth)/image_raw"/>
-        <remap from="scan" to="/scan"/>
-      </node>
-    </group>
-    
-    <!-- throttling -->
-	  <node pkg="nodelet" type="nodelet" name="pointcloud_throttle" 
-	  		args="load pointcloud_to_laserscan/CloudThrottle $(arg manager)" 
-	  		output="screen">
-		<param name="max_rate" value="10.0"/>
-		<remap from="cloud_in" to="/camera/depth_registered/points"/>
-		<remap from="cloud_out" to="cloud_throttled"/>
-	  </node>
+  <!-- Laserscan topic -->
+  <arg name="scan_topic" default="scan"/>
   
-    	<!-- Fake Laser -->
-	  <node machine="arips" pkg="nodelet" type="nodelet" name="kinect_laser" 
-	  		args="load pointcloud_to_laserscan2/CloudToScan2 $(arg manager)"
-	  		output="screen">
-		<param name="output_frame_id" value="/laser_frame"/>
-		<param name="camera_depth_frame" value="/$(arg camera)_depth_frame"/>
-		<param name="min_height" value="-0.6"/>
-		<param name="max_height" value="-0.3"/>
-		<remap from="cloud" to="cloud_throttled"/>
-		<remap from="scan" to="/narrow_scan"/>
-	  </node>
+  <param name="$(arg camera)/driver/image_mode"  value="5" />
+  <param name="$(arg camera)/driver/depth_mode"  value="5" />
+
+  <include file="$(find arips_launch)/launch/includes/3dsensor/$(arg 3d_sensor).launch.xml">
+    <arg name="camera"                          value="$(arg camera)"/>
+    <arg name="publish_tf"                      value="$(arg publish_tf)"/>
+    <arg name="depth_registration"              value="$(arg depth_registration)"/>
+    <arg name="num_worker_threads"              value="$(arg num_worker_threads)" />
+
+    <!-- Processing Modules -->
+    <arg name="rgb_processing"                  value="$(arg rgb_processing)"/>
+    <arg name="ir_processing"                   value="$(arg ir_processing)"/>
+    <arg name="depth_processing"                value="$(arg depth_processing)"/>
+    <arg name="depth_registered_processing"     value="$(arg depth_registered_processing)"/>
+    <arg name="disparity_processing"            value="$(arg disparity_processing)"/>
+    <arg name="disparity_registered_processing" value="$(arg disparity_registered_processing)"/>
+  </include>
+
+   <!--                        Laserscan 
+     This uses lazy subscribing, so will not activate until scan is requested.
+   -->
+  <group if="$(arg scan_processing)">
+    <node pkg="nodelet" type="nodelet" name="depthimage_to_laserscan" args="load depthimage_to_laserscan/DepthImageToLaserScanNodelet $(arg camera)/$(arg camera)_nodelet_manager">
+      <!-- Pixel rows to use to generate the laserscan. For each column, the scan will
+           return the minimum value for those pixels centered vertically in the image. -->
+      <param name="scan_height_min" value="0.2"/>
+	  <param name="scan_height_max" value="0.4"/>
+	  <param name="frame_skip" value="3"/>
 	  
+      <param name="output_frame_id" value="/arips_base"/>
+      <param name="range_min" value="0.45"/>
+      <remap from="image" to="$(arg camera)/$(arg depth)/image_raw"/>
+      <remap from="scan" to="$(arg scan_topic)"/>
+
+      <!-- Somehow topics here get prefixed by "$(arg camera)" when not inside an app namespace,
+           so in this case "$(arg scan_topic)" must provide an absolute topic name (issue #88).
+           Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7 -->
+      <remap from="$(arg camera)/image" to="$(arg camera)/$(arg depth)/image_raw"/>
+      <remap from="$(arg camera)/scan" to="$(arg scan_topic)"/>
+    </node>
   </group>
 </launch>
+

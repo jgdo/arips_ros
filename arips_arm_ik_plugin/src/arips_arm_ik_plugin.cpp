@@ -88,7 +88,7 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
                                         moveit_msgs::MoveItErrorCodes &error_code,
                                         const kinematics::KinematicsQueryOptions &options) const {
   ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
-  return false;
+  return searchPositionIK(ik_pose, ik_seed_state, timeout, std::vector<double>(), solution, solution_callback, error_code, options);
 }
 
 bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state,

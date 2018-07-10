@@ -45,6 +45,10 @@ std::pair<tf::Quaternion, double> correctOrientation(tf::Quaternion const& orig,
     return std::pair<tf::Quaternion, double>(corrected, tcpAngle);
 }
 
+float normAngle(float a) {
+    return std::remainder(a, 2* M_PI);
+}
+
 void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<double> linkLength, std::vector<double> &solution) {
 
     using v3 = tf::Vector3;
@@ -52,8 +56,12 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
 
     double j1 = std::atan2(posOrig.y(), posOrig.x());
 
+    ROS_INFO_STREAM("rotOrig: " << rotOrig.x() << ", " << rotOrig.y() << " " << rotOrig.z() << ", " << rotOrig.w());
+
     auto corrected = correctOrientation(rotOrig, j1);
     quat rot = corrected.first;
+    
+    ROS_INFO_STREAM("corrected: " << rot.x() << ", " << rot.y() << " " << rot.z() << ", " << rot.w());
 
     double j5 = corrected.second;
 
@@ -82,7 +90,7 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
     double offsetj2 = 0;
 
     if(std::abs(dist) < len2 + len3) {
-        j3 = M_PI - std::acos((len2*len2 + len3*len3 - dist*dist) / (2*len2*len3));
+        j3 = normAngle(M_PI - std::acos((len2*len2 + len3*len3 - dist*dist) / (2*len2*len3)));
         offsetj2 = std::acos((len2*len2 + dist*dist - len3*len3) / (2*len2*dist));
     }
 
@@ -102,13 +110,13 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
 
     double j4Base = std::atan2(toolOffsetPlaneY, toolOffsetPlaneX);
 
-    double j4 = j4Base - j4From;
+    double j4 = normAngle(j4Base - j4From);
 
 
 
     solution = {j1, j2, j3, j4, j5};
 
-    //ROS_INFO_STREAM("j1 = " << ", j2 = " << j2 << ", j3 = " << j3 << "j4 = " << j4);
+    ROS_INFO_STREAM("j1 = " << j1 << ", j2 = " << j2 << ", j3 = " << j3 << ", j4 = " << j4 << ", j5 = " << j5);
     //ROS_INFO_STREAM("");
 
 }

@@ -1,6 +1,6 @@
 local_costmap:
    global_frame: /odom
-   robot_base_frame: /base_link
+   robot_base_frame: /arips_base
    update_frequency: 15.0
    publish_frequency: 2.5
    static_map: false

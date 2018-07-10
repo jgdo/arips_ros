@@ -9,4 +9,10 @@ controller_list:
      - joint3
      - joint4
      - joint5
+ - name: arips_gripper_controller
+   action_ns: gripper_action
+   type: GripperCommand
+   default: true
+   joints: 
+     - gripper_joint
 

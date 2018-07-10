@@ -1,0 +1,7 @@
+<robot file="arips_arm.dae">
+  <Manipulator name="NAME_OF_THE_ROBOT_IN_URDF">
+    <base>base_link</base>
+    <effector>tool0</effector>
+  </Manipulator>
+</robot>
+

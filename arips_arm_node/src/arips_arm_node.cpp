@@ -6,6 +6,7 @@
 #include <sensor_msgs/JointState.h>
 
 #include <control_msgs/FollowJointTrajectoryAction.h>
+#include <control_msgs/GripperCommandAction.h>
 #include <actionlib/server/simple_action_server.h>
 
 template<typename>
@@ -35,8 +36,8 @@ public:
     }
 
     void updateBuffer(arips_arm_msgs::TrajectoryState const& state) {
-        if(state.numPointsInBuffer < state.bufferCapacity * 3 / 4) {
-            publishPoints(state.controlCycleCount);
+        if(state.numPointsInBuffer < state.bufferCapacity - MSG_BUF_SIZE - 1) {
+            publishPoints(state.controlCycleCount + state.numPointsInBuffer);
         }
     }
 
@@ -145,7 +146,7 @@ public:
         }
 
         void onMotionState(const arips_arm_msgs::MotionState &msg) override {
-            if(msg.mode == arips_arm_msgs::MotionState::M_BREAK) {
+            if(msg.mode == arips_arm_msgs::MotionState::M_BREAK || msg.mode == arips_arm_msgs::MotionState::M_DIRECT_CONTROLLER) {
                 // trajectory was from action
                 if(mArmNode->mJointTrajActionServer.isActive()) {
                     control_msgs::FollowJointTrajectoryResult res;
@@ -163,7 +164,8 @@ public:
         mStateIdle(this),
         mStateTrajWait(this),
         mStateTrajExec(this),
-        mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false)
+        mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
+        mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
         filter.configure();
         pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 1, false);
@@ -179,6 +181,11 @@ public:
         mJointTrajActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::trajectoryActionPreemptCB, this));
 
         mJointTrajActionServer.start();
+
+        mGripperActionServer.registerGoalCallback(boost::bind(&AripsArmNode::gripperActionGoalCB, this));
+        mGripperActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::gripperActionPreemptCB, this));
+
+        mGripperActionServer.start();
     }
 private:
     ros::NodeHandle nh;
@@ -195,10 +202,15 @@ private:
     industrial_trajectory_filters::UniformSampleFilter filter;
     arips_arm_msgs::MotionState mLastMotionState;
 
+    float mLastGripperSetpoint = 0.3;
+
     ros::Timer mTimer;
 
     actionlib::SimpleActionServer<control_msgs::FollowJointTrajectoryAction> mJointTrajActionServer;
     control_msgs::FollowJointTrajectoryGoalConstPtr mCurrentTrajGoal;
+
+    actionlib::SimpleActionServer<control_msgs::GripperCommandAction> mGripperActionServer;
+    control_msgs::GripperCommandGoalConstPtr mCurrentGripperGoal;
 
     void trajectoryCb(const trajectory_msgs::JointTrajectory& trajOrig) {
         trajectory_msgs::JointTrajectory trajSampled;
@@ -210,13 +222,47 @@ private:
                 mJointTrajActionServer.setAborted(res, res.error_string);
             }
 
+            if(mGripperActionServer.isActive()) {
+                control_msgs::GripperCommandResult res;
+                res.reached_goal = false;
+                mGripperActionServer.setAborted(res, ros::this_node::getName() + ": Aborted goal since started new trajectory over message cb.");
+            }
+
             startNewSampledTrajectory(trajSampled);
         }
     }
 
     void startNewSampledTrajectory(const trajectory_msgs::JointTrajectory& trajSampled) {
         pub.publish(trajSampled);
-        mTrajBuffHandler.setNewTrajectory(trajSampled, mLastMotionState.jointStates.at(NUM_JOINTS).position);
+        mTrajBuffHandler.setNewTrajectory(trajSampled, mLastGripperSetpoint);
+        arips_arm_msgs::MotionCommand cmd;
+        cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
+        mMotionCmdPub.publish(cmd);
+        switchState(mStateTrajWait);
+    }
+
+    void startNewGripperTrajectory(float target_pose) {
+        mLastGripperSetpoint = target_pose; // TODO: better architecture
+
+        trajectory_msgs::JointTrajectory trajSampled;
+        trajSampled.header.stamp = ros::Time::now();
+
+        trajSampled.points.resize(200); // TODO 2 sec
+
+        for(auto& point: trajSampled.points) {
+            point.positions.resize(mLastMotionState.jointStates.size());
+            point.velocities.resize(mLastMotionState.jointStates.size());
+            point.accelerations.resize(mLastMotionState.jointStates.size());
+
+            for(int i = 0; i < mLastMotionState.jointStates.size(); i++) {
+                point.positions.at(i) = mLastMotionState.jointStates.at(i).position;
+                point.velocities.at(i) = 0;
+                point.accelerations.at(i) = 0;
+            }
+        }
+
+        pub.publish(trajSampled);
+        mTrajBuffHandler.setNewTrajectory(trajSampled, target_pose);
         arips_arm_msgs::MotionCommand cmd;
         cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
         mMotionCmdPub.publish(cmd);
@@ -264,8 +310,10 @@ private:
 
         trajectory_msgs::JointTrajectory trajSampled;
         if(filter.update(mCurrentTrajGoal->trajectory, trajSampled)) {
+            ROS_INFO_STREAM("Starting new trajectory");
             startNewSampledTrajectory(trajSampled);
         } else {
+            ROS_INFO_STREAM("Trajectory resampling failed, aborting trajectory goal");
             control_msgs::FollowJointTrajectoryResult res;
             res.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_GOAL;
             res.error_string = ros::this_node::getName() + ": Aborted goal since could not resample the trajectory.";
@@ -275,8 +323,24 @@ private:
     }
 
     void trajectoryActionPreemptCB() {
+        ROS_INFO_STREAM("trajectoryActionPreemptCB().");
         cancelCurrentTrajectory();
         mJointTrajActionServer.setAborted();
+    }
+
+    void gripperActionGoalCB() {
+        ROS_INFO_STREAM("gripperActionGoalCB()");
+
+        mCurrentGripperGoal = mGripperActionServer.acceptNewGoal();
+
+        startNewGripperTrajectory(mCurrentGripperGoal->command.position);
+    }
+
+    void gripperActionPreemptCB() {
+        ROS_INFO_STREAM("gripperActionPreemptCB()");
+
+        cancelCurrentTrajectory();
+        mGripperActionServer.setAborted();
     }
 
     void cancelCurrentTrajectory() {

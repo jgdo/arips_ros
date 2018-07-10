@@ -1,0 +1,10 @@
+<launch>
+  <!--- rosserial and arm node -->
+  <include file="$(find arips_launch)/launch/arduino.launch" />
+
+  <!-- kinect -->
+  <include file="$(find arips_launch)/launch/kinect.launch" />
+  
+  <!-- required static transforms -->
+  <include file="$(find arips_launch)/launch/includes/frames.launch" />
+</launch>

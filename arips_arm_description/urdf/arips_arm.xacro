@@ -20,11 +20,11 @@
   <xacro:property name="link2_height" value="0.07" />
   <xacro:property name="link2_radius" value="0.025" />
   
-  <xacro:property name="link3_len" value="0.12" />
+  <xacro:property name="link3_len" value="0.14" />
   <xacro:property name="link3_thick" value="0.02" />
   <xacro:property name="link3_width" value="0.05" />
   
-  <xacro:property name="link4_len" value="0.15" />
+  <xacro:property name="link4_len" value="0.18" />
   <xacro:property name="link4_thick" value="0.02" />
   <xacro:property name="link4_width" value="0.04" />
   
@@ -115,7 +115,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="0 0 ${link1_height}"/>
     
-    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
+    <limit effort="1000.0" lower="${-pi*0.45}" upper="${pi*0.45}" velocity="1.0"/>
   </joint>
 
   <joint name="joint2" type="revolute">
@@ -125,7 +125,7 @@
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link2_height}"/>
     
-    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
+    <limit effort="1000.0" lower="-0.95" upper="2.1" velocity="1.0"/>
   </joint>
 
   <joint name="joint3" type="revolute">
@@ -135,7 +135,7 @@
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link3_len}"/>
     
-    <limit effort="1000.0" lower="${-pi*0.48}" upper="${pi*0.75}" velocity="0.5"/>
+    <limit effort="1000.0" lower="${-pi*0.48}" upper="3.0" velocity="1.0"/>
   </joint>
   
   <joint name="joint4" type="revolute">
@@ -145,7 +145,7 @@
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link4_len}"/>
     
-    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="1.0"/>
   </joint>
   
   <joint name="joint5" type="revolute">
@@ -155,7 +155,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="0 0 ${link5_len / 2}"/>
     
-    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="0.5"/>
+    <limit effort="1000.0" lower="${-pi/2}" upper="${pi/2}" velocity="1.0"/>
   </joint>
   
   <joint name="link6-tool0" type="fixed">
@@ -178,7 +178,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="-0.055 0.02 0"/>
     
-    <limit effort="1000.0" lower="0" upper="${gripper_open_angle}" velocity="0.5"/>
+    <limit effort="1000.0" lower="0" upper="${gripper_open_angle}" velocity="1.0"/>
   </joint>
   
   <joint name="gripper_joint_right" type="revolute">
@@ -190,7 +190,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="-0.055 -0.02 0"/>
     
-    <limit effort="1000.0" lower="${gripper_open_angle}" upper="0" velocity="0.5"/>
+    <limit effort="1000.0" lower="${gripper_open_angle}" upper="0" velocity="1.0"/>
   </joint>
     
     <link name="gripper_base">
