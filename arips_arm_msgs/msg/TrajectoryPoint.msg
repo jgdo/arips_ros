@@ -1,2 +1,3 @@
-JointGoal[6] goals
+JointGoal[5] goals
+uint32 timeFromStart_ms
 

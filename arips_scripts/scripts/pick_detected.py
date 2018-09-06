@@ -14,43 +14,93 @@ robot = None
 scene = None
 arm = None
 gripper = None
+
+def go(group):
+    for i in range(0, 3):
+        if group.go():
+            return True
+    return False
     
 def callback(point):
+    # point = point.point
     global arm
     global gripper
-    rospy.loginfo("picking at " + str(point))
+    #rospy.loginfo("picking at " + str(point))
+    
+    point.x += 0.005
+    point.y += -0.000
+    print "picking at " + str(point)
+    print "# open gripper"
     
     gripper.clear_pose_targets()
     gripper.set_joint_value_target([0.3])
-    gripper.plan()
-    gripper.go()
+    if(not go(gripper)):
+        return
+    
+    rospy.sleep(0.5)
+    
+    print "# approach"
 
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
     pose_target.position.x = point.x
     pose_target.position.y = point.y
-    pose_target.position.z = point.z + 0.07
+    pose_target.position.z = point.z + 0.04
     arm.set_pose_target(pose_target)
-    plan1 = arm.plan()
-    arm.go()
+    if(not go(arm)):
+        return
+    
+    rospy.sleep(3)
+    
+    print "pick"
     
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
     pose_target.position.x = point.x
     pose_target.position.y = point.y
-    pose_target.position.z = point.z
+    pose_target.position.z = point.z + 0.01
     arm.set_pose_target(pose_target)
-    plan1 = arm.plan()
-    arm.go()
+    if(not go(arm)):
+        return
+    
+    rospy.sleep(0.5)
+    
+    print "close gripper"
+    
+    gripper.clear_pose_targets()
+    gripper.set_joint_value_target([0.0])
+    gripper.go()
+    
+    rospy.sleep(1)
+    
+    print "go drop"
     
     pose_target = geometry_msgs.msg.Pose()
-    pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, -1, 0))
-    pose_target.position.x = 0.05
-    pose_target.position.y = 0
-    pose_target.position.z = 0.4
+    pose_target.orientation.w = 1.0
+    pose_target.position.x = 0.3
+    pose_target.position.y = 0.0
+    pose_target.position.z = 0.2
     arm.set_pose_target(pose_target)
-    plan1 = arm.plan()
-    arm.go()
+    if(not go(arm)):
+        return
+    
+    rospy.sleep(0.5)
+    
+    print "idle"
+    
+    gripper.clear_pose_targets()
+    gripper.set_joint_value_target([0.3])
+    if(not go(gripper)):
+        return
+    
+    rospy.sleep(0.5)
+    
+    print "go home"
+    
+    arm.clear_pose_targets()
+    arm.set_joint_value_target([0.0, -0.6, 0.1, 0, 0])
+    if(not go(arm)):
+        return
         
 def listener():
 
@@ -73,6 +123,7 @@ def listener():
     gripper = moveit_commander.MoveGroupCommander("gripper")
 
     rospy.Subscriber("/pick_pose", Point, callback)
+    # sub = rospy.Subscriber("/clicked_point", geometry_msgs.msg.PoseStamped, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

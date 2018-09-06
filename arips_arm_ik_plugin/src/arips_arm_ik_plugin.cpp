@@ -62,7 +62,7 @@ private:
 bool AripsArmIkPlugin::getPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state,
                                      std::vector<double> &solution, moveit_msgs::MoveItErrorCodes &error_code,
                                      const kinematics::KinematicsQueryOptions &options) const {
-  ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
+  // ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
   return false;
 }
 
@@ -70,7 +70,7 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
                                         double timeout, std::vector<double> &solution,
                                         moveit_msgs::MoveItErrorCodes &error_code,
                                         const kinematics::KinematicsQueryOptions &options) const {
-  ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
+  // ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
   return false;
 }
 
@@ -78,7 +78,7 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
                                         double timeout, const std::vector<double> &consistency_limits,
                                         std::vector<double> &solution, moveit_msgs::MoveItErrorCodes &error_code,
                                         const kinematics::KinematicsQueryOptions &options) const {
-  ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
+  // ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
   return false;
 }
 
@@ -87,7 +87,7 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
                                         const kinematics::KinematicsBase::IKCallbackFn &solution_callback,
                                         moveit_msgs::MoveItErrorCodes &error_code,
                                         const kinematics::KinematicsQueryOptions &options) const {
-  ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
+  //ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
   return searchPositionIK(ik_pose, ik_seed_state, timeout, std::vector<double>(), solution, solution_callback, error_code, options);
 }
 
@@ -98,7 +98,7 @@ bool AripsArmIkPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, cons
                                         moveit_msgs::MoveItErrorCodes &error_code,
                                         const kinematics::KinematicsQueryOptions &options) const {
 
-    ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
+    // ROS_INFO_STREAM_NAMED("arips_ik", __LINE__);
 
 
     using v3 = tf::Vector3;
@@ -152,7 +152,7 @@ bool AripsArmIkPlugin::initialize(const std::string &robot_description, const st
   node_handle.param(full_urdf_xml,xml_string,std::string());
   robot_model.initString(xml_string);
   
-  ROS_DEBUG_STREAM_NAMED("arips_ik","Reading joints and links from URDF");
+  // ROS_DEBUG_STREAM_NAMED("arips_ik","Reading joints and links from URDF");
 
     mLinkLength.reserve(6);
     mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint1")->parent_to_joint_origin_transform.position));

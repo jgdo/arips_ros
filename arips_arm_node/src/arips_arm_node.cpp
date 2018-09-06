@@ -1,181 +1,122 @@
 #include <arips_arm_node/uniform_sample_filter.h>
-#include <arips_arm_msgs/TrajectoryBufferCommand.h>
-#include <arips_arm_msgs/MotionState.h>
-#include <arips_arm_msgs/MotionCommand.h>
 
 #include <sensor_msgs/JointState.h>
+
+#include <std_msgs/Float32.h>
 
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/GripperCommandAction.h>
 #include <actionlib/server/simple_action_server.h>
 
-template<typename>
-struct array_size;
-
-template<typename T, size_t N>
-struct array_size<boost::array<T,N> > {
-static size_t constexpr size = N;
-};
+#include "SCServo.h"
 
 static const size_t NUM_JOINTS = 5;
 
-static_assert(array_size<arips_arm_msgs::MotionState::_jointStates_type>::size == NUM_JOINTS + 1,
-    "This node is designed for a 5dof + gripper robot");
-
-class TrajectoryBufferHandler {
+class RosSCSServo {
 public:
-    TrajectoryBufferHandler() {
-        mBufferPublisher = nh.advertise<arips_arm_msgs::TrajectoryBufferCommand>("traj_buffer_command", 1, false);
-    }
+    RosSCSServo(SCServo* servo, std::string const& ns):
+            mServo(servo)
+    {
+        ros::NodeHandle pnh("~" + ns);
+        ros::NodeHandle nh(ns);
 
-    void setNewTrajectory(trajectory_msgs::JointTrajectory const& traj, float targetGripperPosition) {
-        mCurrentTrajectory = traj;
-        mTargetGripperPosition = targetGripperPosition;
+        pnh.param("id", mID, -1);
 
-        publishPoints(0);
-    }
-
-    void updateBuffer(arips_arm_msgs::TrajectoryState const& state) {
-        if(state.numPointsInBuffer < state.bufferCapacity - MSG_BUF_SIZE - 1) {
-            publishPoints(state.controlCycleCount + state.numPointsInBuffer);
+        if(mID < 1 || mID > 254) {
+            throw std::range_error("RosSCSServo: servo ID must be in [1..254], is " + std::to_string(mID));
         }
+
+        if(!pnh.getParam("angles", mAngleDegTable) || !pnh.getParam("raws", mRawTable) || mAngleDegTable.size() != mRawTable.size() || mAngleDegTable.size() < 2) {
+            ROS_WARN_STREAM("Using default angle table for SCS servo '" << ns << "' (ID: " << mID << ").");
+
+            mAngleDegTable = { -120.0F, 120.0F};
+            mRawTable = {100, 1023-100};
+        }
+
+        setByteRegFromParam(pnh, P_CCW_DEAD, "ccw_dead");
+        setByteRegFromParam(pnh, P_CW_DEAD, "cw_dead");
+
+        mPosPub = nh.advertise<std_msgs::Float32>("pos_deg", 3);
+        mPosSub = nh.subscribe("setpoint_deg", 1, &RosSCSServo::onSetposReceived, this);
+    }
+
+    float updateState() {
+        // todo read servo
+        auto raw = mServo->ReadPos(mID);
+
+        float pos = rawToDegree(raw);
+        std_msgs::Float32 msg;
+        msg.data = pos;
+        mPosPub.publish(msg);
+        return pos;
+    }
+
+    void setPos_deg(float pos) {
+        mSetPos = pos;
+        mServo->WritePos(mID, degreeToRaw(mSetPos), 500);
     }
 
 private:
-    const size_t MSG_BUF_SIZE = arips_arm_msgs::TrajectoryBufferCommand::_traj_points_type::size();
+    SCServo* mServo = nullptr;
 
-    ros::NodeHandle nh;
-    ros::Publisher mBufferPublisher;
+    int mID = -1;
 
-    trajectory_msgs::JointTrajectory mCurrentTrajectory;
-    float mTargetGripperPosition = 0;
+    std::vector<float> mAngleDegTable; // must contain at least 2 entries
+    std::vector<int> mRawTable; // same size as mRawTable
 
-    void publishPoints(size_t startIndex) {
-        startIndex = std::min(startIndex, mCurrentTrajectory.points.size());
-        size_t size = std::min(mCurrentTrajectory.points.size()-startIndex, MSG_BUF_SIZE);
+    ros::Subscriber mPosSub;
+    ros::Publisher mPosPub;
 
-        arips_arm_msgs::TrajectoryBufferCommandPtr bufCmd = boost::make_shared<arips_arm_msgs::TrajectoryBufferCommand>();
-        bufCmd->start_index = startIndex;
+    float mSetPos = 0.0F;
 
-        if(startIndex == 0) {
-            bufCmd->size = mCurrentTrajectory.points.size();
-        } else {
-            bufCmd->size = size;
+    void onSetposReceived(const std_msgs::Float32& msg) {
+        setPos_deg(msg.data);
+    }
+
+    template <class Tin, class Tout>
+    static Tout convertAngle(Tin value, std::vector<Tin> const& sourceTable, std::vector<Tout> const& dstTable) {
+        size_t idx = 0;
+        for(idx = 0; idx < sourceTable.size()-2; idx++) {
+            if(value < sourceTable.at(idx+1))
+                break;
         }
 
-        if(bufCmd->size > 0) {
-            for (size_t i = 0; i < size; i++) {
-                for (size_t j = 0; j < NUM_JOINTS; j++) {
-                    bufCmd->traj_points.at(i).goals.at(j).position = mCurrentTrajectory.points.at(
-                            startIndex + i).positions.at(j);
-                    bufCmd->traj_points.at(i).goals.at(j).velocity = mCurrentTrajectory.points.at(
-                            startIndex + i).velocities.at(j);
-                    bufCmd->traj_points.at(i).goals.at(j).acceleration = mCurrentTrajectory.points.at(
-                            startIndex + i).accelerations.at(j);
-                }
+        float alpha = (float)(value - sourceTable.at(idx))/(float)(sourceTable.at(idx+1) - sourceTable.at(idx));
+        return dstTable.at(idx) * (1.0f - alpha) + dstTable.at(idx+1) * alpha;
+    };
 
-                // fill gripper
-                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).position = mTargetGripperPosition;
-                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).velocity = 0;
-                bufCmd->traj_points.at(i).goals.at(NUM_JOINTS).acceleration = 0;
-            }
-            mBufferPublisher.publish(bufCmd);
+    int degreeToRaw(float deg) const {
+        return convertAngle(deg, mAngleDegTable, mRawTable);
+    }
+
+    float rawToDegree(int raw) const {
+        return convertAngle(raw, mRawTable, mAngleDegTable);
+    }
+
+    void setByteRegFromParam(ros::NodeHandle& pnh, int reg, const std::string& name) {
+        int value;
+        if(pnh.getParam(name, value)) {
+            mServo->writeByte(mID, reg, value);
         }
     }
 };
 
 class AripsArmNode {
 public:
-    struct State {
-        State(AripsArmNode* armNode): mArmNode(armNode) {}
-        virtual ~State() {}
-
-        virtual void enterState() {}
-        virtual void onTick() = 0;
-        virtual void onMotionState(const arips_arm_msgs::MotionState& msg) = 0;
-
-    protected:
-        AripsArmNode* mArmNode;
-    };
-
-    // robot is stopped
-    struct StateIdle: public State {
-        using State::State;
-
-        virtual void enterState() override  {
-            ROS_INFO_STREAM("Entering IDLE state");
-        }
-
-        void onTick() override {
-
-        }
-
-        void onMotionState(const arips_arm_msgs::MotionState &msg) override {
-
-        }
-    };
-
-    // trajectory was requested, waiting for stop and traj. buffer is filled
-    struct StateTrajWait: public State {
-        using State::State;
-
-        virtual void enterState() override  {
-            ROS_INFO_STREAM("Entering TRAJ WAIT state");
-        }
-
-        void onTick() override {
-
-        }
-
-        void onMotionState(const arips_arm_msgs::MotionState &msg) override {
-            if(msg.mode == arips_arm_msgs::MotionState::M_TRAJECTORY) {
-                mArmNode->switchState(mArmNode->mStateTrajExec);
-            }
-        }
-    };
-
-    // trajectory is being executed
-    struct StateTrajExec: public State {
-        using State::State;
-
-        virtual void enterState() override  {
-            ROS_INFO_STREAM("Entering TRAJ EXEC state");
-        }
-
-        void onTick() override {
-        }
-
-        void onMotionState(const arips_arm_msgs::MotionState &msg) override {
-            if(msg.mode == arips_arm_msgs::MotionState::M_BREAK || msg.mode == arips_arm_msgs::MotionState::M_DIRECT_CONTROLLER) {
-                // trajectory was from action
-                if(mArmNode->mJointTrajActionServer.isActive()) {
-                    control_msgs::FollowJointTrajectoryResult res;
-                    res.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
-                    mArmNode->mJointTrajActionServer.setSucceeded(res);
-                }
-                mArmNode->switchState(mArmNode->mStateIdle);
-            } else {
-                mArmNode->mTrajBuffHandler.updateBuffer(msg.trajState);
-            }
-        }
-    };
-
     AripsArmNode():
-        mStateIdle(this),
-        mStateTrajWait(this),
-        mStateTrajExec(this),
         mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
         mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
-        filter.configure();
-        pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 1, false);
-        mMotionCmdPub = nh.advertise<arips_arm_msgs::MotionCommand>("motion_command", 1, false);
-        mJointStatePub = nh.advertise<sensor_msgs::JointState>("joint_states", 1, false);
-        mTrajectorySub = nh.subscribe("trajectory", 1, &AripsArmNode::trajectoryCb, this);
-        mMotionStateSub = nh.subscribe("motion_state", 1, &AripsArmNode::motionStateCb, this);
+        mServos.reserve(NUM_JOINTS);
+        for(int i = 0; i < NUM_JOINTS; i++) {
+            mServos.emplace_back(&mServoDevice, "servo_" + std::to_string(i));
+        }
 
-        mTimer = nh.createTimer(ros::Duration(0.3), &AripsArmNode::timerCb, this);
-        switchState(mStateIdle);
+        filter.configure();
+        pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 3, false);
+        mJointStatePub = nh.advertise<sensor_msgs::JointState>("joint_states", 3, false);
+
+        mTimer = nh.createTimer(ros::Duration(0.2), &AripsArmNode::timerCb, this);
 
         mJointTrajActionServer.registerGoalCallback(boost::bind(&AripsArmNode::trajectoryActionGoalCB, this));
         mJointTrajActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::trajectoryActionPreemptCB, this));
@@ -183,26 +124,20 @@ public:
         mJointTrajActionServer.start();
 
         mGripperActionServer.registerGoalCallback(boost::bind(&AripsArmNode::gripperActionGoalCB, this));
-        mGripperActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::gripperActionPreemptCB, this));
+        // mGripperActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::gripperActionPreemptCB, this));
 
         mGripperActionServer.start();
     }
 private:
     ros::NodeHandle nh;
-    StateIdle mStateIdle;
-    StateTrajWait mStateTrajWait;
-    StateTrajExec mStateTrajExec;
-    State* mCurrentState = nullptr;
 
-    TrajectoryBufferHandler mTrajBuffHandler;
-    ros::Subscriber mTrajectorySub, mMotionStateSub;
-    ros::Publisher pub;
-    ros::Publisher mMotionCmdPub;
-    ros::Publisher mJointStatePub;
+    SCServo mServoDevice;
+
+    std::vector<RosSCSServo> mServos;
+
+    ros::Publisher pub, mJointStatePub;
+
     industrial_trajectory_filters::UniformSampleFilter filter;
-    arips_arm_msgs::MotionState mLastMotionState;
-
-    float mLastGripperSetpoint = 0.3;
 
     ros::Timer mTimer;
 
@@ -210,99 +145,56 @@ private:
     control_msgs::FollowJointTrajectoryGoalConstPtr mCurrentTrajGoal;
 
     actionlib::SimpleActionServer<control_msgs::GripperCommandAction> mGripperActionServer;
-    control_msgs::GripperCommandGoalConstPtr mCurrentGripperGoal;
 
-    void trajectoryCb(const trajectory_msgs::JointTrajectory& trajOrig) {
-        trajectory_msgs::JointTrajectory trajSampled;
-        if(filter.update(trajOrig, trajSampled)) {
-            if(mJointTrajActionServer.isActive()) {
-                control_msgs::FollowJointTrajectoryResult res;
-                res.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_GOAL;
-                res.error_string = ros::this_node::getName() + ": Aborted goal since started new trajectory over message cb.";
-                mJointTrajActionServer.setAborted(res, res.error_string);
-            }
+    /**
+     * Next points index of mSampledTrajectory
+     * Inactive if negative, otherwise [0, traj size], if == traj size, this means the last trajectory point was send and trajectory will be finished at next cycle
+     */
+    int mNextTrajectoryExecutionIndex = -1;
 
-            if(mGripperActionServer.isActive()) {
-                control_msgs::GripperCommandResult res;
-                res.reached_goal = false;
-                mGripperActionServer.setAborted(res, ros::this_node::getName() + ": Aborted goal since started new trajectory over message cb.");
-            }
-
-            startNewSampledTrajectory(trajSampled);
-        }
-    }
+    trajectory_msgs::JointTrajectory mSampledTrajectory;
 
     void startNewSampledTrajectory(const trajectory_msgs::JointTrajectory& trajSampled) {
+        mSampledTrajectory = trajSampled;
+        mNextTrajectoryExecutionIndex = 0;
         pub.publish(trajSampled);
-        mTrajBuffHandler.setNewTrajectory(trajSampled, mLastGripperSetpoint);
-        arips_arm_msgs::MotionCommand cmd;
-        cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
-        mMotionCmdPub.publish(cmd);
-        switchState(mStateTrajWait);
     }
 
-    void startNewGripperTrajectory(float target_pose) {
-        mLastGripperSetpoint = target_pose; // TODO: better architecture
+    void timerCb(const ros::TimerEvent& event)
+    {
+        if(mJointTrajActionServer.isActive() && mNextTrajectoryExecutionIndex >= 0) {
+            if(mNextTrajectoryExecutionIndex < mSampledTrajectory.points.size()) {
+                auto const& point = mSampledTrajectory.points.at(mNextTrajectoryExecutionIndex);
+                for(size_t i = 0; i < point.positions.size(); i++) {
+                    mServos.at(i).setPos_deg(point.positions.at(i) *180.0F / M_PI);
+                }
 
-        trajectory_msgs::JointTrajectory trajSampled;
-        trajSampled.header.stamp = ros::Time::now();
-
-        trajSampled.points.resize(200); // TODO 2 sec
-
-        for(auto& point: trajSampled.points) {
-            point.positions.resize(mLastMotionState.jointStates.size());
-            point.velocities.resize(mLastMotionState.jointStates.size());
-            point.accelerations.resize(mLastMotionState.jointStates.size());
-
-            for(int i = 0; i < mLastMotionState.jointStates.size(); i++) {
-                point.positions.at(i) = mLastMotionState.jointStates.at(i).position;
-                point.velocities.at(i) = 0;
-                point.accelerations.at(i) = 0;
+            } else {
+                // trajectory finished
+                control_msgs::FollowJointTrajectoryResult res;
+                res.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
+                mJointTrajActionServer.setSucceeded(res);
+                mNextTrajectoryExecutionIndex = -1;
             }
         }
-
-        pub.publish(trajSampled);
-        mTrajBuffHandler.setNewTrajectory(trajSampled, target_pose);
-        arips_arm_msgs::MotionCommand cmd;
-        cmd.command = arips_arm_msgs::MotionCommand::CMD_START_TRAJECTORY;
-        mMotionCmdPub.publish(cmd);
-        switchState(mStateTrajWait);
-    }
-
-    void motionStateCb(const arips_arm_msgs::MotionState& msg) {
-        if(mCurrentState)
-            mCurrentState->onMotionState(msg);
-
-        mLastMotionState = msg;
 
         sensor_msgs::JointState jointState;
 
         jointState.header.stamp = ros::Time::now();
 
-        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper_joint" };
+        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5"};
 
-        jointState.position.resize(NUM_JOINTS+1);
-        jointState.velocity.resize(NUM_JOINTS+1);
-        jointState.effort.resize(NUM_JOINTS+1);
+        jointState.position.resize(NUM_JOINTS);
+        jointState.velocity.resize(NUM_JOINTS);
+        jointState.effort.resize(NUM_JOINTS);
 
-        for(size_t i = 0; i < NUM_JOINTS + 1; i++) {
-            jointState.position.at(i) = msg.jointStates.at(i).position;
-            jointState.velocity.at(i) = msg.jointStates.at(i).velocity;
-            jointState.effort.at(i) = msg.jointStates.at(i).torque;
+
+
+        for(size_t i = 0; i < NUM_JOINTS; i++) {
+            jointState.position.at(i) = mServos.at(i).updateState();
         }
 
         mJointStatePub.publish(jointState);
-    }
-
-    void timerCb(const ros::TimerEvent& event)
-    {
-        if(mCurrentState)
-            mCurrentState->onTick();
-    }
-
-    void switchState(State& state) {
-        mCurrentState = &state;
-        mCurrentState->enterState();
     }
 
     void trajectoryActionGoalCB() {
@@ -329,25 +221,25 @@ private:
     }
 
     void gripperActionGoalCB() {
-        ROS_INFO_STREAM("gripperActionGoalCB()");
+        auto gripperGoal = mGripperActionServer.acceptNewGoal();
 
-        mCurrentGripperGoal = mGripperActionServer.acceptNewGoal();
+        // startNewGripperTrajectory(mCurrentGripperGoal->command.position);
 
-        startNewGripperTrajectory(mCurrentGripperGoal->command.position);
-    }
+        std_msgs::Float32 msg;
+        msg.data = gripperGoal->command.position;
 
-    void gripperActionPreemptCB() {
-        ROS_INFO_STREAM("gripperActionPreemptCB()");
+        // TODO mRawGripperGoalPub.publish(msg);
 
-        cancelCurrentTrajectory();
-        mGripperActionServer.setAborted();
+        ROS_INFO_STREAM("gripperActionGoalCB() " << gripperGoal->command.position);
+
+        control_msgs::GripperCommandResult res;
+        res.position = gripperGoal->command.position;
+        res.reached_goal = true;
+        mGripperActionServer.setSucceeded(res);
     }
 
     void cancelCurrentTrajectory() {
-        arips_arm_msgs::MotionCommand cmd;
-        cmd.command = arips_arm_msgs::MotionCommand::CMD_RELEASE;
-        mMotionCmdPub.publish(cmd);
-        switchState(mStateIdle);
+        mNextTrajectoryExecutionIndex = -1;
     }
 };
 

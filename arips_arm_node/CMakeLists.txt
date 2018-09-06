@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Qt5Core REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -138,7 +138,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/arips_arm_node.cpp src/uniform_sample_filter.cpp)
+add_executable(${PROJECT_NAME} src/arips_arm_node.cpp src/uniform_sample_filter.cpp src/SCServo.cpp src/SCSProtocol.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,6 +155,8 @@ add_executable(${PROJECT_NAME} src/arips_arm_node.cpp src/uniform_sample_filter.
  target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
 )
+
+qt5_use_modules(${PROJECT_NAME} Core SerialPort)
 
 #############
 ## Install ##

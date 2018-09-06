@@ -30,60 +30,74 @@ gripper = moveit_commander.MoveGroupCommander("gripper")
 print "============"
 
 
-gripper.clear_pose_targets()
-gripper.set_joint_value_target([0.3])
-gripper.plan()
-gripper.go()
-
-rospy.sleep(1)
-
 print "============ Generating plan 1"
+
 pose_target = geometry_msgs.msg.Pose()
 pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
 pose_target.position.x = 0.3
-pose_target.position.y = 0.0
+pose_target.position.y = -0.02
 pose_target.position.z = -0.07
 arm.set_pose_target(pose_target)
 plan1 = arm.plan()
 arm.go()
 
-rospy.sleep(1)
+rospy.sleep(0.5)
 
 pose_target = geometry_msgs.msg.Pose()
 pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
 pose_target.position.x = 0.3
-pose_target.position.y = 0.0
+pose_target.position.y = 0.02
 pose_target.position.z = -0.07
 arm.set_pose_target(pose_target)
 plan1 = arm.plan()
 arm.go()
 
-rospy.sleep(1)
-
-gripper.clear_pose_targets()
-gripper.set_joint_value_target([0.0])
-gripper.plan()
-gripper.go()
-
-rospy.sleep(1)
+rospy.sleep(0.5)
 
 pose_target = geometry_msgs.msg.Pose()
-pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, -1.57, 0))
-pose_target.position.x = 0.2
-pose_target.position.y = 0.2
+pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
+pose_target.position.x = 0.26
+pose_target.position.y = 0.02
+pose_target.position.z = -0.07
+arm.set_pose_target(pose_target)
+plan1 = arm.plan()
+arm.go()
+
+rospy.sleep(0.5)
+
+pose_target = geometry_msgs.msg.Pose()
+pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
+pose_target.position.x = 0.26
+pose_target.position.y = -0.02
+pose_target.position.z = -0.07
+arm.set_pose_target(pose_target)
+plan1 = arm.plan()
+arm.go()
+
+rospy.sleep(0.5)
+
+pose_target = geometry_msgs.msg.Pose()
+pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
+pose_target.position.x = 0.3
+pose_target.position.y = -0.02
+pose_target.position.z = -0.07
+arm.set_pose_target(pose_target)
+plan1 = arm.plan()
+arm.go()
+
+rospy.sleep(0.5)
+
+pose_target = geometry_msgs.msg.Pose()
+pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 0, 0))
+pose_target.position.x = 0.3
+pose_target.position.y = 0.0
 pose_target.position.z = 0.3
 arm.set_pose_target(pose_target)
 plan1 = arm.plan()
 arm.go()
 
-rospy.sleep(1)
+rospy.sleep(0.5)
 
-gripper.clear_pose_targets()
-gripper.set_joint_value_target([0.3])
-gripper.plan()
-gripper.go()
-
-rospy.sleep(1)
 
 #arm.clear_pose_targets()
 #arm_variable_values = arm.get_current_joint_values()

@@ -56,12 +56,12 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
 
     double j1 = std::atan2(posOrig.y(), posOrig.x());
 
-    ROS_INFO_STREAM("rotOrig: " << rotOrig.x() << ", " << rotOrig.y() << " " << rotOrig.z() << ", " << rotOrig.w());
+    // ROS_INFO_STREAM("rotOrig: " << rotOrig.x() << ", " << rotOrig.y() << " " << rotOrig.z() << ", " << rotOrig.w());
 
     auto corrected = correctOrientation(rotOrig, j1);
     quat rot = corrected.first;
     
-    ROS_INFO_STREAM("corrected: " << rot.x() << ", " << rot.y() << " " << rot.z() << ", " << rot.w());
+    // ROS_INFO_STREAM("corrected: " << rot.x() << ", " << rot.y() << " " << rot.z() << ", " << rot.w());
 
     double j5 = corrected.second;
 
@@ -116,7 +116,7 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
 
     solution = {j1, j2, j3, j4, j5};
 
-    ROS_INFO_STREAM("j1 = " << j1 << ", j2 = " << j2 << ", j3 = " << j3 << ", j4 = " << j4 << ", j5 = " << j5);
+    // ROS_INFO_STREAM("j1 = " << j1 << ", j2 = " << j2 << ", j3 = " << j3 << ", j4 = " << j4 << ", j5 = " << j5);
     //ROS_INFO_STREAM("");
 
 }

@@ -1,4 +1,6 @@
 <launch>
+  <arg name="no_frames"  default="false"/>
+  
   <!--- rosserial and arm node -->
   <include file="$(find arips_launch)/launch/arduino.launch" />
 
@@ -6,5 +8,5 @@
   <include file="$(find arips_launch)/launch/kinect.launch" />
   
   <!-- required static transforms -->
-  <include file="$(find arips_launch)/launch/includes/frames.launch" />
+  <include unless="$(arg no_frames)" file="$(find arips_launch)/launch/includes/frames.launch" />
 </launch>

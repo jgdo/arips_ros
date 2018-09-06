@@ -14,6 +14,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <object_recognition_msgs/TableArray.h>
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
 #include <interactive_markers/interactive_marker_server.h>
@@ -31,6 +32,8 @@ ros::Publisher pick_pose_pub;
 
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
+
+std::shared_ptr<tf::TransformListener> listener;
 
 void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
 {
@@ -130,6 +133,18 @@ void makeButtonMarker( const tf::Vector3& position, std_msgs::Header const& head
 void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
+
+    tf::StampedTransform transform;
+    try{
+        listener->lookupTransform("base_link", cloud_msg->header.frame_id,
+                                 ros::Time(0), transform);
+    }
+    catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        return;
+    }
+
+
     // Convert the sensor_msgs/PointCloud2 data to pcl/PointCloud
     //pcl::PCLPointCloud2::Ptr cloud (new pcl::PCLPointCloud2);
    pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -196,7 +211,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
         visualization_msgs::Marker object;
-        object.header.frame_id = cloud_msg->header.frame_id;
+        object.header.frame_id = "base_link";
         object.header.stamp = ros::Time::now();
         object.ns = "clustered_objects";
         object.id = 0;
@@ -216,18 +231,22 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
              // ROS_INFO_STREAM("Found cluster " << j << " containing " << it->indices.size() << " points: " << center.x << " " << center.y << " " << center.z);
 
 
-            geometry_msgs::Point p;
-            p.x = center.x;
-            p.y = center.y;
-            p.z = center.z;
-            object.points.push_back(p);
+            tf::Vector3 tfc(center.x, center.y, center.z);
+            tf::Vector3 centerBase = transform(tfc);
 
-            std_msgs::ColorRGBA color;
-            color.r = 0.0f;
-            color.g = 1.0f;
-            color.b = 0.0f;
-            color.a = 1.0;
-            object.colors.push_back(color);
+            if(centerBase.x() < 1) {
+
+                geometry_msgs::Point p;
+                tf::pointTFToMsg(centerBase, p);
+                object.points.push_back(p);
+
+                std_msgs::ColorRGBA color;
+                color.r = 0.0f;
+                color.g = 1.0f;
+                color.b = 0.0f;
+                color.a = 1.0;
+                object.colors.push_back(color);
+            }
 
             /*
             pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
@@ -240,9 +259,9 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             j++;
         }
 
-        object.scale.x = 0.1;
-        object.scale.y = 0.1;
-        object.scale.z = 0.1;
+        object.scale.x = 0.005;
+        object.scale.y = 0.005;
+        object.scale.z = 0.005;
 
 
         InteractiveMarker int_marker;
@@ -327,6 +346,8 @@ main (int argc, char** argv)
   // Initialize ROS
   ros::init (argc, argv, "my_pcl_tutorial");
   ros::NodeHandle nh;
+
+    listener = std::make_shared<tf::TransformListener>();
 
   // Create a ROS publisher for the output point cloud
   pub = nh.advertise<pcl_msgs::ModelCoefficients> ("coefficients", 1);

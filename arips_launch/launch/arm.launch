@@ -1,0 +1,5 @@
+<launch>
+    <node name="arips_arm_node" pkg="arips_arm_node" type="arips_arm_node" output="screen" clear_params="true" >
+        <rosparam file="$(find arips_launch)/config/scs_servo_params.yaml" command="load" ns="" />
+    </node>
+</launch>
