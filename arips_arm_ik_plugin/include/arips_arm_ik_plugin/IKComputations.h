@@ -75,7 +75,7 @@ void computeIK(tf::Vector3 const& posOrig, tf::Quaternion rotOrig, std::vector<d
 
     // ROS_INFO_STREAM("pos = " << pos.x() << " " << pos.y() << " " << pos.z());
 
-    v3 posJ2Diff = pos - v3(0, 0, linkLength.at(0) + linkLength.at(1));
+    v3 posJ2Diff = pos - v3(0, 0, linkLength.at(0) + linkLength.at(1)) - v3(cos(j1) * 0.02, sin(j1)*0.02, 0);
     // ROS_INFO_STREAM("posJ2Diff = " << posJ2Diff.x() << " " << posJ2Diff.y() << " " << posJ2Diff.z());
 
 

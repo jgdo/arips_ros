@@ -3,16 +3,29 @@ servo_0:
     angles: [-120, -100,    -70,    -60,    0,    20,   40,     60,     110, 120]
     raws:   [142,  204,     300,    331,    519,  581,  642,    702,    858, 889]
     
+    angle_offset: 0
+    angle_factor: -1
+    
     ccw_dead: 0
     cw_dead: 0
+    
+    kp: 20
+    ki: 15
+    isum_max: 50
     
 servo_1:
     id: 2
     angles: [-120, -100, -90, -60, -30, -20, -10, 0,    30,  50,  60 , 90, 120]
     raws:   [138,  200, 230, 314,  401, 432, 462,  492, 587, 641, 670, 756, 844]
     
+    angle_offset: -8.21321
+    
     ccw_dead: 0
     cw_dead: 0
+    
+    kp: 20
+    ki: 15
+    isum_max: 50
     
 servo_2:
     id: 3
@@ -20,8 +33,14 @@ servo_2:
     angles: [-120, -110, -100, -80, -60, -40, -20, -10,  0,  10,  20, 30,  40,  60,  80,   90, 100, 120]
     raws:   [184, 211,   237,  288, 340, 394, 454, 492, 529, 561, 592, 623, 651, 709, 763, 790, 819, 883]
     
+    angle_offset: -38.78679 # 45deg - angle_offset[servo_1], -2 addition calibration error
+    
     ccw_dead: 0
     cw_dead: 0
+    
+    kp: 20
+    ki: 15
+    isum_max: 50
     
 servo_3:
     id: 4
@@ -29,15 +48,36 @@ servo_3:
     angles: [-120, -110,  -100, -80, -60,  -40, -30, -20,  0,    10,  20,   40,  60, 70,   80, 100, 120]
     raws:   [140, 170,     199, 256, 316,  375, 405,  432, 501, 536,  566, 624, 685, 714,  742, 796, 855]
     
+    angle_offset: 0
+    
     ccw_dead: 1
     cw_dead: 1
+    
+    kp: 20
+    ki: 15
+    isum_max: 50
     
 servo_4:
     id: 5
     
     angles: [-120,  0,  120]
     raws:   [175, 535, 888 ]
+    
+    angle_offset: 0
+    angle_factor: -1
 
     ccw_dead: 1
     cw_dead: 1
     
+servo_5:
+    id: 6
+    
+    angles: [-0.05,  -0.03,  -0.020]
+    raws:   [250, 635, 800 ]
+    
+    
+#  angle_offset: 0
+
+# ccw_dead: 1
+# cw_dead: 1
+

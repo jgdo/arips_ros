@@ -34,3 +34,8 @@
 # CLion
 cmake-build-debug/
 .idea/
+
+# obsolete
+launch_arch/
+tiny_reconfigure/
+

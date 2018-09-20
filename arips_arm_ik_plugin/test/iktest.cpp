@@ -119,28 +119,29 @@ INSTANTIATE_TEST_CASE_P(IKTestInstance,
                         IKTest,
                         ::testing::Values(
                                 // up
-                                IKTestParams {v3(0, 0, len0 + len1 + len2+len3+len4+len5), quat(v3(0,1,0), -M_PI_2), {0,0,0,0,0} },
-                                // up, tip to front
-                                IKTestParams {v3(len4+len5, 0, len0 + len1 + len2+len3), quat(v3(0,1,0), 0), {0,0,0,M_PI_2,0}},
-                                // up, tip and l4 to front
-                                IKTestParams{v3(len3+len4+len5, 0, len0 + len1 + len2), quat(v3(0,1,0), 0), {0,0,M_PI_2,0, 0}},
-                                // forward
-                                IKTestParams{v3(len2+len3+len4+len5, 0, len0 + len1), quat(v3(0,1,0), 0), {0,M_PI_2, 0,0, 0}},
-                                // up rotated
-                                // TODO j5 rotation IKTestParams {v3(0, 0, len0 + len1 + len2+len3+len4+len5), quat(v3(0,0,1), -0.3) * quat(v3(0,1,0), -M_PI_2), {-0.3,0,0,0,0} }
-                                // tip front up
-                                //  |_
-                                //    |
-                                //    |
-                                IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}},
-                                // tip front up, skewed, requires rot correction
-                                //  |_               /
-                                //    |  fron side,  | from front
-                                //    |              |
-                                IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(1,0,0), -0.3)*quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}},
-                                //  IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(1,0,0), -1.8)*quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}}
-                                // up, tip to left
-                                IKTestParams {v3(0, len4+len5, len0 + len1 + len2+len3), quat(v3(0,0,1), M_PI_2), {M_PI_2,0,0,M_PI_2,0}}
+//                                IKTestParams {v3(0, 0, len0 + len1 + len2+len3+len4+len5), quat(v3(0,1,0), -M_PI_2), {0,0,0,0,0} },
+//                                // up, tip to front
+//                                IKTestParams {v3(len4+len5, 0, len0 + len1 + len2+len3), quat(v3(0,1,0), 0), {0,0,0,M_PI_2,0}},
+//                                // up, tip and l4 to front
+//                                IKTestParams{v3(len3+len4+len5, 0, len0 + len1 + len2), quat(v3(0,1,0), 0), {0,0,M_PI_2,0, 0}},
+//                                // forward
+//                                IKTestParams{v3(len2+len3+len4+len5, 0, len0 + len1), quat(v3(0,1,0), 0), {0,M_PI_2, 0,0, 0}},
+//                                // up rotated
+//                                // TODO j5 rotation IKTestParams {v3(0, 0, len0 + len1 + len2+len3+len4+len5), quat(v3(0,0,1), -0.3) * quat(v3(0,1,0), -M_PI_2), {-0.3,0,0,0,0} }
+//                                // tip front up
+//                                //  |_
+//                                //    |
+//                                //    |
+//                                IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}},
+//                                // tip front up, skewed, requires rot correction
+//                                //  |_               /
+//                                //    |  fron side,  | from front
+//                                //    |              |
+//                                IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(1,0,0), -0.3)*quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}},
+//                                //  IKTestParams {v3(len3, 0, len0 + len1 + len2 + len4 + len5), quat(v3(1,0,0), -1.8)*quat(v3(0,1,0), -M_PI_2), {0,0,M_PI_2,-M_PI_2,0}}
+//                                // up, tip to left
+//                                IKTestParams {v3(0, len4+len5, len0 + len1 + len2+len3), quat(v3(0,0,1), M_PI_2), {M_PI_2,0,0,M_PI_2,0}},
+                                IKTestParams {v3(0.223863182215, 0.05796219564, 0.1625287302), quat(0.01663151, 0.51452351175, 0.060132427, 0.8552035), {M_PI_2,0,0,M_PI_2,0}}
                         ));
 
 

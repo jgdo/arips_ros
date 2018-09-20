@@ -33,8 +33,16 @@ public:
             mRawTable = {100, 1023-100};
         }
 
+        pnh.param("angle_offset", mAngleOffset_deg, 0.0F);
+
+        pnh.param("angle_factor", mAngleFactor, 1.0F);
+
         setByteRegFromParam(pnh, P_CCW_DEAD, "ccw_dead");
         setByteRegFromParam(pnh, P_CW_DEAD, "cw_dead");
+
+        setByteRegFromParam(pnh, P_COMPLIANCE_P, "kp");
+        setByteRegFromParam(pnh, P_COMPLIANCE_I, "ki");
+        setByteRegFromParam(pnh, P_INTEGRAL_LIMIT_L, "isum_max");
 
         mPosPub = nh.advertise<std_msgs::Float32>("pos_deg", 3);
         mPosSub = nh.subscribe("setpoint_deg", 1, &RosSCSServo::onSetposReceived, this);
@@ -67,7 +75,11 @@ private:
     ros::Subscriber mPosSub;
     ros::Publisher mPosPub;
 
+    float mAngleOffset_deg = 0.0F;
+    float mAngleFactor = 1.0F;
+
     float mSetPos = 0.0F;
+
 
     void onSetposReceived(const std_msgs::Float32& msg) {
         setPos_deg(msg.data);
@@ -86,11 +98,11 @@ private:
     };
 
     int degreeToRaw(float deg) const {
-        return convertAngle(deg, mAngleDegTable, mRawTable);
+        return convertAngle((deg + mAngleOffset_deg) * mAngleFactor, mAngleDegTable, mRawTable);
     }
 
     float rawToDegree(int raw) const {
-        return convertAngle(raw, mRawTable, mAngleDegTable);
+        return mAngleFactor * convertAngle(raw, mRawTable, mAngleDegTable) - mAngleOffset_deg;
     }
 
     void setByteRegFromParam(ros::NodeHandle& pnh, int reg, const std::string& name) {
@@ -107,8 +119,8 @@ public:
         mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
         mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
-        mServos.reserve(NUM_JOINTS);
-        for(int i = 0; i < NUM_JOINTS; i++) {
+        mServos.reserve(NUM_JOINTS+1);
+        for(int i = 0; i < NUM_JOINTS+1; i++) {
             mServos.emplace_back(&mServoDevice, "servo_" + std::to_string(i));
         }
 
@@ -116,7 +128,7 @@ public:
         pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 3, false);
         mJointStatePub = nh.advertise<sensor_msgs::JointState>("joint_states", 3, false);
 
-        mTimer = nh.createTimer(ros::Duration(0.2), &AripsArmNode::timerCb, this);
+        mTimer = nh.createTimer(ros::Duration(0.05), &AripsArmNode::timerCb, this);
 
         mJointTrajActionServer.registerGoalCallback(boost::bind(&AripsArmNode::trajectoryActionGoalCB, this));
         mJointTrajActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::trajectoryActionPreemptCB, this));
@@ -164,12 +176,15 @@ private:
     {
         if(mJointTrajActionServer.isActive() && mNextTrajectoryExecutionIndex >= 0) {
             if(mNextTrajectoryExecutionIndex < mSampledTrajectory.points.size()) {
+                ROS_INFO_STREAM("Sending trajectory point " << mNextTrajectoryExecutionIndex);
                 auto const& point = mSampledTrajectory.points.at(mNextTrajectoryExecutionIndex);
                 for(size_t i = 0; i < point.positions.size(); i++) {
                     mServos.at(i).setPos_deg(point.positions.at(i) *180.0F / M_PI);
                 }
+                mNextTrajectoryExecutionIndex++;
 
             } else {
+                ROS_INFO_STREAM("Sending trajectory finished");
                 // trajectory finished
                 control_msgs::FollowJointTrajectoryResult res;
                 res.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
@@ -182,17 +197,18 @@ private:
 
         jointState.header.stamp = ros::Time::now();
 
-        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5"};
+        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper_joint"};
 
-        jointState.position.resize(NUM_JOINTS);
-        jointState.velocity.resize(NUM_JOINTS);
-        jointState.effort.resize(NUM_JOINTS);
-
+        jointState.position.resize(NUM_JOINTS + 1);
+        jointState.velocity.resize(NUM_JOINTS + 1);
+        jointState.effort.resize(NUM_JOINTS + 1);
 
 
         for(size_t i = 0; i < NUM_JOINTS; i++) {
-            jointState.position.at(i) = mServos.at(i).updateState();
+            jointState.position.at(i) = mServos.at(i).updateState() * M_PI / 180.0F;
         }
+
+        jointState.position.at(NUM_JOINTS) = -mServos.at(NUM_JOINTS).updateState();
 
         mJointStatePub.publish(jointState);
     }
@@ -225,10 +241,7 @@ private:
 
         // startNewGripperTrajectory(mCurrentGripperGoal->command.position);
 
-        std_msgs::Float32 msg;
-        msg.data = gripperGoal->command.position;
-
-        // TODO mRawGripperGoalPub.publish(msg);
+        mServos.at(NUM_JOINTS).setPos_deg(-gripperGoal->command.position);
 
         ROS_INFO_STREAM("gripperActionGoalCB() " << gripperGoal->command.position);
 

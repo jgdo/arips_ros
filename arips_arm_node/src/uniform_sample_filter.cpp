@@ -35,7 +35,7 @@
 
 using namespace industrial_trajectory_filters;
 
-const double DEFAULT_SAMPLE_DURATION = 0.2; //seconds
+const double DEFAULT_SAMPLE_DURATION = 0.05; //seconds
 
   UniformSampleFilter::UniformSampleFilter()
   {

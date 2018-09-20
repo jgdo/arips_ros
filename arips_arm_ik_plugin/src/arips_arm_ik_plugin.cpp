@@ -156,9 +156,12 @@ bool AripsArmIkPlugin::initialize(const std::string &robot_description, const st
 
     mLinkLength.reserve(6);
     mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint1")->parent_to_joint_origin_transform.position));
-    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint2")->parent_to_joint_origin_transform.position));
-    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint3")->parent_to_joint_origin_transform.position));
-    mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint4")->parent_to_joint_origin_transform.position));
+    //mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint2")->parent_to_joint_origin_transform.position));
+    //mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint3")->parent_to_joint_origin_transform.position));
+    //mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint4")->parent_to_joint_origin_transform.position));
+    mLinkLength.push_back(0.07);
+    mLinkLength.push_back(0.14);
+    mLinkLength.push_back(0.15);
     mLinkLength.push_back(getLinkLength(robot_model.joints_.at("joint5")->parent_to_joint_origin_transform.position));
     mLinkLength.push_back(getLinkLength(robot_model.joints_.at("link6-tool0")->parent_to_joint_origin_transform.position));
 
