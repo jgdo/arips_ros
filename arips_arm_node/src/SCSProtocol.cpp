@@ -1,21 +1,24 @@
 /*
  * SCSProtocol.cpp
- * SCS´®ÐÐ¶æ»úÐ­Òé³ÌÐò
- * ÈÕÆÚ: 2016.8.25
- * ×÷Õß: Ì·ÐÛÀÖ
+ * SCSï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ï¿½: 2016.8.25
+ * ï¿½ï¿½ï¿½ï¿½: Ì·ï¿½ï¿½ï¿½ï¿½
  */
 
 #include <stddef.h>
 #include "SCSProtocol.h"
 
+#include <string>
+#include <stdexcept>
+
 SCSProtocol::SCSProtocol()
 {
-	Level = 1;//³ý¹ã²¥Ö¸ÁîËùÓÐÖ¸Áî·µ»ØÓ¦´ð
-	End = 1;//¶æ»ú´¦ÀíÆ÷Óë¿ØÖÆ°å´¦ÀíÆ÷¶Ë½á¹¹²»Ò»ÖÂ
+	Level = 1;//ï¿½ï¿½ï¿½ã²¥Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½î·µï¿½ï¿½Ó¦ï¿½ï¿½
+	End = 1;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ°å´¦ï¿½ï¿½ï¿½ï¿½ï¿½Ë½á¹¹ï¿½ï¿½Ò»ï¿½ï¿½
 }
 
-//1¸ö16Î»Êý²ð·ÖÎª2¸ö8Î»Êý
-//DataLÎªµÍÎ»£¬DataHÎª¸ßÎ»
+//1ï¿½ï¿½16Î»ï¿½ï¿½ï¿½ï¿½ï¿½Îª2ï¿½ï¿½8Î»ï¿½ï¿½
+//DataLÎªï¿½ï¿½Î»ï¿½ï¿½DataHÎªï¿½ï¿½Î»
 void SCSProtocol::Host2SCS(u8 *DataL, u8* DataH, int Data)
 {
 	if(End){
@@ -27,8 +30,8 @@ void SCSProtocol::Host2SCS(u8 *DataL, u8* DataH, int Data)
 	}
 }
 
-//2¸ö8Î»Êý×éºÏÎª1¸ö16Î»Êý
-//DataLÎªµÍÎ»£¬DataHÎª¸ßÎ»
+//2ï¿½ï¿½8Î»ï¿½ï¿½ï¿½ï¿½ï¿½Îª1ï¿½ï¿½16Î»ï¿½ï¿½
+//DataLÎªï¿½ï¿½Î»ï¿½ï¿½DataHÎªï¿½ï¿½Î»
 int SCSProtocol::SCS2Host(u8 DataL, u8 DataH)
 {
 	int Data;
@@ -74,8 +77,8 @@ void SCSProtocol::writeBuf(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen, u8 Fun)
 	writeSCS(~CheckSum);
 }
 
-//ÆÕÍ¨Ð´Ö¸Áî
-//¶æ»úID£¬MemAddrÄÚ´æ±íµØÖ·£¬Ð´ÈëÊý¾Ý£¬Ð´Èë³¤¶È
+//ï¿½ï¿½Í¨Ð´Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½IDï¿½ï¿½MemAddrï¿½Ú´ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ð´ï¿½ë³¤ï¿½ï¿½
 int SCSProtocol::genWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen)
 {
 	flushSCS();
@@ -83,8 +86,8 @@ int SCSProtocol::genWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen)
 	return Ack(ID);
 }
 
-//Òì²½Ð´Ö¸Áî
-//¶æ»úID£¬MemAddrÄÚ´æ±íµØÖ·£¬Ð´ÈëÊý¾Ý£¬Ð´Èë³¤¶È
+//ï¿½ì²½Ð´Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½IDï¿½ï¿½MemAddrï¿½Ú´ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ð´ï¿½ë³¤ï¿½ï¿½
 int SCSProtocol::regWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen)
 {
 	flushSCS();
@@ -92,8 +95,8 @@ int SCSProtocol::regWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen)
 	return Ack(ID);
 }
 
-//Í¬²½Ð´Ö¸Áî
-//¶æ»úID[]Êý×é£¬IDNÊý×é³¤¶È£¬MemAddrÄÚ´æ±íµØÖ·£¬Ð´ÈëÊý¾Ý£¬Ð´Èë³¤¶È
+//Í¬ï¿½ï¿½Ð´Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½ID[]ï¿½ï¿½ï¿½é£¬IDNï¿½ï¿½ï¿½é³¤ï¿½È£ï¿½MemAddrï¿½Ú´ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ð´ï¿½ë³¤ï¿½ï¿½
 void SCSProtocol::snycWrite(u8 ID[], u8 IDN, u8 MemAddr, u8 *nDat, u8 nLen)
 {
 	u8 mesLen = ((nLen+1)*IDN+4);
@@ -153,15 +156,15 @@ int SCSProtocol::writePos(u8 ID, u16 Position, u16 Time, u16 Speed, u8 Fun)
 	return Ack(ID);
 }
 
-//Ð´Î»ÖÃÖ¸Áî
-//¶æ»úID£¬PositionÎ»ÖÃ£¬Ö´ÐÐÊ±¼äTime£¬Ö´ÐÐËÙ¶ÈSpeed
+//Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½IDï¿½ï¿½PositionÎ»ï¿½Ã£ï¿½Ö´ï¿½ï¿½Ê±ï¿½ï¿½Timeï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ù¶ï¿½Speed
 int SCSProtocol::WritePos(u8 ID, u16 Position, u16 Time, u16 Speed)
 {
 	return writePos(ID, Position, Time, Speed, INST_WRITE);
 }
 
-//Òì²½Ð´Î»ÖÃÖ¸Áî
-//¶æ»úID£¬PositionÎ»ÖÃ£¬Ö´ÐÐÊ±¼äTime£¬Ö´ÐÐËÙ¶ÈSpeed
+//ï¿½ì²½Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½IDï¿½ï¿½PositionÎ»ï¿½Ã£ï¿½Ö´ï¿½ï¿½Ê±ï¿½ï¿½Timeï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ù¶ï¿½Speed
 int SCSProtocol::RegWritePos(u8 ID, u16 Position, u16 Time, u16 Speed)
 {
 	return writePos(ID, Position, Time, Speed, INST_REG_WRITE);
@@ -172,8 +175,8 @@ void SCSProtocol::RegWriteAction()
 	writeBuf(0xfe, 0, NULL, 0, INST_ACTION);
 }
 
-//Ð´Î»ÖÃÖ¸Áî
-//¶æ»úID[]Êý×é£¬IDNÊý×é³¤¶È£¬PositionÎ»ÖÃ£¬Ö´ÐÐÊ±¼äTime£¬Ö´ÐÐËÙ¶ÈSpeed
+//Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½ID[]ï¿½ï¿½ï¿½é£¬IDNï¿½ï¿½ï¿½é³¤ï¿½È£ï¿½PositionÎ»ï¿½Ã£ï¿½Ö´ï¿½ï¿½Ê±ï¿½ï¿½Timeï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ù¶ï¿½Speed
 void SCSProtocol::SyncWritePos(u8 ID[], u8 IDN, u16 Position, u16 Time, u16 Speed)
 {
 	u8 buf[6];
@@ -183,55 +186,69 @@ void SCSProtocol::SyncWritePos(u8 ID[], u8 IDN, u16 Position, u16 Time, u16 Spee
 	snycWrite(ID, IDN, P_GOAL_POSITION_L, buf, 6);
 }
 
-//¶ÁÖ¸Áî
-//¶æ»úID£¬MemAddrÄÚ´æ±íµØÖ·£¬·µ»ØÊý¾ÝnData£¬Êý¾Ý³¤¶ÈnLen
-int SCSProtocol::Read(u8 ID, u8 MemAddr, u8 *nData, u8 nLen)
+//ï¿½ï¿½Ö¸ï¿½ï¿½
+//ï¿½ï¿½ï¿½IDï¿½ï¿½MemAddrï¿½Ú´ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nDataï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½nLen
+void SCSProtocol::Read(u8 ID, u8 MemAddr, u8 *nData, u8 nLen)
 {
 	flushSCS();
 	writeBuf(ID, MemAddr, &nLen, 1, INST_READ);
+
 	u8 bBuf[5];
-	if(readSCS(bBuf, 5)!=5){
-		return 0;
-	}
-	int Size = readSCS(nData, nLen);
-	if(readSCS(bBuf, 1)){
-		return Size;
-	}
-	return 0;
+    u8 checkSum;
+	readSCS(bBuf, 5);
+	readSCS(nData, nLen);
+	readSCS(&checkSum, 1);
+
+    if(bBuf[0] != 0xff || bBuf[1] != 0xff) {
+        throw std::runtime_error("Error reading servo " + std::to_string(ID) + ": received message header not 0xff 0xff.");
+    }
+
+    if(bBuf[2] != ID) {
+        throw std::runtime_error("Error reading servo " + std::to_string(ID) + ": received servo ID does not match.");
+    }
+
+    if(bBuf[3] != nLen + 2) {
+        throw std::runtime_error("Error reading servo " + std::to_string(ID) + ": received length does not match.");
+    }
+
+    // todo: check errror byte
+
+    u8 expectedChecksum = bBuf[2] + bBuf[3] + bBuf[4];
+    for(auto i = 0; i < nLen; i++) {
+        expectedChecksum += nData[i];
+    }
+	expectedChecksum = ~expectedChecksum;
+    if(checkSum != expectedChecksum) {
+        throw std::runtime_error("Error reading servo " + std::to_string(ID) + ": received checksum " + std::to_string(checkSum)
+								 + " does not match expected checksum " + std::to_string(expectedChecksum));
+    }
 }
 
-//¶Á1×Ö½Ú£¬³¬Ê±·µ»Ø-1
+//ï¿½ï¿½1ï¿½Ö½Ú£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::readByte(u8 ID, u8 MemAddr)
 {
 	u8 bDat;
-	int Size = Read(ID, MemAddr, &bDat, 1);
-	if(Size!=1){
-		return -1;
-	}else{
-		return bDat;
-	}
+	Read(ID, MemAddr, &bDat, 1);
+	return bDat;
 }
 
-//¶Á2×Ö½Ú£¬³¬Ê±·µ»Ø-1
+//ï¿½ï¿½2ï¿½Ö½Ú£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::readWord(u8 ID, u8 MemAddr)
 {	
 	u8 nDat[2];
-	int Size;
 	u16 wDat;
-	Size = Read(ID, MemAddr, nDat, 2);
-	if(Size!=2)
-		return -1;
+	Read(ID, MemAddr, nDat, 2);
 	wDat = SCS2Host(nDat[0], nDat[1]);
 	return wDat;
 }
 
-//¶ÁÎ»ÖÃ£¬³¬Ê±·µ»Ø-1
+//ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::ReadPos(u8 ID)
 {
 	return readWord(ID, P_PRESENT_POSITION_L);
 }
 
-//¶àÈ¦¿ØÖÆÖ¸Áî
+//ï¿½ï¿½È¦ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 int SCSProtocol::WriteSpe(u8 ID, s16 Speed)
 {
 	if(Speed<0){
@@ -241,30 +258,26 @@ int SCSProtocol::WriteSpe(u8 ID, s16 Speed)
 	return writeWord(ID, P_GOAL_TIME_L, Speed);
 }
 
-//¶ÁµçÑ¹£¬³¬Ê±·µ»Ø-1
+//ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::ReadVoltage(u8 ID)
 {	
 	return readByte(ID, P_PRESENT_VOLTAGE);
 }
 
-//¶ÁÎÂ¶È£¬³¬Ê±·µ»Ø-1
+//ï¿½ï¿½ï¿½Â¶È£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::ReadTemper(u8 ID)
 {	
 	return readByte(ID, P_PRESENT_TEMPERATURE);
 }
 
-//PingÖ¸Áî£¬·µ»Ø¶æ»úID£¬³¬Ê±·µ»Ø-1
+//PingÖ¸ï¿½î£¬ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½IDï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½-1
 int SCSProtocol::Ping(u8 ID)
 {
 	flushSCS();
 	u8 bBuf[6];
 	writeBuf(ID, 0, NULL, 0, INST_PING);
-	int Size = readSCS(bBuf, 6);
-	if(Size==6){
-		return bBuf[2];
-	}else{
-		return -1;
-	}
+	readSCS(bBuf, 6);
+    return bBuf[2];
 }
 
 int SCSProtocol::wheelMode(u8 ID)
@@ -285,7 +298,7 @@ int SCSProtocol::joinMode(u8 ID, u16 minAngle, u16 maxAngle)
 	return genWrite(ID, P_MIN_ANGLE_LIMIT_L, bBuf, 4);
 }
 
-//¸´Î»¶æ»ú²ÎÊýÎªÄ¬ÈÏÖµ
+//ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½Öµ
 int SCSProtocol::Reset(u8 ID)
 {
 	flushSCS();
@@ -297,10 +310,7 @@ int	SCSProtocol::Ack(u8 ID)
 {
 	if(ID != 0xfe && Level){
 		u8 buf[6];
-		u8 Size = readSCS(buf, 6);
-		if(Size!=6){
-			return 0;
-		}
+		readSCS(buf, 6);
 	}
 	return 1;
 }

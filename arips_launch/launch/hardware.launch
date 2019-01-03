@@ -1,12 +1,16 @@
 <launch>
-  <arg name="no_frames"  default="false"/>
+  <!--- md25 drive -->
+  <include file="$(find arips_launch)/launch/md25.launch" />
   
-  <!--- rosserial and arm node -->
-  <include file="$(find arips_launch)/launch/arduino.launch" />
+  <!--- YD Lidar-->
+  <include file="$(find arips_launch)/launch/lidar.launch" />
 
   <!-- kinect -->
-  <include file="$(find arips_launch)/launch/kinect.launch" />
+  <!-- <include file="$(find arips_launch)/launch/kinect.launch" /> -->
   
-  <!-- required static transforms -->
-  <include unless="$(arg no_frames)" file="$(find arips_launch)/launch/includes/frames.launch" />
+  <!-- arm -->
+  <!-- <include file="$(find arips_launch)/launch/arm.launch" />   -->
+  
+  <!-- kinect frames -->
+  <!-- <include file="$(find arips_launch)/launch/includes/frames.launch" /> -->
 </launch>

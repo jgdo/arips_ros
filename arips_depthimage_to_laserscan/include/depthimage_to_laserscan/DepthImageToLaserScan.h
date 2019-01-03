@@ -249,8 +249,7 @@ private:
                 }
             }
         }
-        
-        computeFloorPlane(pointsInRange, scan_msg);
+        // computeFloorPlane(pointsInRange, scan_msg);
     }
     
     void computeFloorPlane(const RangePointVec& points, const sensor_msgs::LaserScanPtr& scan_msg);

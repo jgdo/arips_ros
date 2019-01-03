@@ -26,7 +26,7 @@ class kinect_calibrator:
         return tf.TransformerROS().fromTranslationRotation(pos, quat)
 
     def check_transform(self, event):
-        t_marker_kinect = self.getTransform("/kinect_rgb_frame", "/ar_marker_1")
+        t_marker_kinect = self.getTransform("/kinect_base", "/ar_marker_1")
 
         print "t_marker_kinect", t_marker_kinect
 
@@ -40,7 +40,7 @@ class kinect_calibrator:
         quat = tf.transformations.quaternion_from_matrix(t_kinect_base_corrected)
 
         print "transform"
-        print trans, quat
+        print trans, tf.transformations.euler_from_quaternion(quat)
 
         print
 

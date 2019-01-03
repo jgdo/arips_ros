@@ -1,6 +1,4 @@
 <launch>
   <node name="rosserial" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM1" output="screen" respawn="true" respawn_delay="5"/>
-  
-  <node name="arips_arm_node" pkg="arips_arm_node" type="arips_arm_node" output="screen" />
 </launch>
 

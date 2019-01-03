@@ -5,6 +5,7 @@ import tf
 import tf.transformations
 import numpy as np
 from std_msgs.msg import Float32
+import sys
 
 global tf_listener
 global angle_counter
@@ -47,7 +48,7 @@ def callback(msg):
 
     normal_orig = msg.values[0:3]
     global tf_listener
-    pos, quat = tf_listener.lookupTransform("/kinect_link", msg.header.frame_id, rospy.Time(0))
+    pos, quat = tf_listener.lookupTransform("/arips_base", msg.header.frame_id, rospy.Time(0))
     # print "quat = ", quat
     normal_rotated = qv_mult(quat, normal_orig)
     z = [0, 0, 1]
@@ -56,7 +57,7 @@ def callback(msg):
         angle += np.pi
 
     angle_deg = np.rad2deg(angle)
-    print "angle = ", angle_deg
+    print "angle = ", angle_deg, " value = " , set_angle
 
     if set_angle not in angle_table:
         angle_table[set_angle] = [set_angle, 0, 0]
@@ -71,8 +72,13 @@ def callback(msg):
         times_counter = -1
 
         if angle_counter >= len(angle_input_table):
-            for elem in sorted(angle_table.values(), key=lambda e: e[0]):
-                print elem[0], ": ", elem[1] / elem[2] # , elem[2]
+            sys.stdout.write("angles: [");
+            for elem in sorted(angle_table.values(), key=lambda e: -e[1] / e[2]):
+                sys.stdout.write(str(-elem[1] / elem[2]) + ", ");
+            sys.stdout.write("]\nraws: [");
+            for elem in sorted(angle_table.values(), key=lambda e: -e[1] / e[2]):
+                sys.stdout.write(str(-elem[0]) + ", ");
+            sys.stdout.write("]\n");
             rospy.signal_shutdown('done')
 
 
@@ -87,7 +93,7 @@ def listener():
     times_counter = -1
     angle_table = {}
 
-    angle_input_table = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]
+    angle_input_table = range(-310, -451, -20) + range(-450, -309, 20)
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # node are launched, the previous one is kicked off. The

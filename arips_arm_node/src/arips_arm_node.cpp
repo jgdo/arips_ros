@@ -1,8 +1,10 @@
 #include <arips_arm_node/uniform_sample_filter.h>
+#include <tf/transform_broadcaster.h>
 
 #include <sensor_msgs/JointState.h>
 
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int32.h>
 
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/GripperCommandAction.h>
@@ -37,21 +39,24 @@ public:
 
         pnh.param("angle_factor", mAngleFactor, 1.0F);
 
-        setByteRegFromParam(pnh, P_CCW_DEAD, "ccw_dead");
-        setByteRegFromParam(pnh, P_CW_DEAD, "cw_dead");
+        try {
 
-        setByteRegFromParam(pnh, P_COMPLIANCE_P, "kp");
-        setByteRegFromParam(pnh, P_COMPLIANCE_I, "ki");
-        setByteRegFromParam(pnh, P_INTEGRAL_LIMIT_L, "isum_max");
+            setByteRegFromParam(pnh, P_CCW_DEAD, "ccw_dead");
+            setByteRegFromParam(pnh, P_CW_DEAD, "cw_dead");
+
+            setByteRegFromParam(pnh, P_COMPLIANCE_P, "kp");
+            setByteRegFromParam(pnh, P_COMPLIANCE_I, "ki");
+            setByteRegFromParam(pnh, P_INTEGRAL_LIMIT_L, "isum_max");
+        } catch(std::exception const& e) {
+            ROS_ERROR_STREAM(e.what());
+        }
 
         mPosPub = nh.advertise<std_msgs::Float32>("pos_deg", 3);
         mPosSub = nh.subscribe("setpoint_deg", 1, &RosSCSServo::onSetposReceived, this);
     }
 
     float updateState() {
-        // todo read servo
         auto raw = mServo->ReadPos(mID);
-
         float pos = rawToDegree(raw);
         std_msgs::Float32 msg;
         msg.data = pos;
@@ -61,7 +66,16 @@ public:
 
     void setPos_deg(float pos) {
         mSetPos = pos;
-        mServo->WritePos(mID, degreeToRaw(mSetPos), 500);
+
+        try {
+            mServo->WritePos(mID, degreeToRaw(mSetPos), 500);
+        } catch(std::exception const& e) {
+            ROS_ERROR_STREAM(e.what());
+        }
+    }
+
+    int getId() const {
+        return mID;
     }
 
 private:
@@ -116,11 +130,12 @@ private:
 class AripsArmNode {
 public:
     AripsArmNode():
+            mServoDevice(ros::NodeHandle("~").param<int>("baud", 500000)),
         mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
         mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
-        mServos.reserve(NUM_JOINTS+1);
-        for(int i = 0; i < NUM_JOINTS+1; i++) {
+        mServos.reserve(NUM_JOINTS+2);
+        for(int i = 0; i < NUM_JOINTS+2; i++) {
             mServos.emplace_back(&mServoDevice, "servo_" + std::to_string(i));
         }
 
@@ -128,7 +143,7 @@ public:
         pub = nh.advertise<trajectory_msgs::JointTrajectory>("sampled_trajectory", 3, false);
         mJointStatePub = nh.advertise<sensor_msgs::JointState>("joint_states", 3, false);
 
-        mTimer = nh.createTimer(ros::Duration(0.05), &AripsArmNode::timerCb, this);
+        mTimer = nh.createTimer(ros::Duration(0.2), &AripsArmNode::timerCb, this);
 
         mJointTrajActionServer.registerGoalCallback(boost::bind(&AripsArmNode::trajectoryActionGoalCB, this));
         mJointTrajActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::trajectoryActionPreemptCB, this));
@@ -139,6 +154,16 @@ public:
         // mGripperActionServer.registerPreemptCallback(boost::bind(&AripsArmNode::gripperActionPreemptCB, this));
 
         mGripperActionServer.start();
+
+        mKinectTiltSub = nh.subscribe("kinect_tilt_deg", 1, &AripsArmNode::kinectTiltCb, this);
+
+        mChangeBaudSub = nh.subscribe("change_servo_baud", 1, &AripsArmNode::changeBaudCb, this);
+
+        mKinectCorrectionAngleSub = nh.subscribe("/kinect_correction_angle", 1, &AripsArmNode::onKinectCorrectionAngle, this);
+
+        if(ros::NodeHandle("~").param<bool>("zero_tilt", false)) {
+            mKinectAngleFactor = 0.0F;
+        }
     }
 private:
     ros::NodeHandle nh;
@@ -158,6 +183,14 @@ private:
 
     actionlib::SimpleActionServer<control_msgs::GripperCommandAction> mGripperActionServer;
 
+    ros::Subscriber mKinectTiltSub;
+
+    ros::Subscriber mChangeBaudSub;
+
+    ros::Subscriber mKinectCorrectionAngleSub;
+
+    float mKinectAngleFactor = M_PI / 180.0f;
+
     /**
      * Next points index of mSampledTrajectory
      * Inactive if negative, otherwise [0, traj size], if == traj size, this means the last trajectory point was send and trajectory will be finished at next cycle
@@ -165,6 +198,12 @@ private:
     int mNextTrajectoryExecutionIndex = -1;
 
     trajectory_msgs::JointTrajectory mSampledTrajectory;
+
+    tf::TransformBroadcaster mTFBroadcaster;
+
+    sensor_msgs::JointState mJointState;
+
+    float mListKinectCorrectionAngle = 0.0;
 
     void startNewSampledTrajectory(const trajectory_msgs::JointTrajectory& trajSampled) {
         mSampledTrajectory = trajSampled;
@@ -193,24 +232,48 @@ private:
             }
         }
 
-        sensor_msgs::JointState jointState;
+        mJointState.header.stamp = ros::Time::now();
 
-        jointState.header.stamp = ros::Time::now();
+        mJointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper_joint"};
 
-        jointState.name = { "joint1", "joint2", "joint3", "joint4", "joint5", "gripper_joint"};
-
-        jointState.position.resize(NUM_JOINTS + 1);
-        jointState.velocity.resize(NUM_JOINTS + 1);
-        jointState.effort.resize(NUM_JOINTS + 1);
+        mJointState.position.resize(NUM_JOINTS + 1);
+        mJointState.velocity.resize(NUM_JOINTS + 1);
+        mJointState.effort.resize(NUM_JOINTS + 1);
 
 
         for(size_t i = 0; i < NUM_JOINTS; i++) {
-            jointState.position.at(i) = mServos.at(i).updateState() * M_PI / 180.0F;
+            try {
+                mJointState.position.at(i) = mServos.at(i).updateState() * M_PI / 180.0F;
+            } catch (const std::runtime_error& err) {
+                ROS_WARN_STREAM(err.what());
+            }
         }
 
-        jointState.position.at(NUM_JOINTS) = -mServos.at(NUM_JOINTS).updateState();
+        try {
+            mJointState.position.at(NUM_JOINTS) = mServos.at(NUM_JOINTS).updateState();
+        } catch (const std::runtime_error& err) {
+            ROS_WARN_STREAM(err.what());
+        }
 
-        mJointStatePub.publish(jointState);
+        mJointStatePub.publish(mJointState);
+
+        try {
+            float kinectAngle_deg = mServos.at(NUM_JOINTS+1).updateState();
+
+            // publish kinect tf
+            float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
+            if(mKinectCorrectionAngleSub.getNumPublishers() > 0) {
+                kinectAngle_rad += mListKinectCorrectionAngle;
+
+                ROS_INFO_STREAM("using correction angle " << mListKinectCorrectionAngle);
+            }
+
+            tf::Transform transform{tf::createQuaternionFromRPY(0, kinectAngle_rad, 0)};
+            transform.setOrigin(transform * tf::Vector3(0.02, 0, 0.025));
+            mTFBroadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect_base", "/kinect_link"));
+        } catch (const std::runtime_error& err) {
+            ROS_WARN_STREAM(err.what());
+        }
     }
 
     void trajectoryActionGoalCB() {
@@ -241,7 +304,7 @@ private:
 
         // startNewGripperTrajectory(mCurrentGripperGoal->command.position);
 
-        mServos.at(NUM_JOINTS).setPos_deg(-gripperGoal->command.position);
+        mServos.at(NUM_JOINTS).setPos_deg(gripperGoal->command.position);
 
         ROS_INFO_STREAM("gripperActionGoalCB() " << gripperGoal->command.position);
 
@@ -253,6 +316,43 @@ private:
 
     void cancelCurrentTrajectory() {
         mNextTrajectoryExecutionIndex = -1;
+    }
+
+    void kinectTiltCb(const std_msgs::Float32& msg) {
+        mServos.at(NUM_JOINTS+1).setPos_deg(msg.data);
+    }
+
+    void changeBaudCb(const std_msgs::Int32& msg) {
+        std::map<int, int> baudToCode{
+                {1000000, 0},
+                {500000, 1},
+                {250000, 2},
+                {128000, 3},
+                {115200, 4},
+                {76800, 5},
+                {57600, 6},
+                {38400, 7},
+        };
+
+        auto code = baudToCode.find(msg.data);
+        if(code == baudToCode.end()) {
+            ROS_ERROR_STREAM("Could not set servo baud rate to " << msg.data << ": baud rate not supported");
+        }
+
+        for(auto& servo: mServos) {
+            mServoDevice.writeByte(servo.getId(), P_LOCK, 0);
+            mServoDevice.writeByte(servo.getId(), P_BAUD_RATE, code->second);
+        }
+
+        mServoDevice.setBaud(msg.data);
+
+        for(auto& servo: mServos) {
+            mServoDevice.writeByte(servo.getId(), P_LOCK, 1);
+        }
+    }
+
+    void onKinectCorrectionAngle(const std_msgs::Float32& msg) {
+        mListKinectCorrectionAngle += msg.data * 0.1F;
     }
 };
 

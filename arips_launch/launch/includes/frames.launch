@@ -1,7 +1,7 @@
 <launch>
-  <node pkg="tf" type="static_transform_publisher" name="arips_base_link_broadcaster" args="0.178 -0.012 0.1294 -0.02 0 0.0 /arips_base /base_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="arips_base_link_broadcaster" args="0.163 -0.006 0.055 -0.028 0 0.0 /arips_base /base_link 100" />
   
   <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_base_to_link"
-    args="0.009 -0.004 0.021  -0.02 0 0.0185 kinect_base kinect_link" />  
+    args="-0.09834986 -0.04265322  0.74170686 0.05932504849564464, 0.7451718982089848, 0.0648381526370992  arips_base kinect_base" />  
 </launch>
 

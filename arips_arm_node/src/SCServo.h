@@ -1,8 +1,8 @@
 /*
  * SCServo.h
- * Ó²¼þÍ¨ÐÅ½Ó¿Ú
- * ÈÕÆÚ: 2016.8.25
- * ×÷Õß: Ì·ÐÛÀÖ
+ * Ó²ï¿½ï¿½Í¨ï¿½Å½Ó¿ï¿½
+ * ï¿½ï¿½ï¿½ï¿½: 2016.8.25
+ * ï¿½ï¿½ï¿½ï¿½: Ì·ï¿½ï¿½ï¿½ï¿½
  */
 
 #ifndef _SCSERVO_H
@@ -15,11 +15,13 @@
 class SCServo : public SCSProtocol
 {
 public:
-	SCServo(void);
+	SCServo(int baud);
         virtual int writeSCS(unsigned char *nDat, int nLen);
-        virtual int readSCS(unsigned char *nDat, int nLen);
+        virtual void readSCS(unsigned char *nDat, int nLen);
         virtual int writeSCS(unsigned char bDat);
         virtual void flushSCS();
+
+	void setBaud(int baud);
 public:
         unsigned long int IOTimeOut;
         QSerialPort pSerial;

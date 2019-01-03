@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/Float32.h>
 // PCL specific includes
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -29,11 +30,20 @@ ros::Publisher pub_cloud;
 ros::Publisher pub_cloud_neg;
 ros::Publisher pub_table;
 ros::Publisher pick_pose_pub;
+ros::Publisher kinect_correction_angle_pub;
 
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
 
 std::shared_ptr<tf::TransformListener> listener;
+
+struct DetectedObject {
+    tf::Vector3 pos = tf::Vector3{0,0,0};
+    int count = 0;
+    bool updated = false;
+};
+
+std::list<DetectedObject> detectedObjects;
 
 void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
 {
@@ -90,46 +100,6 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
     server->applyChanges();
 }
 
-Marker makeBox( InteractiveMarker &msg )
-{
-    Marker marker;
-
-    marker.type = Marker::CUBE;
-    marker.scale.x = msg.scale * 0.05;
-    marker.scale.y = msg.scale * 0.05;
-    marker.scale.z = msg.scale * 0.05;
-    marker.color.r = 0.0;
-    marker.color.g = 1.0;
-    marker.color.b = 0.0;
-    marker.color.a = 0.5;
-
-    return marker;
-}
-
-void makeButtonMarker( const tf::Vector3& position, std_msgs::Header const& header )
-{
-    InteractiveMarker int_marker;
-    int_marker.header = header;
-    tf::pointTFToMsg(position, int_marker.pose.position);
-    int_marker.scale = 1;
-
-    int_marker.name = "Objects";
-    int_marker.description = "Button\n(Left Click)";
-
-    InteractiveMarkerControl control;
-
-    control.interaction_mode = InteractiveMarkerControl::BUTTON;
-    control.name = "button_control";
-
-    Marker marker = makeBox( int_marker );
-    control.markers.push_back( marker );
-    control.always_visible = true;
-    int_marker.controls.push_back(control);
-
-    server->insert(int_marker);
-    server->setCallback(int_marker.name, &processFeedback);
-}
-
 void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -138,6 +108,16 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     try{
         listener->lookupTransform("base_link", cloud_msg->header.frame_id,
                                  ros::Time(0), transform);
+    }
+    catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        return;
+    }
+
+    tf::StampedTransform baseTransform;
+    try{
+        listener->lookupTransform("arips_base", cloud_msg->header.frame_id,
+                                  ros::Time(0), baseTransform);
     }
     catch (tf::TransformException &ex) {
         ROS_ERROR("%s",ex.what());
@@ -190,6 +170,21 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
         pcl_conversions::fromPCL(coefficients, ros_coefficients);
         pub.publish(ros_coefficients);
 
+        {
+            tf::Vector3 normal_orig = tf::Vector3(coefficients.values.at(0), coefficients.values.at(1),
+                                                  coefficients.values.at(2)).normalized();
+            tf::Vector3 normal_rotated = baseTransform.getBasis() * normal_orig;
+            float angle = -std::atan2(normal_rotated.x(), normal_rotated.z());
+            if (angle < -M_PI / 2.0) {
+                angle += M_PI;
+            }
+
+            // ROS_INFO_STREAM("angle: " << angle <<  " " << normal_rotated.x() << " " << normal_rotated.z());
+            std_msgs::Float32 msg;
+            msg.data = angle;
+            kinect_correction_angle_pub.publish(msg);
+        }
+
         pcl::VoxelGrid<pcl::PointXYZ> vg;
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
         vg.setInputCloud (cloud_inliers.makeShared());
@@ -215,8 +210,18 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
         object.header.stamp = ros::Time::now();
         object.ns = "clustered_objects";
         object.id = 0;
-        object.type = visualization_msgs::Marker::POINTS;
+        object.type = visualization_msgs::Marker::CUBE_LIST;
         object.action = visualization_msgs::Marker::ADD;
+
+        tf::Pose pose(tf::createIdentityQuaternion());
+        tf::poseTFToMsg(pose, object.pose);
+
+        constexpr float tolerance_m = 0.03;
+        constexpr float maxDist_m = 0.3;
+
+        for(auto& obj: detectedObjects) {
+            obj.updated = false;
+        }
 
         int j = 0;
         for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
@@ -234,18 +239,22 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             tf::Vector3 tfc(center.x, center.y, center.z);
             tf::Vector3 centerBase = transform(tfc);
 
-            if(centerBase.x() < 1) {
+            if(centerBase.length() < maxDist_m) {
 
-                geometry_msgs::Point p;
-                tf::pointTFToMsg(centerBase, p);
-                object.points.push_back(p);
+                bool detected = false;
+                for (auto& obj: detectedObjects) {
+                    if (obj.pos.distance(centerBase) < tolerance_m) {
+                        obj.pos = obj.pos * 0.5 + centerBase * 0.5;
+                        obj.count++;
+                        obj.updated = true;
+                        detected = true;
+                        break;
+                    }
+                }
 
-                std_msgs::ColorRGBA color;
-                color.r = 0.0f;
-                color.g = 1.0f;
-                color.b = 0.0f;
-                color.a = 1.0;
-                object.colors.push_back(color);
+                if (!detected) {
+                    detectedObjects.push_back(DetectedObject{centerBase, 1, true});
+                }
             }
 
             /*
@@ -259,9 +268,34 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             j++;
         }
 
-        object.scale.x = 0.005;
-        object.scale.y = 0.005;
-        object.scale.z = 0.005;
+
+        for(auto iter = detectedObjects.begin(); iter != detectedObjects.end();) {
+            if(iter->updated) {
+                if(iter->count >= 3) {
+                    geometry_msgs::Point point;
+                    tf::pointTFToMsg(iter->pos, point);
+                    object.points.push_back(point);
+
+                    std_msgs::ColorRGBA color;
+                    color.r = 0.0f;
+                    color.g = 1.0f;
+                    color.b = 0.0f;
+                    color.a = 1.0;
+                    object.colors.push_back(color);
+                }
+            } else {
+                if(--iter->count < 0) {
+                    iter = detectedObjects.erase(iter);
+                    continue;
+                }
+            }
+
+            ++iter;
+        }
+
+        object.scale.x = 0.03;
+        object.scale.y = 0.03;
+        object.scale.z = 0.03;
 
 
         InteractiveMarker int_marker;
@@ -283,6 +317,8 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
         server->insert(int_marker, processFeedback);
         server->applyChanges();
+
+        ROS_INFO_STREAM("Detected number of cubes: " << object.points.size());
 
         visualization_msgs::Marker marker;
         marker.header.frame_id = cloud_msg->header.frame_id;
@@ -361,9 +397,12 @@ main (int argc, char** argv)
 
     pick_pose_pub = nh.advertise<geometry_msgs::Point>("/pick_pose", 1);
 
+    kinect_correction_angle_pub = nh.advertise<std_msgs::Float32>("/kinect_correction_angle", 1);
+
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/kinect/depth_registered/points", 1, cloud_cb);
 
   // Spin
   ros::spin ();
 }
+

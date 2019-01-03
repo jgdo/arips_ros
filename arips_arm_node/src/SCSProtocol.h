@@ -1,8 +1,8 @@
 /*
  * SCSProtocol.h
- * SCS´®ÐÐ¶æ»úÐ­Òé³ÌÐò
- * ÈÕÆÚ: 2016.8.25
- * ×÷Õß: Ì·ÐÛÀÖ
+ * SCSï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ï¿½: 2016.8.25
+ * ï¿½ï¿½ï¿½ï¿½: Ì·ï¿½ï¿½ï¿½ï¿½
  */
 
 #ifndef _SCSPROTOCOL_H
@@ -18,41 +18,41 @@ typedef		long			s32;
 class SCSProtocol{
 public:
 	SCSProtocol();
-	int genWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen);//ÆÕÍ¨Ð´Ö¸Áî
-	int regWrite(u8 ID, u8 MemAddr,u8 *nDat, u8 nLen);//Òì²½Ð´Ö¸Áî
-	void snycWrite(u8 ID[], u8 IDN, u8 MemAddr, u8 *nDat, u8 nLen);//Í¬²½Ð´Ö¸Áî
-	int writeByte(u8 ID, u8 MemAddr, u8 bDat);//Ð´1¸ö×Ö½Ú
-	int writeWord(u8 ID, u8 MemAddr, u16 wDat);//Ð´2¸ö×Ö½Ú
-	int EnableTorque(u8 ID, u8 Enable);//Å¤Á¦¿ØÖÆÖ¸Áî
-	int WritePos(u8 ID, u16 Position, u16 Time, u16 Speed = 0);//ÆÕÍ¨Ð´Î»ÖÃÖ¸Áî
-	int RegWritePos(u8 ID, u16 Position, u16 Time, u16 Speed = 0);//Òì²½Ð´Î»ÖÃÖ¸Áî
-	void RegWriteAction();//Ö´ÐÐÒì²½Ð´Ö¸Áî
-	void SyncWritePos(u8 ID[], u8 IDN, u16 Position, u16 Time, u16 Speed = 0);//Í¬²½Ð´Î»ÖÃÖ¸Áî
-	int WriteSpe(u8 ID, s16 Speed);//¶àÈ¦¿ØÖÆÖ¸Áî
-	int Read(u8 ID, u8 MemAddr, u8 *nData, u8 nLen);//¶ÁÖ¸Áî
-	int readByte(u8 ID, u8 MemAddr);//¶Á1¸ö×Ö½Ú
-	int readWord(u8 ID, u8 MemAddr);//¶Á2¸ö×Ö½Ú
-	int ReadPos(u8 ID);//¶ÁÎ»ÖÃ
-	int ReadVoltage(u8 ID);//¶ÁµçÑ¹
-	int ReadTemper(u8 ID);//¼ÇÎÂ¶È
-	int Ping(u8 ID);//PingÖ¸Áî
-	int wheelMode(u8 ID);//¶àÈ¦ÂÖ×ÓÄ£Ê½
-	int joinMode(u8 ID, u16 minAngle=0, u16 maxAngle=1023);//ÆÕÍ¨ËÅ·þÄ£Ê½
-	int Reset(u8 ID);//¸´Î»¶æ»ú²ÎÊýÎªÄ¬ÈÏÖµ
+	int genWrite(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen);//ï¿½ï¿½Í¨Ð´Ö¸ï¿½ï¿½
+	int regWrite(u8 ID, u8 MemAddr,u8 *nDat, u8 nLen);//ï¿½ì²½Ð´Ö¸ï¿½ï¿½
+	void snycWrite(u8 ID[], u8 IDN, u8 MemAddr, u8 *nDat, u8 nLen);//Í¬ï¿½ï¿½Ð´Ö¸ï¿½ï¿½
+	int writeByte(u8 ID, u8 MemAddr, u8 bDat);//Ð´1ï¿½ï¿½ï¿½Ö½ï¿½
+	int writeWord(u8 ID, u8 MemAddr, u16 wDat);//Ð´2ï¿½ï¿½ï¿½Ö½ï¿½
+	int EnableTorque(u8 ID, u8 Enable);//Å¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+	int WritePos(u8 ID, u16 Position, u16 Time, u16 Speed = 0);//ï¿½ï¿½Í¨Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+	int RegWritePos(u8 ID, u16 Position, u16 Time, u16 Speed = 0);//ï¿½ì²½Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+	void RegWriteAction();//Ö´ï¿½ï¿½ï¿½ì²½Ð´Ö¸ï¿½ï¿½
+	void SyncWritePos(u8 ID[], u8 IDN, u16 Position, u16 Time, u16 Speed = 0);//Í¬ï¿½ï¿½Ð´Î»ï¿½ï¿½Ö¸ï¿½ï¿½
+	int WriteSpe(u8 ID, s16 Speed);//ï¿½ï¿½È¦ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+	void Read(u8 ID, u8 MemAddr, u8 *nData, u8 nLen);//ï¿½ï¿½Ö¸ï¿½ï¿½
+	int readByte(u8 ID, u8 MemAddr);//ï¿½ï¿½1ï¿½ï¿½ï¿½Ö½ï¿½
+	int readWord(u8 ID, u8 MemAddr);//ï¿½ï¿½2ï¿½ï¿½ï¿½Ö½ï¿½
+	int ReadPos(u8 ID);//ï¿½ï¿½Î»ï¿½ï¿½
+	int ReadVoltage(u8 ID);//ï¿½ï¿½ï¿½ï¿½Ñ¹
+	int ReadTemper(u8 ID);//ï¿½ï¿½ï¿½Â¶ï¿½
+	int Ping(u8 ID);//PingÖ¸ï¿½ï¿½
+	int wheelMode(u8 ID);//ï¿½ï¿½È¦ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+	int joinMode(u8 ID, u16 minAngle=0, u16 maxAngle=1023);//ï¿½ï¿½Í¨ï¿½Å·ï¿½Ä£Ê½
+	int Reset(u8 ID);//ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½Öµ
 public:
-	u8	Level;//¶æ»ú·µ»ØµÈ¼¶
-	u8	End;//´¦ÀíÆ÷´óÐ¡¶Ë½á¹¹
+	u8	Level;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÈ¼ï¿½
+	u8	End;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ë½á¹¹
 protected:
 	virtual int writeSCS(unsigned char *nDat, int nLen) = 0;
-	virtual int readSCS(unsigned char *nDat, int nLen) = 0;
+	virtual void readSCS(unsigned char *nDat, int nLen) = 0;
 	virtual int writeSCS(unsigned char bDat) = 0;
 	virtual void flushSCS() = 0;
 private:
 	void writeBuf(u8 ID, u8 MemAddr, u8 *nDat, u8 nLen, u8 Fun);
 	int writePos(u8 ID, u16 Position, u16 Time, u16 Speed, u8 Fun);
-	void Host2SCS(u8 *DataL, u8* DataH, int Data);//1¸ö16Î»Êý²ð·ÖÎª2¸ö8Î»Êý
-	int	SCS2Host(u8 DataL, u8 DataH);//2¸ö8Î»Êý×éºÏÎª1¸ö16Î»Êý
-	int	Ack(u8 ID);//·µ»ØÓ¦´ð
+	void Host2SCS(u8 *DataL, u8* DataH, int Data);//1ï¿½ï¿½16Î»ï¿½ï¿½ï¿½ï¿½ï¿½Îª2ï¿½ï¿½8Î»ï¿½ï¿½
+	int	SCS2Host(u8 DataL, u8 DataH);//2ï¿½ï¿½8Î»ï¿½ï¿½ï¿½ï¿½ï¿½Îª1ï¿½ï¿½16Î»ï¿½ï¿½
+	int	Ack(u8 ID);//ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
 
 	#define		B_1M		0
 	#define		B_0_5M		1

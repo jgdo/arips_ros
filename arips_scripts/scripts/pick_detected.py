@@ -21,21 +21,34 @@ def go(group):
             return True
     return False
     
+
+def setGripper(width):
+    global gripper
+    gripper.clear_pose_targets()
+    gripper.set_joint_value_target([width])
+    gripper.plan()
+    gripper.go()
+    
+
+def openGripper():
+    setGripper(0.06)
+    
+def closeGripper():
+    setGripper(0.027)
+    
 def callback(point):
     # point = point.point
     global arm
     global gripper
-    #rospy.loginfo("picking at " + str(point))
+    rospy.loginfo("picking at " + str(point))
     
-    point.x += 0.005
+    
+    point.x += 0.03
     point.y += -0.000
     print "picking at " + str(point)
     print "# open gripper"
     
-    gripper.clear_pose_targets()
-    gripper.set_joint_value_target([0.3])
-    if(not go(gripper)):
-        return
+    openGripper()
     
     rospy.sleep(0.5)
     
@@ -45,7 +58,8 @@ def callback(point):
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
     pose_target.position.x = point.x
     pose_target.position.y = point.y
-    pose_target.position.z = point.z + 0.04
+    pose_target.position.z = point.z + 0.05
+    arm.clear_pose_targets()
     arm.set_pose_target(pose_target)
     if(not go(arm)):
         return
@@ -58,7 +72,8 @@ def callback(point):
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
     pose_target.position.x = point.x
     pose_target.position.y = point.y
-    pose_target.position.z = point.z + 0.01
+    pose_target.position.z = point.z
+    arm.clear_pose_targets()
     arm.set_pose_target(pose_target)
     if(not go(arm)):
         return
@@ -67,9 +82,7 @@ def callback(point):
     
     print "close gripper"
     
-    gripper.clear_pose_targets()
-    gripper.set_joint_value_target([0.0])
-    gripper.go()
+    closeGripper()
     
     rospy.sleep(1)
     
@@ -80,6 +93,7 @@ def callback(point):
     pose_target.position.x = 0.3
     pose_target.position.y = 0.0
     pose_target.position.z = 0.2
+    arm.clear_pose_targets()
     arm.set_pose_target(pose_target)
     if(not go(arm)):
         return
@@ -88,10 +102,7 @@ def callback(point):
     
     print "idle"
     
-    gripper.clear_pose_targets()
-    gripper.set_joint_value_target([0.3])
-    if(not go(gripper)):
-        return
+    openGripper()
     
     rospy.sleep(0.5)
     

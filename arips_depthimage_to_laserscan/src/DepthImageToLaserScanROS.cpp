@@ -73,6 +73,7 @@ void DepthImageToLaserScanROS::depthCb(const sensor_msgs::ImageConstPtr& depth_m
         sensor_msgs::LaserScanPtr scan_msg = dtl_.convert_msg(depth_msg, info_msg, transform);
         pub_.publish(scan_msg);
         
+        /*
         cv::Vec3f normal, offset;
         dtl_.getLastPlane(normal, offset);
         
@@ -97,7 +98,7 @@ void DepthImageToLaserScanROS::depthCb(const sensor_msgs::ImageConstPtr& depth_m
         marker.color.r = 1.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
-        vis_pub.publish( marker );
+        vis_pub.publish( marker ); */
     }
     catch (std::runtime_error& e)
     {

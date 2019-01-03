@@ -1,0 +1,9 @@
+<launch>
+  <node name="md25_node" pkg="md25" type="md25_node" output="screen">
+    <param name="port" value="/dev/ttyUSB0" />
+    <param name="wheel_base" value="0.325" />
+    <param name="base_frame" value="arips_base" />
+    <param name="encoder_sensitivity1" value="0.00872639" />
+    <param name="encoder_sensitivity2" value="0.00872639" />
+  </node>
+</launch>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(arips_arm_node)
+project(arips_calibration_scripts)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,20 +8,13 @@ project(arips_arm_node)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  moveit_ros_planning
-  arips_arm_msgs
-  roscpp
-  trajectory_msgs
-  genmsg
-        control_msgs
-        actionlib
-        actionlib_msgs
-        tf
+  message_generation
+  rospy
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(Qt5Core REQUIRED)
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -76,7 +69,7 @@ find_package(Qt5Core REQUIRED)
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   trajectory_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -110,8 +103,8 @@ find_package(Qt5Core REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES arips_arm_node
-  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs arips_arm_msgs control_msgs actionlib_msgs
+#  LIBRARIES arips_calibration
+#  CATKIN_DEPENDS message_generation rospy
 #  DEPENDS system_lib
 )
 
@@ -122,13 +115,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/arips_arm_node.cpp
+#   src/${PROJECT_NAME}/arips_calibration.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -139,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/arips_arm_node.cpp src/uniform_sample_filter.cpp src/SCServo.cpp src/SCSProtocol.cpp)
+#add_executable(kinect_axis_calibration src/kinect_axis_calibration.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,15 +142,12 @@ add_executable(${PROJECT_NAME} src/arips_arm_node.cpp src/uniform_sample_filter.
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-#add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(${PROJECT_NAME}
-   ${catkin_LIBRARIES}
-)
-
-qt5_use_modules(${PROJECT_NAME} Core SerialPort)
+#target_link_libraries(kinect_axis_calibration
+#   ${catkin_LIBRARIES}
+#)
 
 #############
 ## Install ##
@@ -199,7 +189,7 @@ qt5_use_modules(${PROJECT_NAME} Core SerialPort)
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_arm_node.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_calibration.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
