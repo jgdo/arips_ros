@@ -1,11 +1,11 @@
 global_costmap:
-   global_frame: /map
-   robot_base_frame: /arips_base
+   global_frame: map
+   robot_base_frame: arips_base
    map_topic: /map
    update_frequency: 3.0
    publish_frequency: 1.0
    static_map: true
    rolling_window: false
    map_type: costmap
-   observation_sources: ""
+   observation_sources: {}
 

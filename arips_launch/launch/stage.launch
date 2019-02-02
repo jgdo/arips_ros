@@ -2,15 +2,15 @@
   <!--- run stage -->
   <arg name="world_file" default="$(find arips_launch)/stage/world.world"/>
   <node name="stageros" pkg="stage_ros" type="stageros" args="$(arg world_file)" >
-    <remap from="base_scan" to="narrow_scan"/>
+    <remap from="base_scan" to="scan"/>
   </node>
   
   <!-- Run the map server -->
-  <arg name="map_file" default="$(find arips_launch)/stage/map.yaml"/>
+  <arg name="map_file" default="$(find arips_launch)/stage/appartement_ffm_lidar.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
   <!--- Run AMCL -->
   <node pkg="amcl" type="amcl" name="amcl">
-  	<remap from="scan" to="narrow_scan"/>
+  	<remap from="scan" to="scan"/>
   </node>
 </launch>

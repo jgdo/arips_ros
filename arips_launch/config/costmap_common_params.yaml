@@ -1,6 +1,6 @@
 obstacle_range: 3.5
 raytrace_range: 5.0
-robot_radius: 0.23
+robot_radius: 0.22
 inflation_radius: 0.5
 max_obstacle_height: 1.0
 observation_sources: scan

@@ -1,11 +1,13 @@
 <launch>
-  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" clear_params="true" >
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen" clear_params="true" >    
     <rosparam file="$(find arips_launch)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find arips_launch)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find arips_launch)/config/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find arips_launch)/config/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find arips_launch)/config/base_local_planner_params.yaml" command="load" />
     <rosparam file="$(find arips_launch)/config/move_base_params.yaml" command="load" />
+    
+    <remap from="cmd_vel" to="cmd_vel"/>
   </node>
   
   <node pkg="costmap_2d" type="costmap_2d_markers" respawn="false" name="costmap_2d_markers" output="screen" clear_params="true" >
