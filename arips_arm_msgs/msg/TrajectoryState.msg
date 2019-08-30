@@ -1,4 +1,0 @@
-uint32 controlCycleCount
-uint32 numPointsInBuffer
-uint32 bufferCapacity
-
