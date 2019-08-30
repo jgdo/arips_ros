@@ -26,23 +26,26 @@ class kinect_calibrator:
         return tf.TransformerROS().fromTranslationRotation(pos, quat)
 
     def check_transform(self, event):
-        t_marker_kinect = self.getTransform("/kinect_base", "/ar_marker_1")
+        try:
+            t_markerfloor_markerrobot = self.getTransform("/marker_floor", "/marker_robot")
 
-        print "t_marker_kinect", t_marker_kinect
+            print "t_markerfloor_markerrobot", t_markerfloor_markerrobot
 
-        t_ideal_marker_base = tf.TransformerROS().fromTranslationRotation([0.41, 0.0, 0.0], [0, 0, 0, 1])
+            t_ideal_base_markerfloor = tf.TransformerROS().fromTranslationRotation([0.30, 0.0, 0.0], [0, 0, 0, 1])
 
-        t_kinect_base_corrected = np.matmul(t_ideal_marker_base, np.linalg.inv(t_marker_kinect))
+            t_base_markerrobot = np.matmul(t_ideal_base_markerfloor, t_markerfloor_markerrobot)
 
-        print "t_kinect_base_corrected", t_kinect_base_corrected
+            print "t_base_markerrobot", t_base_markerrobot
 
-        trans = tf.transformations.translation_from_matrix(t_kinect_base_corrected)
-        quat = tf.transformations.quaternion_from_matrix(t_kinect_base_corrected)
+            trans = tf.transformations.translation_from_matrix(t_base_markerrobot)
+            quat = tf.transformations.quaternion_from_matrix(t_base_markerrobot)
 
-        print "transform"
-        print trans, tf.transformations.euler_from_quaternion(quat)
+            print "transform"
+            print trans, tf.transformations.euler_from_quaternion(quat)
 
-        print
+            print
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            pass
 
 
 def main(args):

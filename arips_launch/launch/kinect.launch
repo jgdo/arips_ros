@@ -32,7 +32,7 @@
   <arg name="depth_registered_processing"     default="true"/>
   <arg name="disparity_processing"            default="false"/>
   <arg name="disparity_registered_processing" default="false"/>
-  <arg name="scan_processing"                 default="true"/>
+  <arg name="scan_processing"                 default="false"/>
 
   <!-- Worker threads for the nodelet manager -->
   <arg name="num_worker_threads" default="4" />

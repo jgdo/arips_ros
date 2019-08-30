@@ -12,8 +12,6 @@
     <color rgba="1 0.6 0 1"/>
   </material>
   
-  <xacro:property name="pi" value="3.14159265359" />
-  
   <xacro:property name="link1_sidelen" value="0.05" />
   <xacro:property name="link1_height" value="0.01" />
   

@@ -9,7 +9,6 @@ project(arips_arm_node)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning
-  arips_arm_msgs
   roscpp
   trajectory_msgs
   genmsg
@@ -111,7 +110,7 @@ find_package(Qt5Core REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES arips_arm_node
-  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs arips_arm_msgs control_msgs actionlib_msgs
+  CATKIN_DEPENDS moveit_ros_planning roscpp trajectory_msgs control_msgs actionlib_msgs
 #  DEPENDS system_lib
 )
 

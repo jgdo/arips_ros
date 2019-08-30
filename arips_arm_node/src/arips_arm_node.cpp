@@ -9,6 +9,7 @@
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/GripperCommandAction.h>
 #include <actionlib/server/simple_action_server.h>
+#include <tf/transform_listener.h>
 
 #include "SCServo.h"
 
@@ -159,7 +160,6 @@ public:
 
         mChangeBaudSub = nh.subscribe("change_servo_baud", 1, &AripsArmNode::changeBaudCb, this);
 
-        mKinectCorrectionAngleSub = nh.subscribe("/kinect_correction_angle", 1, &AripsArmNode::onKinectCorrectionAngle, this);
 
         if(ros::NodeHandle("~").param<bool>("zero_tilt", false)) {
             mKinectAngleFactor = 0.0F;
@@ -187,8 +187,6 @@ private:
 
     ros::Subscriber mChangeBaudSub;
 
-    ros::Subscriber mKinectCorrectionAngleSub;
-
     float mKinectAngleFactor = M_PI / 180.0f;
 
     /**
@@ -199,6 +197,7 @@ private:
 
     trajectory_msgs::JointTrajectory mSampledTrajectory;
 
+    tf::TransformListener mTFListener;
     tf::TransformBroadcaster mTFBroadcaster;
 
     sensor_msgs::JointState mJointState;
@@ -258,18 +257,40 @@ private:
         mJointStatePub.publish(mJointState);
 
         try {
-            float kinectAngle_deg = mServos.at(NUM_JOINTS+1).updateState();
-
-            // publish kinect tf
-            float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
-            if(mKinectCorrectionAngleSub.getNumPublishers() > 0) {
-                kinectAngle_rad += mListKinectCorrectionAngle;
-
-                ROS_INFO_STREAM("using correction angle " << mListKinectCorrectionAngle);
+            tf::Transform transform;
+            
+            bool useCorrected = false;
+            
+            
+            try{
+                tf::StampedTransform T_base_gtmarker, T_marker_kinect;
+                
+                mTFListener.lookupTransform("/marker_robot", "/kinect_link",  
+                                    ros::Time(0), T_marker_kinect);
+                mTFListener.lookupTransform("/kinect_base", "/corrected_robot_marker",  
+                                    ros::Time(0), T_base_gtmarker);
+                if((ros::Time::now() - T_marker_kinect.stamp_).toSec() < 1.0) {
+                    transform = T_base_gtmarker * T_marker_kinect;
+                    
+                    useCorrected = true;
+                    
+                    ROS_INFO_STREAM("Using corrected kinect pose");
+                }
+            }
+            catch (tf::TransformException ex){
             }
 
-            tf::Transform transform{tf::createQuaternionFromRPY(0, kinectAngle_rad, 0)};
-            transform.setOrigin(transform * tf::Vector3(0.02, 0, 0.025));
+            if(!useCorrected) {
+                float kinectAngle_deg = mServos.at(NUM_JOINTS+1).updateState();
+
+                // publish kinect tf
+                float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
+
+                transform.setRotation(tf::createQuaternionFromRPY(0, kinectAngle_rad, 0));
+                transform.setOrigin(transform * tf::Vector3(0.02, 0, 0.025));
+            }
+            
+            
             mTFBroadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect_base", "/kinect_link"));
         } catch (const std::runtime_error& err) {
             ROS_WARN_STREAM(err.what());

@@ -43,8 +43,9 @@ def callback(point):
     rospy.loginfo("picking at " + str(point))
     
     
-    point.x += 0.03
-    point.y += -0.000
+    point.x += 0.009
+    point.y += 0.008
+    point.z -= 0.010;
     print "picking at " + str(point)
     print "# open gripper"
     
@@ -58,7 +59,7 @@ def callback(point):
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
     pose_target.position.x = point.x
     pose_target.position.y = point.y
-    pose_target.position.z = point.z + 0.05
+    pose_target.position.z = point.z + 0.03
     arm.clear_pose_targets()
     arm.set_pose_target(pose_target)
     if(not go(arm)):
@@ -109,7 +110,7 @@ def callback(point):
     print "go home"
     
     arm.clear_pose_targets()
-    arm.set_joint_value_target([0.0, -0.6, 0.1, 0, 0])
+    arm.set_joint_value_target([0.0, 0.0, -1.3, 0.0, 0])
     if(not go(arm)):
         return
         
@@ -133,7 +134,7 @@ def listener():
     arm = moveit_commander.MoveGroupCommander("arm")
     gripper = moveit_commander.MoveGroupCommander("gripper")
 
-    rospy.Subscriber("/pick_pose", Point, callback)
+    rospy.Subscriber("/pick_pose", Point, callback, queue_size=1)
     # sub = rospy.Subscriber("/clicked_point", geometry_msgs.msg.PoseStamped, callback)
 
     # spin() simply keeps python from exiting until this node is stopped

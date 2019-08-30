@@ -64,7 +64,28 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
     {
         case visualization_msgs::InteractiveMarkerFeedback::BUTTON_CLICK:
             ROS_INFO_STREAM( s.str() << ": button click" << mouse_point_ss.str() << "." );
-            pick_pose_pub.publish(feedback->mouse_point);
+            {
+                tf::Vector3 pose, closestPose;
+                double closestDist = -1;
+                
+                tf::pointMsgToTF(feedback->mouse_point, pose);
+                
+                for(auto& obj: detectedObjects) {
+                    if(obj.count >= 3) {
+                        double dist = (pose - obj.pos).length();
+                        
+                        if(closestDist < 0 || dist < closestDist) {
+                            closestDist = dist;
+                            closestPose = obj.pos;
+                        }
+                    }
+                }
+                
+                geometry_msgs::Point selectedPose;
+                tf::pointTFToMsg(closestPose, selectedPose);
+                
+                pick_pose_pub.publish(selectedPose);
+            }
             break;
 
         case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
@@ -268,20 +289,28 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             j++;
         }
 
-
+        ROS_INFO_STREAM("##############");
         for(auto iter = detectedObjects.begin(); iter != detectedObjects.end();) {
             if(iter->updated) {
                 if(iter->count >= 3) {
-                    geometry_msgs::Point point;
-                    tf::pointTFToMsg(iter->pos, point);
-                    object.points.push_back(point);
+                    if(iter->pos.x() > 0.04) {
+                        ROS_INFO_STREAM("point " << iter->pos.x() << "  " << iter->pos.y() << "  " << iter->pos.z());
 
-                    std_msgs::ColorRGBA color;
-                    color.r = 0.0f;
-                    color.g = 1.0f;
-                    color.b = 0.0f;
-                    color.a = 1.0;
-                    object.colors.push_back(color);
+                        geometry_msgs::Point point;
+                        tf::pointTFToMsg(iter->pos, point);
+                        object.points.push_back(point);
+
+                        std_msgs::ColorRGBA color;
+                        color.r = 0.0f;
+                        color.g = 1.0f;
+                        color.b = 0.0f;
+                        color.a = 1.0;
+                        object.colors.push_back(color);
+
+                        if(iter->count > 5) {
+                            pick_pose_pub.publish(point);
+                        }
+                    }
                 }
             } else {
                 if(--iter->count < 0) {

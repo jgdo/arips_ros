@@ -14,7 +14,7 @@
 SCServo::SCServo(int baud)
 {
 	IOTimeOut = 2;
-    pSerial.setPortName("/dev/ttyUSB0");
+    pSerial.setPortName("/dev/ttyUSB1");
     pSerial.setBaudRate(baud);
     pSerial.open(QIODevice::ReadWrite);
     qDebug() << "isOpen: " << pSerial.isOpen();

@@ -1,9 +1,6 @@
 <launch>
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
-  
-  <!--- YD Lidar-->
-  <include file="$(find arips_launch)/launch/lidar.launch" />
 
   <!-- kinect -->
   <include file="$(find arips_launch)/launch/kinect.launch" />
@@ -14,3 +11,4 @@
   <!-- kinect frames -->
   <include file="$(find arips_launch)/launch/includes/frames.launch" />
 </launch>
+

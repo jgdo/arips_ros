@@ -52,7 +52,6 @@
   <build_depend>moveit_ros_planning</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>trajectory_msgs</build_depend>
-  <build_depend>arips_arm_msgs</build_depend>
   <build_depend>control_msgs</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
@@ -65,7 +64,6 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>trajectory_msgs</exec_depend>
   <exec_depend>control_msgs</exec_depend>
-  <exec_depend>arips_arm_msgs</exec_depend>
   <exec_depend>actionlib</exec_depend>
   <exec_depend>actionlib_msgs</exec_depend>
 
