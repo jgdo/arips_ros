@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="arips">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_body.dae" />
+      </geometry>
+      <origin rpy="0 0 -1.57075"/>
+    </visual>
+  </link>
+  
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://arips_description/models/robot_kinect.dae" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="camera_joint" type="revolute">
+  <limit effort="1000.0" lower="-1" upper="1" velocity="0.5"/>
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="-0.14 0 0.74" rpy="0 0 0"/>
+    <axis xyz="0 1 0" />
+  </joint>
+  
+  <joint name="base_to_right_leg" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base_link"/>
+    <origin rpy="-0.028 0 0" xyz="0.163 -0.006 0.055"/>
+  </joint>
+  
+  <include filename="$(find arips_arm_description)/urdf/arips_arm.xacro" />
+  
+</robot>

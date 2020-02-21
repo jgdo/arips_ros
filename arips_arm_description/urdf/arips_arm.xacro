@@ -35,7 +35,7 @@
   
   <xacro:property name="gripper_open_angle" value="0.3" />
 	
-  <link name="base_link">
+  <link name="arm_base_link">
   	<visual>
       <geometry>
         <box size="${link1_sidelen} ${link1_sidelen} ${link1_height}"/>
@@ -107,7 +107,7 @@
   
 
   <joint name="joint1" type="revolute">
-    <parent link="base_link"/>
+    <parent link="arm_base_link"/>
     <child link="link2"/>
     
     <axis xyz="0 0 1"/>
