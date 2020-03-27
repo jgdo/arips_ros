@@ -6,182 +6,54 @@
 <robot name="arips">
   <link name="base_link">
     <visual>
+      <!--
       <geometry>
-        <mesh filename="package://arips_description/models/robot_body.dae"/>
+        <mesh filename="package://arips_description/models/robot_body.dae" />
       </geometry>
       <origin rpy="0 0 -1.57075"/>
+      -->
+      <geometry>
+        <cylinder length="0.15" radius="0.2"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.125"/>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.15" radius="0.2"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.125"/>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.125"/>
+      <mass value="1.5"/>
+      <inertia ixx="0.01625" ixy="0.0" ixz="0.0" iyy="0.01625" iyz="0.0" izz="0.03"/>
+    </inertial>
   </link>
+  <!--
   <link name="camera_link">
     <visual>
       <geometry>
-        <mesh filename="package://arips_description/models/robot_kinect.dae"/>
+        <mesh filename="package://arips_description/models/robot_kinect.dae" />
       </geometry>
     </visual>
   </link>
+
   <joint name="camera_joint" type="revolute">
-    <limit effort="1000.0" lower="-1" upper="1" velocity="0.5"/>
+  <limit effort="1000.0" lower="-1" upper="1" velocity="0.5"/>
     <parent link="base_link"/>
     <child link="camera_link"/>
-    <origin rpy="0 0 0" xyz="-0.14 0 0.74"/>
-    <axis xyz="0 1 0"/>
+    <origin xyz="-0.14 0 0.74" rpy="0 0 0"/>
+    <axis xyz="0 1 0" />
   </joint>
-  <joint name="base_to_right_leg" type="fixed">
+  
+  
+  <joint name="base_to_arm" type="fixed">
     <parent link="base_link"/>
     <child link="arm_base_link"/>
     <origin rpy="-0.028 0 0" xyz="0.163 -0.006 0.055"/>
   </joint>
-  <material name="white">
-    <color rgba="1 1 1 1"/>
-  </material>
-  <material name="black">
-    <color rgba="0 0 0 1"/>
-  </material>
-  <material name="orange">
-    <color rgba="1 0.6 0 1"/>
-  </material>
-  <link name="arm_base_link">
-    <visual>
-      <geometry>
-        <box size="0.05 0.05 0.01"/>
-      </geometry>
-      <origin xyz="0 0 0.005"/>
-      <material name="black"/>
-    </visual>
-  </link>
-  <link name="link2">
-    <visual>
-      <geometry>
-        <cylinder length="0.07" radius="0.025"/>
-      </geometry>
-      <origin xyz="0 0 0.035"/>
-      <material name="white"/>
-    </visual>
-  </link>
-  <link name="link3">
-    <visual>
-      <geometry>
-        <box size="0.02 0.05 0.14"/>
-      </geometry>
-      <origin xyz="0 0 0.07"/>
-      <material name="white"/>
-    </visual>
-  </link>
-  <link name="link4">
-    <visual>
-      <geometry>
-        <box size="0.02 0.04 0.15"/>
-      </geometry>
-      <origin xyz="0 0 0.075"/>
-      <material name="orange"/>
-    </visual>
-  </link>
-  <link name="link5">
-    <visual>
-      <geometry>
-        <box size="0.01 0.04 0.035"/>
-      </geometry>
-      <origin xyz="0 0 0"/>
-      <material name="orange"/>
-    </visual>
-  </link>
-  <link name="link6">
-    <visual>
-      <geometry>
-        <cylinder length="0.045" radius="0.01"/>
-      </geometry>
-      <origin xyz="0 0 0.0225"/>
-      <material name="orange"/>
-    </visual>
-  </link>
-  <link name="tool0">
-    <visual>
-      <geometry>
-        <box size="0.012 0.022 0.02"/>
-      </geometry>
-      <origin xyz="-0.04 0 0.02"/>
-      <material name="black"/>
-    </visual>
-  </link>
-  <joint name="joint1" type="revolute">
-    <parent link="arm_base_link"/>
-    <child link="link2"/>
-    <axis xyz="0 0 1"/>
-    <origin xyz="0 0 0.01"/>
-    <limit effort="1000.0" lower="-1.41371669412" upper="1.41371669412" velocity="1.0"/>
-  </joint>
-  <joint name="joint2" type="revolute">
-    <parent link="link2"/>
-    <child link="link3"/>
-    <axis xyz="0 1 0"/>
-    <origin xyz="0.02 0 0.07"/>
-    <limit effort="1000.0" lower="-0.95" upper="2.1" velocity="1.0"/>
-  </joint>
-  <joint name="joint3" type="revolute">
-    <parent link="link3"/>
-    <child link="link4"/>
-    <axis xyz="0 1 0"/>
-    <origin xyz="0 0 0.14"/>
-    <limit effort="1000.0" lower="-1.50796447372" upper="3.0" velocity="1.0"/>
-  </joint>
-  <joint name="joint4" type="revolute">
-    <parent link="link4"/>
-    <child link="link5"/>
-    <axis xyz="0 1 0"/>
-    <origin xyz="0 0 0.15"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="1.0"/>
-  </joint>
-  <joint name="joint5" type="revolute">
-    <parent link="link5"/>
-    <child link="link6"/>
-    <axis xyz="0 0 1"/>
-    <origin xyz="0 0 0.0175"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="1.0"/>
-  </joint>
-  <joint name="link6-tool0" type="fixed">
-    <parent link="link6"/>
-    <child link="tool0"/>
-    <origin rpy="0 -1.57075 0" xyz="0 0 0.085"/>
-  </joint>
-  <joint name="tool0_gripper" type="fixed">
-    <parent link="tool0"/>
-    <child link="gripper_base"/>
-    <origin rpy="0 0 0" xyz="0.0 0 0"/>
-  </joint>
-  <joint name="gripper_joint" type="revolute">
-    <parent link="gripper_base"/>
-    <child link="gripper_link_left"/>
-    <axis xyz="0 0 1"/>
-    <origin xyz="-0.055 0.02 0"/>
-    <limit effort="1000.0" lower="0" upper="0.3" velocity="1.0"/>
-  </joint>
-  <joint name="gripper_joint_right" type="revolute">
-    <mimic joint="gripper_joint" multiplier="-1"/>
-    <parent link="gripper_base"/>
-    <child link="gripper_link_right"/>
-    <axis xyz="0 0 1"/>
-    <origin xyz="-0.055 -0.02 0"/>
-    <limit effort="1000.0" lower="0.3" upper="0" velocity="1.0"/>
-  </joint>
-  <link name="gripper_base">
-   </link>
-  <link name="gripper_link_left">
-    <visual>
-      <geometry>
-        <box size="0.06 0.005 0.02"/>
-      </geometry>
-      <origin xyz="0.03 0 0"/>
-      <material name="orange"/>
-    </visual>
-  </link>
-  <link name="gripper_link_right">
-    <visual>
-      <geometry>
-        <box size="0.06 0.005 0.02"/>
-      </geometry>
-      <origin xyz="0.03 0 0"/>
-      <material name="orange"/>
-    </visual>
-  </link>
+  
+  <include filename="$(find arips_arm_description)/urdf/arips_arm.xacro" />
+  -->
 </robot>
 
