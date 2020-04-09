@@ -61,9 +61,9 @@ window
 # load an environment bitmap
 floorplan
 ( 
-  name "appartement_ffm_lidar"
-  bitmap "appartement_ffm_lidar.pgm"
-  size [25.600 27.200 0.500]
+  name "map"
+  bitmap "map.pgm"
+  size [7.5 7.5 0.500]
   pose [ -1.614 1.238  0.000 0.000 ]
 )
 

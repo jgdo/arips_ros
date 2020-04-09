@@ -1,3 +1,4 @@
+robot_base_frame: base_link
 obstacle_range: 3.5
 raytrace_range: 5.0
 robot_radius: 0.22

@@ -6,7 +6,7 @@
   </node>
   
   <!-- Run the map server -->
-  <arg name="map_file" default="$(find arips_launch)/stage/appartement_ffm_lidar.yaml"/>
+  <arg name="map_file" default="$(find arips_launch)/stage/map.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
   <!--- Run AMCL -->
