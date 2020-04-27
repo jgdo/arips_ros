@@ -20,4 +20,7 @@
     respawn="false" output="screen">
     <remap from="/joint_states" to="/arips/joint_states" />
   </node>
+  
+  // use laser scan matcher instead of odometry
+  <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
 </launch>
