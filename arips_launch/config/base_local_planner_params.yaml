@@ -16,13 +16,13 @@ base_local_planner: arips_local_planner/AripsPlannerROS
 AripsPlannerROS:
 
 # Robot Configuration Parameters - Kobuki
-  max_vel_x: 0.3  # 0.55
+  max_vel_x: 0.55  # 0.55
   min_vel_x: 0.1
 
   max_vel_y: 0.0  # diff drive robot
   min_vel_y: 0.0  # diff drive robot
 
-  max_vel_trans: 0.3 # choose slightly less than the base's capability
+  max_vel_trans: 0.55 # choose slightly less than the base's capability
   min_vel_trans: 0.1  # this is the min trans velocity when there is negligible rotational velocity
   trans_stopped_vel: 0.0
 

@@ -8,7 +8,7 @@
     <xacro:property name="wheel_thick" value="0.03"/>
     <xacro:property name="wheel_radius" value="0.05"/>
     <xacro:property name="front_wheel_gap" value="0.003"/>
-    <xacro:property name="wheel_damping_factor" value="0.7"/>
+    <xacro:property name="wheel_damping_factor" value="0.2"/>
     
     <xacro:property name="camera_name" value="kinect"/>
     
@@ -24,9 +24,12 @@
             <commandTopic>cmd_vel</commandTopic>
             <odometryTopic>odom</odometryTopic>
             <odometryFrame>odom</odometryFrame>
-            <robotBaseFrame>base_link</robotBaseFrame>
+            <robotBaseFrame>arips_base</robotBaseFrame>
             <publishWheelTF>true</publishWheelTF>
+            <publishTf>false</publishTf>
             <legacyMode>false</legacyMode>
+            
+            <odometrySource>encoder</odometrySource>
         </plugin>
     </gazebo>
     
@@ -37,7 +40,7 @@
     </gazebo>
     
     
-    <gazebo reference="base_link">
+    <gazebo reference="arips_base">
         <sensor type="ray" name="lidar_sensor">
         <pose>0 0 0.2 0 0 0</pose>
         <visualize>false</visualize>
@@ -67,25 +70,26 @@
             </noise>
         </ray>
         <plugin name="gazebo_ros_lidar_controller" filename="libgazebo_ros_laser.so">
-            <topicName>/base_scan</topicName>
-            <frameName>base_link</frameName>
+            <topicName>/scan</topicName>
+            <frameName>arips_base</frameName>
         </plugin>
         </sensor>
     </gazebo>
     
-      <gazebo reference="base_link">
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+      <gazebo reference="arips_base">
+        <mu1>0.0001</mu1>
+        <mu2>0.0001</mu2>
     </gazebo>
     
+    <!-- Use slightly different friction for individual wheels to be more realistic -->
     <gazebo reference="left_wheel">
-        <mu1>0.8</mu1>
-        <mu2>0.8</mu2>
+        <mu1>0.81</mu1>
+        <mu2>0.81</mu2>
     </gazebo>
     
     <gazebo reference="right_wheel">
-        <mu1>0.8</mu1>
-        <mu2>0.8</mu2>
+        <mu1>0.81</mu1>
+        <mu2>0.81</mu2>
     </gazebo>
     
     <gazebo reference="kinect_link">
@@ -95,12 +99,12 @@
             <horizontal_fov>1.047198</horizontal_fov>
             <image>
                 <width>320</width>
-                <height>480</height>
+                <height>240</height>
                 <format>R8G8B8</format>
             </image>
             <clip>
                 <near>0.04</near>
-                <far>8</far>
+                <far>25</far>
             </clip>
             </camera>
             <plugin name="kinect_plugin" filename="libgazebo_ros_openni_kinect.so">
@@ -132,7 +136,7 @@
 
     
     
-  <link name="base_link">
+  <link name="arips_base">
       
     <visual>
         
@@ -204,7 +208,7 @@
   </link>
   
   <joint name="right_wheel_joint" type="continuous">
-    <parent link="base_link"/>
+    <parent link="arips_base"/>
     <child link="right_wheel"/>
     <axis xyz="0 0 1"/>
     <origin xyz="0 -${wheel_base/2} ${wheel_radius}" rpy="${-PI/2} 0 0"/>
@@ -238,7 +242,7 @@
   </link>
   
   <joint name="left_wheel_joint" type="continuous">
-    <parent link="base_link"/>
+    <parent link="arips_base"/>
     <child link="left_wheel"/>
     <axis xyz="0 0 1"/>
     <origin xyz="0 ${wheel_base/2} ${wheel_radius}" rpy="${-PI/2} 0 0"/>
@@ -272,7 +276,7 @@
 
   <joint name="kinect_joint" type="revolute">
     <limit effort="10.0" lower="-1" upper="1" velocity="0.2"/>
-    <parent link="base_link"/>
+    <parent link="arips_base"/>
     <child link="kinect_link"/>
     <origin xyz="-0.14 0 0.74" rpy="0 0 0"/>
     <axis xyz="0 1 0" />
@@ -295,8 +299,8 @@
   
     <!--
   <joint name="base_to_arm" type="fixed">
-    <parent link="base_link"/>
-    <child link="arm_base_link"/>
+    <parent link="arips_base"/>
+    <child link="arm_arips_base"/>
     <origin rpy="-0.028 0 0" xyz="0.163 -0.006 0.055"/>
   </joint>
   
