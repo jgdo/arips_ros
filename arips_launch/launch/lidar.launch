@@ -1,6 +1,6 @@
 <launch>
   <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="false" >
-    <param name="port"         type="string" value="/dev/ttyUSB2"/>  
+    <param name="port"         type="string" value="/dev/ydlidar"/>  
     <param name="baudrate"     type="int"    value="128000"/>
     <param name="frame_id"     type="string" value="laser_frame"/>
     <param name="low_exposure"  type="bool"   value="false"/>
@@ -12,11 +12,12 @@
     <param name="range_min"    type="double" value="0.22" />
     <param name="range_max"    type="double" value="16.0" />
     <param name="ignore_array" type="string" value="" />
-    <param name="samp_rate"    type="int"    value="2"/>
-    <param name="frequency"    type="double" value="7"/>
+    <param name="samp_rate"    type="int"    value="5000"/>
+    <param name="frequency"    type="double" value="10"/>
+    <param name="timestamp_offset"    type="double" value="0.0"/>
   </node>
   
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.0 0.0 0.0 0.0 0.0  0.0 arips_base laser_frame" />  
+    args="0.0 0.0 0.0 0.0 3.14159265 0.0 arips_base laser_frame" />  
     
 </launch>

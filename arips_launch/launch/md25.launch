@@ -1,9 +1,12 @@
 <launch>
   <node name="md25_node" pkg="md25" type="md25_node" output="screen" respawn="true">
-    <param name="port" value="/dev/ttyUSB0" />
+    <param name="port" value="/dev/md25" />
     <param name="wheel_base" value="0.333" />
     <param name="base_frame" value="arips_base" />
+    <param name="odom_frame" value="odom" />
     <param name="encoder_sensitivity1" value="0.00872639" />
     <param name="encoder_sensitivity2" value="0.00872639" />
+    <param name="publish_odom_transformation" value="false" />
+    
   </node>
 </launch>
