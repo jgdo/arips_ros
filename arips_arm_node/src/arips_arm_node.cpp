@@ -131,7 +131,8 @@ private:
 class AripsArmNode {
 public:
     AripsArmNode():
-            mServoDevice(ros::NodeHandle("~").param<int>("baud", 500000)),
+            mServoDevice(pnh.param<int>("baud", 500000), 
+                         QString::fromStdString(pnh.param<std::string>("port", "/dev/scs215"))),
         mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
         mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
@@ -167,6 +168,7 @@ public:
     }
 private:
     ros::NodeHandle nh;
+    ros::NodeHandle pnh {"~"};
 
     SCServo mServoDevice;
 

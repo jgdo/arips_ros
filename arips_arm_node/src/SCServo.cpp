@@ -11,10 +11,10 @@
 #include <QDebug>
 #include <stdexcept>
 
-SCServo::SCServo(int baud)
+SCServo::SCServo(int baud, QString port)
 {
 	IOTimeOut = 2;
-    pSerial.setPortName("/dev/ttyUSB1");
+    pSerial.setPortName(port);
     pSerial.setBaudRate(baud);
     pSerial.open(QIODevice::ReadWrite);
     qDebug() << "isOpen: " << pSerial.isOpen();

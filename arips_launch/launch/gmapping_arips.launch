@@ -1,7 +1,7 @@
 <launch>
-  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" args="scan:=base_scan" output="screen">
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" args="scan:=scan" output="screen">
 	    <param name="odom_frame" value="odom"/>
-	    <param name="base_frame" value="base_link" />
+	    <param name="base_frame" value="arips_base" />
         <param name="map_update_interval" value="2.0"/>
         <param name="maxUrange" value="8.0"/>
         <param name="sigma" value="0.005"/>

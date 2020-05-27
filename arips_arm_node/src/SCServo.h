@@ -11,15 +11,16 @@
 #include "SCSProtocol.h"
 
 #include <QSerialPort>
+#include <QString>
 
 class SCServo : public SCSProtocol
 {
 public:
-	SCServo(int baud);
-        virtual int writeSCS(unsigned char *nDat, int nLen);
-        virtual void readSCS(unsigned char *nDat, int nLen);
-        virtual int writeSCS(unsigned char bDat);
-        virtual void flushSCS();
+	SCServo(int baud, QString port);
+    virtual int writeSCS(unsigned char *nDat, int nLen);
+    virtual void readSCS(unsigned char *nDat, int nLen);
+    virtual int writeSCS(unsigned char bDat);
+    virtual void flushSCS();
 
 	void setBaud(int baud);
 public:
