@@ -48,6 +48,13 @@
     <!-- <metapackage/> -->
 
     <!-- Other tools can request additional information be placed here -->
+      
+      <capability_interface>
+        capability/arips_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/arips_provider.yaml
+      </capability_provider>
 
   </export>
 </package>
