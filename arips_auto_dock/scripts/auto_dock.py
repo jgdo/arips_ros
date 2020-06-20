@@ -4,7 +4,7 @@ import rospy
 import tf2_ros
 from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
-from math import pow, atan2, sqrt
+import math
 
 
 # based on http://wiki.ros.org/turtlesim/Tutorials/Go%20to%20Goal
@@ -26,14 +26,15 @@ class AutoDocker:
         vel_msg = Twist()
         
         try:
-            trans = tfBuffer.lookup_transform('arips_base', 'docking_station', rospy.Time())
+            trans = self.tfBuffer.lookup_transform('arips_base', 'docking_station', rospy.Time())
             
             dist = math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
             if dist > 0.1:
-                vel_msg.angular.z = 0.5 * math.sign(math.atan2(trans.transform.translation.y, trans.transform.translation.x))
+                vel_msg.angular.z = math.copysign(0.5, math.atan2(trans.transform.translation.y, trans.transform.translation.x))
                 vel_msg.linear.x = 0.5 
             
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            print("Could not find frame docking_station")
             pass
         
         self.velocity_publisher.publish(vel_msg)
@@ -46,5 +47,6 @@ if __name__ == '__main__':
     try:
         d = AutoDocker()
         d.start()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
