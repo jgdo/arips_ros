@@ -4,4 +4,4 @@ footprint: [[-0.16, -0.16], [-0.16, 0.16], [0.19, 0.16], [0.24, 0.0], [0.19, -0.
 footprint_padding: 0.01
 inflation_radius: 0.50
 observation_sources: scan
-scan: {data_type: LaserScan, topic: /narrow_scan, marking: true, clearing: true}
+scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}
