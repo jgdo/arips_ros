@@ -1,21 +1,33 @@
-
+import rhasspy_ros_interface.msg
+import capabilities.msg
+import rospy
 
 class UserInteraction:
     def __init__(self):
         self.intent_table = {}
         self.active_handler = None
 
+        rospy.Subscriber("speech_intent", rhasspy_ros_interface.msg.Intent, self.intent_callback)
+
     def intent_callback(self, msg):
         if msg.intent == 'stop':
+            rospy.loginfo("Received stop intent")
+
             # special handing for stop intent
             if self.active_handler is not None:
                 self.active_handler.stop()
                 self.active_handler = None
+            else:
+                rospy.loginfo("Nothing to stop")
+
             return None
         elif self.active_handler is not None:
+            rospy.logerr("Cannot start new intent since a different intent is already running")
             # cannot run intent since already occupied
             return self.user_respond_fail()
         elif msg.intent in self.intent_table:
+            rospy.loginfo("Handling intent '{}'".format(msg.intent))
+
             # handle new valid intent
             handler = self.intent_table[msg.intent]
 
@@ -27,12 +39,13 @@ class UserInteraction:
                     return self.user_respond_fail()
 
             # handle intent. Intent can be handled either directly or over long time
-            res = handler.handle_intent(msg.intent)
+            res = handler.handle_intent(msg)
             if res is not None:
                 self.active_handler = res
 
             return None
         else:
+            rospy.logerr("Cannot find handler for intent '{}', ignoring".format(msg.intent))
             return self.user_respond_fail()
 
     def handle_intent_finished(self, handler):
@@ -46,7 +59,7 @@ class UserInteraction:
         self.active_handler = None
 
     def get_active_capabilities(self):
-        pass
+        return [] # TODO
 
     def activate_required_capabilities(self, capabilities):
         pass
@@ -58,3 +71,30 @@ class UserInteraction:
         :return: None
         '''
         pass
+
+    def add_intent(self, intent, handler):
+        self.intent_table[intent] = handler
+
+class TestIntentHandler:
+    def __init__(self):
+        pass
+
+    def handle_intent(self, msg):
+        print("Handling intent {}".format(str(msg)))
+        return None
+
+    def stop(self):
+        pass
+
+    def get_required_capabilities(self):
+        return []
+
+def main():
+    rospy.init_node('user_interaction_node')
+    ui = UserInteraction()
+    ui.add_intent('test_intent', TestIntentHandler())
+
+    rospy.spin()
+
+if __name__ == '__main__':
+    main()

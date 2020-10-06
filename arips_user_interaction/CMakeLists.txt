@@ -10,6 +10,7 @@ project(arips_user_interaction)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  rhasspy_ros_interface
 )
 
 ## System dependencies are found with CMake's conventions
