@@ -1,0 +1,5 @@
+name: SLAM_gmapping
+spec_version: 1
+spec_type: provider
+implements: arips_launch/SLAM
+launch_file: '../launch/gmapping_arips.launch'

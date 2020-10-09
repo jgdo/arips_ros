@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+
 import rhasspy_ros_interface.msg
-import capabilities.msg
 import rospy
+from arips_user_interaction import intent_handler, teleop_handler, look_handler
 
 class UserInteraction:
     def __init__(self):
@@ -34,8 +36,9 @@ class UserInteraction:
             # check if all required capabilities are active and activate if not
             active_capabilities = self.get_active_capabilities()
             required_capabilities = handler.get_required_capabilities()
-            if required_capabilities not in active_capabilities:
+            if any(cap not in active_capabilities for cap in required_capabilities):
                 if not self.activate_required_capabilities(required_capabilities):
+                    rospy.logerr("Could not activate required capabilities for intent '{}', ignoring".format(msg.intent))
                     return self.user_respond_fail()
 
             # handle intent. Intent can be handled either directly or over long time
@@ -62,7 +65,7 @@ class UserInteraction:
         return [] # TODO
 
     def activate_required_capabilities(self, capabilities):
-        pass
+        return True
 
     def user_respond_fail(self):
         '''
@@ -75,9 +78,9 @@ class UserInteraction:
     def add_intent(self, intent, handler):
         self.intent_table[intent] = handler
 
-class TestIntentHandler:
+class TestIntentHandler(intent_handler.IntentHandler):
     def __init__(self):
-        pass
+        super(TestIntentHandler, self).__init__()
 
     def handle_intent(self, msg):
         print("Handling intent {}".format(str(msg)))
@@ -93,6 +96,8 @@ def main():
     rospy.init_node('user_interaction_node')
     ui = UserInteraction()
     ui.add_intent('test_intent', TestIntentHandler())
+    ui.add_intent('teleop_joy', teleop_handler.JoyTeleopIntentHandler())
+    ui.add_intent('kinect_tilt', look_handler.LookIntentHandler())
 
     rospy.spin()
 

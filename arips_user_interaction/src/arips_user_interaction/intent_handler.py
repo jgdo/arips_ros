@@ -1,6 +1,6 @@
 
 
-class IntentHandler:
+class IntentHandler(object):
     def __init__(self):
         pass
 
