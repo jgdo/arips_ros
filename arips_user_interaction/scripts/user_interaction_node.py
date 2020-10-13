@@ -2,7 +2,9 @@
 
 import rhasspy_ros_interface.msg
 import rospy
-from arips_user_interaction import intent_handler, teleop_handler, look_handler
+import std_msgs.msg
+from arips_user_interaction import intent_handler, teleop_handler, look_handler, scene_handler
+
 
 class UserInteraction:
     def __init__(self):
@@ -10,6 +12,7 @@ class UserInteraction:
         self.active_handler = None
 
         rospy.Subscriber("speech_intent", rhasspy_ros_interface.msg.Intent, self.intent_callback)
+        self.speak_pub = rospy.Publisher('speak', std_msgs.msg.String, queue_size=10, latch=False)
 
     def intent_callback(self, msg):
         if msg.intent == 'stop':
@@ -78,6 +81,9 @@ class UserInteraction:
     def add_intent(self, intent, handler):
         self.intent_table[intent] = handler
 
+    def say(self, str):
+        self.speak_pub.publish(std_msgs.msg.String(str))
+
 class TestIntentHandler(intent_handler.IntentHandler):
     def __init__(self):
         super(TestIntentHandler, self).__init__()
@@ -98,6 +104,7 @@ def main():
     ui.add_intent('test_intent', TestIntentHandler())
     ui.add_intent('teleop_joy', teleop_handler.JoyTeleopIntentHandler())
     ui.add_intent('kinect_tilt', look_handler.LookIntentHandler())
+    ui.add_intent('describe_scene', scene_handler.SceneIntentHandler(ui))
 
     rospy.spin()
 

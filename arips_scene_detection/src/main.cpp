@@ -5,6 +5,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <moveit_msgs/PlanningScene.h>
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -30,7 +31,10 @@ ros::Publisher pub_cloud;
 ros::Publisher pub_cloud_neg;
 ros::Publisher pub_table;
 ros::Publisher pick_pose_pub;
-ros::Publisher kinect_correction_angle_pub;
+ros::Publisher kinect_correction_angle_pub, planning_scene_diff_publisher;
+
+
+ros::Publisher scene_pub;
 
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 interactive_markers::MenuHandler menu_handler;
@@ -41,6 +45,7 @@ struct DetectedObject {
     tf::Vector3 pos = tf::Vector3{0,0,0};
     int count = 0;
     bool updated = false;
+    int id = rand();
 };
 
 std::list<DetectedObject> detectedObjects;
@@ -125,10 +130,10 @@ void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
 
-    tf::StampedTransform transform;
+    tf::StampedTransform arm_transform;
     try{
-        listener->lookupTransform("base_link", cloud_msg->header.frame_id,
-                                 ros::Time(0), transform);
+        listener->lookupTransform("arm_base_link", cloud_msg->header.frame_id,
+                                  ros::Time(0), arm_transform);
     }
     catch (tf::TransformException &ex) {
         ROS_ERROR("%s",ex.what());
@@ -227,7 +232,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
         visualization_msgs::Marker object;
-        object.header.frame_id = "base_link";
+        object.header.frame_id = "arm_base_link";
         object.header.stamp = ros::Time::now();
         object.ns = "clustered_objects";
         object.id = 0;
@@ -258,7 +263,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
             tf::Vector3 tfc(center.x, center.y, center.z);
-            tf::Vector3 centerBase = transform(tfc);
+            tf::Vector3 centerBase = arm_transform(tfc);
 
             if(centerBase.length() < maxDist_m) {
 
@@ -289,6 +294,21 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             j++;
         }
 
+        visualization_msgs::MarkerArray scene_objects;
+
+        {
+            visualization_msgs::Marker marker;
+            marker.action = visualization_msgs::Marker::DELETEALL;
+            scene_objects.markers.push_back(marker);
+        }
+
+        moveit_msgs::PlanningScene planning_scene;
+        {
+            moveit_msgs::CollisionObject object;
+            object.operation = moveit_msgs::CollisionObject::REMOVE;
+            planning_scene.world.collision_objects.push_back(object);
+        }
+
         ROS_INFO_STREAM("##############");
         for(auto iter = detectedObjects.begin(); iter != detectedObjects.end();) {
             if(iter->updated) {
@@ -310,17 +330,51 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
                         if(iter->count > 5) {
                             pick_pose_pub.publish(point);
                         }
+
+                        visualization_msgs::Marker marker;
+                        marker.header.frame_id = "arm_base_link";
+                        marker.header.stamp = ros::Time::now();
+                        marker.type = visualization_msgs::Marker::CUBE;
+                        marker.pose.position = point;
+                        marker.pose.orientation.w = 1;
+                        marker.id = iter->id;
+                        marker.color = color;
+                        marker.scale.x = 0.03;
+                        marker.scale.y = 0.03;
+                        marker.scale.z = 0.03;
+                        scene_objects.markers.push_back(marker);
+
+
+                        moveit_msgs::CollisionObject object;
+                        object.header = marker.header;
+                        object.operation = moveit_msgs::CollisionObject::ADD;
+                        object.id = std::to_string(marker.id);
+
+                        /* Define a box to be attached */
+                        shape_msgs::SolidPrimitive primitive;
+                        primitive.type = primitive.BOX;
+                        primitive.dimensions = {0.1, 0.1, 0.1};
+
+                        object.primitives.push_back(primitive);
+                        object.primitive_poses.push_back(marker.pose);
+
+                        planning_scene.world.collision_objects.push_back(object);
                     }
                 }
             } else {
                 if(--iter->count < 0) {
-                    iter = detectedObjects.erase(iter);
+                     iter = detectedObjects.erase(iter);
                     continue;
                 }
             }
 
             ++iter;
         }
+
+        scene_pub.publish(scene_objects);
+
+        planning_scene.is_diff = true;
+        planning_scene_diff_publisher.publish(planning_scene);
 
         object.scale.x = 0.03;
         object.scale.y = 0.03;
@@ -409,7 +463,7 @@ int
 main (int argc, char** argv)
 {
   // Initialize ROS
-  ros::init (argc, argv, "my_pcl_tutorial");
+  ros::init (argc, argv, "arips_scene_detection");
   ros::NodeHandle nh;
 
     listener = std::make_shared<tf::TransformListener>();
@@ -419,6 +473,8 @@ main (int argc, char** argv)
     pub_cloud = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud", 1);
     pub_cloud_neg = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud_neg", 1);
   marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+
+    scene_pub = nh.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
 
     server.reset( new interactive_markers::InteractiveMarkerServer("basic_controls","",false) );
 
@@ -430,6 +486,8 @@ main (int argc, char** argv)
 
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/kinect/depth_registered/points", 1, cloud_cb);
+
+    planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
 
   // Spin
   ros::spin ();

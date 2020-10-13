@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>arips_groundplane_segmentation</name>
+  <name>arips_scene_detection</name>
   <version>0.0.0</version>
   <description>The arips_groundplane_segmentation package</description>
 
