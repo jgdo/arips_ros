@@ -276,7 +276,7 @@ private:
                     
                     useCorrected = true;
                     
-                    ROS_INFO_STREAM("Using corrected kinect pose");
+                    ROS_DEBUG_STREAM("Using corrected kinect pose");
                 }
             }
             catch (tf::TransformException ex){

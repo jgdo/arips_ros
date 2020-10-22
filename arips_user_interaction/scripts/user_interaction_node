@@ -78,8 +78,12 @@ class UserInteraction:
         '''
         pass
 
-    def add_intent(self, intent, handler):
-        self.intent_table[intent] = handler
+    def add_intent(self, intents, handler):
+        if type(intents) is not list:
+            intent = [intents]
+
+        for intent in intents:
+            self.intent_table[intent] = handler
 
     def say(self, str):
         self.speak_pub.publish(std_msgs.msg.String(str))
@@ -104,7 +108,7 @@ def main():
     ui.add_intent('test_intent', TestIntentHandler())
     ui.add_intent('teleop_joy', teleop_handler.JoyTeleopIntentHandler())
     ui.add_intent('kinect_tilt', look_handler.LookIntentHandler())
-    ui.add_intent('describe_scene', scene_handler.SceneIntentHandler(ui))
+    ui.add_intent(['describe_scene', 'pick_up'], scene_handler.SceneIntentHandler(ui))
 
     rospy.spin()
 

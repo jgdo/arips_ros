@@ -266,6 +266,8 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
             tf::Vector3 centerBase = arm_transform(tfc);
 
             if(centerBase.length() < maxDist_m) {
+                if (centerBase.z() > 0)
+                    continue;
 
                 bool detected = false;
                 for (auto& obj: detectedObjects) {
@@ -353,7 +355,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
                         /* Define a box to be attached */
                         shape_msgs::SolidPrimitive primitive;
                         primitive.type = primitive.BOX;
-                        primitive.dimensions = {0.1, 0.1, 0.1};
+                        primitive.dimensions = {0.00, 0.00, 0.00};
 
                         object.primitives.push_back(primitive);
                         object.primitive_poses.push_back(marker.pose);
