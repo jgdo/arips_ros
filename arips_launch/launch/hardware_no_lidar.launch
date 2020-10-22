@@ -10,5 +10,9 @@
   
   <!-- kinect frames -->
   <include file="$(find arips_launch)/launch/includes/frames.launch" />
+
+
+  <!-- moveit -->
+  <include file="$(find arips_moveit_generated)/launch/real.launch" />
 </launch>
 

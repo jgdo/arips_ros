@@ -1,0 +1,10 @@
+<launch>
+  <!--- alvar marker tracking -->
+  <include file="$(find arips_launch)/launch/alvar.launch" />
+  
+  <!--- combine individual markers to a single robot marker -->
+  <node name="marker_pose" pkg="arips_calibration_scripts" type="get_marker_pose.py" output="screen" />
+  
+  <!--- compute compensation of kinect <-> base transformation (actual calibration script) -->
+  <node name="calibrate_kinect_pose" pkg="arips_calibration_scripts" type="calibrate_kinect_to_robot_base.py" output="screen" />
+</launch>
