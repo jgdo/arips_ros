@@ -76,9 +76,11 @@ servo_5:
     
     angles: [-0.05,  -0.03,  -0.020]
     raws:   [250, 635, 800 ]
-    
+
     
     angle_factor: -1
+
+    max_torque: 128
     
 #  angle_offset: 0
 
@@ -95,8 +97,8 @@ servo_6:
     angle_offset: 0
     angle_factor: -1
     
-    ccw_dead: 0
-    cw_dead: 0
+    ccw_dead: 1
+    cw_dead: 1
     
     kp: 15
     ki: 7

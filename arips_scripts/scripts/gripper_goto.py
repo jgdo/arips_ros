@@ -18,7 +18,7 @@ arm = moveit_commander.MoveGroupCommander("arm")
 gripper = moveit_commander.MoveGroupCommander("gripper")
 
 
-rospy.sleep(1)
+#rospy.sleep(1)
 
 gripper.set_goal_tolerance(0.001)
 
@@ -33,5 +33,5 @@ gripper.set_joint_value_target([float(sys.argv[1]) if len(sys.argv) >= 2 else 0.
 gripper.plan()
 gripper.go()
 
-rospy.sleep(1)
+#rospy.sleep(1)
 

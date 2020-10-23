@@ -47,7 +47,9 @@ public:
 
             setByteRegFromParam(pnh, P_COMPLIANCE_P, "kp");
             setByteRegFromParam(pnh, P_COMPLIANCE_I, "ki");
-            setByteRegFromParam(pnh, P_INTEGRAL_LIMIT_L, "isum_max");
+            setWordRegFromParam(pnh, P_INTEGRAL_LIMIT_L, "isum_max");
+
+            setWordRegFromParam(pnh, P_MAX_TORQUE_L, "max_torque");
         } catch(std::exception const& e) {
             ROS_ERROR_STREAM(e.what());
         }
@@ -124,6 +126,13 @@ private:
         int value;
         if(pnh.getParam(name, value)) {
             mServo->writeByte(mID, reg, value);
+        }
+    }
+
+    void setWordRegFromParam(ros::NodeHandle& pnh, int reg, const std::string& name) {
+        int value;
+        if(pnh.getParam(name, value)) {
+            mServo->writeWord(mID, reg, value);
         }
     }
 };
