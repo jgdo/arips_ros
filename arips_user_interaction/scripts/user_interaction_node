@@ -80,7 +80,7 @@ class UserInteraction:
 
     def add_intent(self, intents, handler):
         if type(intents) is not list:
-            intent = [intents]
+            intents = [intents]
 
         for intent in intents:
             self.intent_table[intent] = handler

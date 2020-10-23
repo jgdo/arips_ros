@@ -2,11 +2,7 @@
   <node name="rhasspy_ros_node" pkg="rhasspy_ros_interface" type="rhasspy_ros_node.py" respawn="true" output="screen">
   </node>
   
-  <node name="user_interaction_node" pkg="arips_user_interaction" type="user_interaction_node.py" respawn="true" output="screen">
+  <node name="user_interaction_node" pkg="arips_user_interaction" type="user_interaction_node" respawn="true" output="screen">
   </node>
-  
-  <node name="capability_server" pkg="capabilities" type="capability_server" respawn="true" output="screen">
-  </node>
-  
   
 </launch>

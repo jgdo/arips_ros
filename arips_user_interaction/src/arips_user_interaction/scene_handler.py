@@ -155,4 +155,4 @@ class SceneIntentHandler(IntentHandler):
         self.set_gripper(0.06)
 
     def close_gripper(self):
-        self.set_gripper(0.027)
+        self.set_gripper(0.02)
