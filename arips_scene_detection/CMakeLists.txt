@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
         interactive_markers
+        cv_bridge
+        image_transport
+        image_geometry
 )
 
 ## System dependencies are found with CMake's conventions
@@ -135,7 +138,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(scene_detection src/main.cpp)
+add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp src/ground_segmentation.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
