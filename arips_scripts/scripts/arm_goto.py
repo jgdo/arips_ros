@@ -10,7 +10,7 @@ import tf_conversions
 import geometry_msgs.msg
 from tf import TransformListener
 
-print "============ Starting tutorial setup"
+print("============ Starting tutorial setup")
 moveit_commander.roscpp_initialize(sys.argv)
 rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
 
@@ -28,11 +28,11 @@ rospy.sleep(1)
 arm.set_goal_tolerance(0.003)
 
 
-print "current pose: ", arm.get_current_pose()
-print "current rpy: ", arm.get_current_rpy()
-print "joints: ", arm.get_current_joint_values()
+print("current pose: ", arm.get_current_pose())
+print("current rpy: ", arm.get_current_rpy())
+print("joints: ", arm.get_current_joint_values())
 
-print "============ Generating plan 1"
+print("============ Generating plan 1")
 pose_target = geometry_msgs.msg.PoseStamped()
 pose_target.pose.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0, 1.57, 0))
 

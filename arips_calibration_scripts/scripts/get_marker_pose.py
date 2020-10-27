@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 
@@ -50,7 +50,7 @@ class kinect_calibrator:
             
             M = tf.transformations.superimposition_matrix(v1, v0)
             
-            #print M
+            #print(M
             rospy.logdebug("publishing marker_floor")
             
             self.tf_br.sendTransform(tf.transformations.translation_from_matrix(M),
@@ -62,10 +62,10 @@ class kinect_calibrator:
             pass
                      
     def check_transform_robot(self):
-        (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_20', rospy.Time(0))
-        (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_21', rospy.Time(0))
-        (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_22', rospy.Time(0))
-        (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_23', rospy.Time(0))
+        (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_14', rospy.Time(0))
+        (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_11', rospy.Time(0))
+        (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_13', rospy.Time(0))
+        (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_12', rospy.Time(0))
         
         v0 = np.zeros((3, 4))
         v0[:, 0] = trans1
@@ -81,7 +81,7 @@ class kinect_calibrator:
         
         M = tf.transformations.superimposition_matrix(v1, v0)
         
-        #print M
+        #print(M
         rospy.logdebug("publishing marker_robot")
         
         self.tf_br.sendTransform(tf.transformations.translation_from_matrix(M),
@@ -98,7 +98,7 @@ def main(args):
     try:
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down ROS Image feature detector module"
+        print("Shutting down ROS Image feature detector module")
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -8,7 +8,7 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 import tf_conversions
 
-print "============ Starting tutorial setup"
+print("============ Starting tutorial setup")
 moveit_commander.roscpp_initialize(sys.argv)
 rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
 
@@ -18,19 +18,19 @@ arm = moveit_commander.MoveGroupCommander("arm")
 gripper = moveit_commander.MoveGroupCommander("gripper")
 
 
-#print "============ Waiting for RVIZ..."
+#print("============ Waiting for RVIZ..."
 #rospy.sleep(1)
-#print "============ Starting tutorial "
-#print "============ Reference frame: %s" % arm.get_planning_frame()
-#print "============ Reference frame: %s" % arm.get_end_effector_link()
-#print "============ Robot Groups:"
-#print robot.get_group_names()
-#print "============ Printing robot state"
-#print robot.get_current_state()
-print "============"
+#print("============ Starting tutorial "
+#print("============ Reference frame: %s" % arm.get_planning_frame()
+#print("============ Reference frame: %s" % arm.get_end_effector_link()
+#print("============ Robot Groups:"
+#print(robot.get_group_names()
+#print("============ Printing robot state"
+#print(robot.get_current_state()
+print("============")
 
 
-print "============ Generating plan 1"
+print("============ Generating plan 1")
 
 def drawAt(x, y, z):
     global arm

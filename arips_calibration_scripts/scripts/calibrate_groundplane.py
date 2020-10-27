@@ -49,7 +49,7 @@ def callback(msg):
     normal_orig = msg.values[0:3]
     global tf_listener
     pos, quat = tf_listener.lookupTransform("/arips_base", msg.header.frame_id, rospy.Time(0))
-    # print "quat = ", quat
+    # print("quat = ", quat
     normal_rotated = qv_mult(quat, normal_orig)
     z = [0, 0, 1]
     angle = -np.arctan2(normal_rotated[0], normal_rotated[2])
@@ -57,7 +57,7 @@ def callback(msg):
         angle += np.pi
 
     angle_deg = np.rad2deg(angle)
-    print "angle = ", angle_deg, " value = " , set_angle
+    print("angle = ", angle_deg, " value = " , set_angle)
 
     if set_angle not in angle_table:
         angle_table[set_angle] = [set_angle, 0, 0]
@@ -72,13 +72,13 @@ def callback(msg):
         times_counter = -1
 
         if angle_counter >= len(angle_input_table):
-            sys.stdout.write("angles: [");
+            sys.stdout.write("angles: [")
             for elem in sorted(angle_table.values(), key=lambda e: -e[1] / e[2]):
-                sys.stdout.write(str(-elem[1] / elem[2]) + ", ");
-            sys.stdout.write("]\nraws: [");
+                sys.stdout.write(str(-elem[1] / elem[2]) + ", ")
+            sys.stdout.write("]\nraws: [")
             for elem in sorted(angle_table.values(), key=lambda e: -e[1] / e[2]):
-                sys.stdout.write(str(-elem[0]) + ", ");
-            sys.stdout.write("]\n");
+                sys.stdout.write(str(-elem[0]) + ", ")
+            sys.stdout.write("]\n")
             rospy.signal_shutdown('done')
 
 

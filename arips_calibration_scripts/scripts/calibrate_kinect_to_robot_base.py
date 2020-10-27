@@ -29,19 +29,19 @@ class kinect_calibrator:
         try:
             t_markerfloor_markerrobot = self.getTransform("/marker_floor", "/marker_robot")
 
-            print "t_markerfloor_markerrobot", t_markerfloor_markerrobot
+            print("t_markerfloor_markerrobot", t_markerfloor_markerrobot)
 
             t_ideal_base_markerfloor = tf.TransformerROS().fromTranslationRotation([0.30, 0.0, 0.0], [0, 0, 0, 1])
 
             t_base_markerrobot = np.matmul(t_ideal_base_markerfloor, t_markerfloor_markerrobot)
 
-            print "t_base_markerrobot", t_base_markerrobot
+            print("t_base_markerrobot", t_base_markerrobot)
 
             trans = tf.transformations.translation_from_matrix(t_base_markerrobot)
             quat = tf.transformations.quaternion_from_matrix(t_base_markerrobot)
 
-            print "transform"
-            print trans, tf.transformations.euler_from_quaternion(quat)
+            print("transform")
+            print(trans, tf.transformations.euler_from_quaternion(quat))
 
             print
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
@@ -56,7 +56,7 @@ def main(args):
     try:
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down ROS Image feature detector module"
+        print("Shutting down ROS Image feature detector module")
 
 if __name__ == '__main__':
     main(sys.argv)

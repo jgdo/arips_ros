@@ -45,15 +45,15 @@ def callback(point):
     
     point.x += 0.009
     point.y += 0.008
-    point.z -= 0.010;
-    print "picking at " + str(point)
-    print "# open gripper"
+    point.z -= 0.010
+    print( "picking at " + str(point))
+    print( "# open gripper")
     
     openGripper()
     
     rospy.sleep(0.5)
     
-    print "# approach"
+    print( "# approach")
 
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
@@ -67,7 +67,7 @@ def callback(point):
     
     rospy.sleep(3)
     
-    print "pick"
+    print( "pick")
     
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
@@ -81,13 +81,13 @@ def callback(point):
     
     rospy.sleep(0.5)
     
-    print "close gripper"
+    print( "close gripper")
     
     closeGripper()
     
     rospy.sleep(1)
     
-    print "go drop"
+    print( "go drop")
     
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation.w = 1.0
@@ -101,13 +101,13 @@ def callback(point):
     
     rospy.sleep(0.5)
     
-    print "idle"
+    print( "idle")
     
     openGripper()
     
     rospy.sleep(0.5)
     
-    print "go home"
+    print( "go home")
     
     arm.clear_pose_targets()
     arm.set_joint_value_target([0.0, 0.0, -1.3, 0.0, 0])

@@ -1,4 +1,4 @@
-from intent_handler import IntentHandler
+from arips_user_interaction.intent_handler import IntentHandler
 import rospy
 from std_msgs.msg import Float32
 

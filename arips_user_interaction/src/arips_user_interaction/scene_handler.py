@@ -1,4 +1,4 @@
-from intent_handler import IntentHandler
+from arips_user_interaction.intent_handler import IntentHandler
 import moveit_commander
 import sys
 import rospy
@@ -70,14 +70,14 @@ class SceneIntentHandler(IntentHandler):
         point.x += 0.013
         point.y += 0.008
         point.z -= 0.010
-        print "picking at " + str(point)
-        print "# open gripper"
+        print("picking at " + str(point))
+        print("# open gripper")
 
         self.open_gripper()
 
         rospy.sleep(0.5)
 
-        print "# approach"
+        print("# approach")
 
         pose_target = geometry_msgs.msg.Pose()
         pose_target.orientation = geometry_msgs.msg.Quaternion(
@@ -92,7 +92,7 @@ class SceneIntentHandler(IntentHandler):
 
         rospy.sleep(3)
 
-        print "pick"
+        print("pick")
 
         pose_target = geometry_msgs.msg.Pose()
         pose_target.orientation = geometry_msgs.msg.Quaternion(
@@ -107,13 +107,13 @@ class SceneIntentHandler(IntentHandler):
 
         rospy.sleep(0.5)
 
-        print "close gripper"
+        print("close gripper")
 
         self.close_gripper()
 
         rospy.sleep(1)
 
-        print "go drop"
+        print("go drop")
 
         pose_target = geometry_msgs.msg.Pose()
         pose_target.orientation.w = 1.0
@@ -127,13 +127,13 @@ class SceneIntentHandler(IntentHandler):
 
         rospy.sleep(0.5)
 
-        print "idle"
+        print("idle")
 
         self.open_gripper()
 
         rospy.sleep(0.5)
 
-        print "go home"
+        print("go home")
 
         self.arm.clear_pose_targets()
         self.arm.set_joint_value_target([0.0, 0.0, -1.3, 0.0, 0])

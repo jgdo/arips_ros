@@ -28,7 +28,7 @@ class arm_calibrator:
     def check_transform(self, event):
         t_base_marker = self.getTransform("/arips_base", "/ar_marker_0")
 
-        #print "t_base_marker", t_base_marker
+        #print("t_base_marker", t_base_marker
 
         t_arm_tool0 = self.getTransform("/base_link", "/tool0")
         t_tool0_marker = tf.TransformerROS().fromTranslationRotation([-0.0475, 0.001, 0.03], [0, 0, 0, 1])
@@ -39,18 +39,18 @@ class arm_calibrator:
 
         np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 
-        #print "t_arm_base_corrected"
-        #print t_arm_base_corrected
+        #print("t_arm_base_corrected"
+        #print(t_arm_base_corrected
 
         trans = tf.transformations.translation_from_matrix(t_base_arm_corrected)
         quat = tf.transformations.quaternion_from_matrix(t_base_arm_corrected)
 
-        print "t_base_arm_corrected"
-        print t_base_arm_corrected
+        print("t_base_arm_corrected")
+        print(t_base_arm_corrected)
 
-        print "transform"
-        print trans, quat
-        print
+        print("transform")
+        print(trans, quat)
+        print()
 
 
 def main(args):
@@ -61,7 +61,7 @@ def main(args):
     try:
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down ROS Image feature detector module"
+        print("Shutting down ROS Image feature detector module")
 
 if __name__ == '__main__':
     main(sys.argv)

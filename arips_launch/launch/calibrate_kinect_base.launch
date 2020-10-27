@@ -1,6 +1,6 @@
 <launch>
   <!--- alvar marker tracking -->
-  <include file="$(find arips_launch)/launch/alvar.launch" />
+  <include file="$(find arips_launch)/launch/aruco.launch" />
   
   <!--- combine individual markers to a single robot marker -->
   <node name="marker_pose" pkg="arips_calibration_scripts" type="get_marker_pose.py" output="screen" />

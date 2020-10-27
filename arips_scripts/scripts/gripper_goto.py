@@ -8,7 +8,7 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 import tf_conversions
 
-print "============ Starting tutorial setup"
+print("============ Starting tutorial setup")
 moveit_commander.roscpp_initialize(sys.argv)
 rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
 
@@ -23,11 +23,11 @@ gripper = moveit_commander.MoveGroupCommander("gripper")
 gripper.set_goal_tolerance(0.001)
 
 
-#print "current pose: ", gripper.get_current_pose()
-#print "current rpy: ", gripper.get_current_rpy()
-#print "joints: ", gripper.get_current_joint_values()
+#print("current pose: ", gripper.get_current_pose()
+#print("current rpy: ", gripper.get_current_rpy()
+#print("joints: ", gripper.get_current_joint_values()
 
-print "============ Generating plan 1"
+print("============ Generating plan 1")
 gripper.clear_pose_targets()
 gripper.set_joint_value_target([float(sys.argv[1]) if len(sys.argv) >= 2 else 0.03])
 gripper.plan()
