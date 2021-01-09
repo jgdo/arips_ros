@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find arips_launch)/launch/md25.launch" />
+  <include file="$(find arips_launch)/launch/joy_teleop.launch" />
+</launch>

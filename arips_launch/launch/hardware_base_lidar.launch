@@ -1,10 +1,19 @@
 <launch>
+  <param name="joy" value="false" />
+
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
   
   <!--- YD Lidar-->
   <include file="$(find arips_launch)/launch/lidar.launch" />
   
+  <!--- laser odometry -->
+  <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
+  
   <!-- kinect frames -->
-  <include file="$(find arips_launch)/launch/includes/frames.launch" />
+  <include file="$(find arips_launch)/launch/includes/frames.launch" />  
+  
+  <group if="$(arg joy)">
+    <include file="$(find arips_launch)/launch/joy_teleop.launch" />
+  </group>
 </launch>

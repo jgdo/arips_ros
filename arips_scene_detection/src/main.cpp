@@ -144,7 +144,7 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
-        cv_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_16UC1);
+        cv_ptr = cv_bridge::toCvCopy(depth_msg);
     }
     catch (cv_bridge::Exception& e)
     {

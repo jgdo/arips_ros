@@ -1,0 +1,21 @@
+costmaps:
+  map1:
+    map_topic: /flat_layer_map1
+    global_frame: flat_layer_map1_frame
+    robot_base_frame: base_link
+  map2:
+     map_topic: /flat_layer_map2
+     global_frame: flat_layer_map2_frame
+     robot_base_frame: base_link
+  map3:
+     map_topic: /flat_layer_map3
+     global_frame: flat_layer_map3_frame
+     robot_base_frame: base_link
+  map4:
+     map_topic: /flat_layer_map4
+     global_frame: flat_layer_map4_frame
+     robot_base_frame: base_link
+  map5:
+     map_topic: /flat_layer_map5
+     global_frame: flat_layer_map5_frame
+     robot_base_frame: base_link

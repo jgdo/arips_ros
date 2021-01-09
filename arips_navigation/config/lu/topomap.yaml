@@ -1,0 +1,133 @@
+parser_data:
+  node_parser:
+    module_flat:
+      default_costs:
+        distance_factor: 1
+        energy_factor: 1
+        time_factor: 1
+      maps:
+        map1:
+          planner: NavfnCostsPlanner
+  edge_parser:
+    module_step:
+      default_costs_down:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_up:
+        distance: 1
+        energy: 2.5
+        time: 15
+      default_costs_cross_over:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_cross_gravel:
+        distance: 1
+        energy: 1
+        time: 10
+      step:
+        - name: Step_0
+          start:
+            x: 1.647662878036499
+            y: -0.250501811504364
+            z: -2.384185791015625e-07
+          end:
+            x: 1.650795459747314
+            y: 0.4351365864276886
+            z: -2.384185791015625e-07
+          frame_id: flat_layer_map1_frame
+nodes:
+  - name: map1_node_0
+    type: flat
+    node_data:
+      x: 543
+      y: 0
+      map: map1
+      height: 0
+  - name: map1_node_19
+    type: flat
+    node_data:
+      x: 277
+      y: 272
+      map: map1
+      height: 0
+  - name: map1_node_3
+    type: flat
+    node_data:
+      x: 316
+      y: 241
+      map: map1
+      height: 0
+  - name: map1_node_71
+    type: flat
+    node_data:
+      x: 239
+      y: 347
+      map: map1
+      height: 0
+  - name: map1_node_74
+    type: flat
+    node_data:
+      x: 201
+      y: 250
+      map: map1
+      height: 0
+  - name: map1_node_75
+    type: flat
+    node_data:
+      x: 200
+      y: 293
+      map: map1
+      height: 0
+edges:
+  - name: step_0_map1_node_19_map1_node_19
+    type: step
+    source: map1_node_19
+    target: map1_node_19
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 1.399493009809577
+          y: 0.1506362152448242
+          z: -2.384185791015625e-07
+        end:
+          x: 1.398970546499167
+          y: 0.03628296281676641
+          z: -2.384185791015625e-07
+        orientation:
+          x: 0
+          y: 0
+          z: 0.002284409098896746
+          w: -0.9999973907341304
+        frame_id: flat_layer_map1_frame
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over
+  - name: step_1_map1_node_3_map1_node_3
+    type: step
+    source: map1_node_3
+    target: map1_node_3
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 1.899487791284646
+          y: 0.1483518121065582
+          z: -2.384185791015625e-07
+        end:
+          x: 1.898965327974236
+          y: 0.03399855967850041
+          z: -2.384185791015625e-07
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999973907341304
+          w: 0.002284409098896685
+        frame_id: flat_layer_map1_frame
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over

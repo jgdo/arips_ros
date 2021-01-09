@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node pkg="tf" type="static_transform_publisher" name="world_pub" args="0 0 0 0 0 0 global world 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map_pub" args="0 0 0 0 0 0 world flat_layer_map1_frame 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map2_pub" args="0 0 4 0 0 0 world flat_layer_map2_frame 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map3_pub" args="0 0 8 0 0 0 world flat_layer_map3_frame 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map4_pub" args="0 0 12 0 0 0 world flat_layer_map4_frame 30"/>
+  
+  <node pkg="tf" type="static_transform_publisher" name="base_link_pub" args="0 0 0 0 0 0 world base_link 30"/>
+
+  <arg name="map_file1" default="$(find arips_navigation)/maps/office.yaml"/>
+  <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >
+    <param name="frame_id" type="str" value="/flat_layer_map1_frame" />
+    <remap from="map" to="flat_layer_map1"/>
+    <remap from="map_metadata" to="flat_layer_map1_metadata"/>
+  </node>
+
+  <arg name="map_file2" default="$(find arips_navigation)/maps/office.yaml"/>
+  <node name="map_server2" pkg="map_server" type="map_server" args="$(arg map_file2)" >
+    <param name="frame_id" type="str" value="/flat_layer_map2_frame" />
+    <remap from="map" to="flat_layer_map2"/>
+    <remap from="map_metadata" to="flat_layer_map2_metadata"/>
+  </node> 
+  
+  <arg name="map_file3" default="$(find arips_navigation)/maps/office.yaml"/>
+  <node name="map_server3" pkg="map_server" type="map_server" args="$(arg map_file3)" >
+    <param name="frame_id" type="str" value="/flat_layer_map3_frame" />
+    <remap from="map" to="flat_layer_map3"/>
+    <remap from="map_metadata" to="flat_layer_map3_metadata"/>
+  </node>
+  
+  <arg name="map_file4" default="$(find arips_navigation)/maps/office.yaml"/>
+  <node name="map_server4" pkg="map_server" type="map_server" args="$(arg map_file4)" >
+    <param name="frame_id" type="str" value="/flat_layer_map4_frame" />
+    <remap from="map" to="flat_layer_map4"/>
+    <remap from="map_metadata" to="flat_layer_map4_metadata"/>
+  </node> 
+   
+  <node pkg="arips_navigation" type="arips_navigation_node" respawn="true" name="arips_navigation_node" output="screen" clear_params="true">
+    <rosparam file="$(find arips_navigation)/config/office/costmap.yaml" command="load" />
+    <rosparam file="$(find arips_navigation)/config/config.yaml" command="load" />
+    <rosparam param="topo_planner/topo_map_file" subst_value="True">$(find arips_navigation)/config/office/topomap.yaml</rosparam>
+  </node>
+
+
+  <node pkg="rostopic" type="rostopic" name="rostopic_node" args="pub /topomap toponav_msgs/MapVisualization &quot;map_topics: [/flat_layer_map1, /flat_layer_map2, /flat_layer_map3, /flat_layer_map4]&quot;" output="screen"/>
+</launch>

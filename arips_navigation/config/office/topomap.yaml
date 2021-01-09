@@ -1,0 +1,4081 @@
+parser_data:
+  edge_parser:
+    module_door:
+      default_costs: 2
+      door:
+        - pose:
+            orientation:
+              z: 0.6962697409655759
+              w: 0.7177802225024941
+              x: 0
+              y: 0
+            position:
+              x: 4.943881988525391
+              z: 1
+              y: 2.585590362548828
+            frame_id: world
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_0
+        - pose:
+            frame_id: world
+            position:
+              z: 1
+              x: 2.684813022613525
+              y: 2.579227447509766
+            orientation:
+              w: 0.7004647963590441
+              y: 0
+              z: 0.7136869545267609
+              x: 0
+          scale:
+            y: 1
+            x: 0.1
+            z: 2
+          name: Door_1
+        - scale:
+            x: 0.1
+            z: 2
+            y: 1
+          pose:
+            frame_id: world
+            position:
+              z: 5
+              y: 8.745316505432129
+              x: 9.214746475219727
+            orientation:
+              x: -0
+              z: -0.6892448591995736
+              y: 0
+              w: 0.7245284839583328
+          name: Door_10
+        - pose:
+            position:
+              y: 8.666036605834961
+              z: 5
+              x: 11.56382083892822
+            frame_id: world
+            orientation:
+              y: 0
+              w: 0.6954709168099281
+              z: -0.7185542456012337
+              x: -0
+          scale:
+            z: 2
+            y: 1
+            x: 0.1
+          name: Door_11
+        - name: Door_12
+          pose:
+            frame_id: world
+            position:
+              y: 2.522395849227905
+              x: 10.06689453125
+              z: 5
+            orientation:
+              z: -0.7023772357702472
+              y: 0
+              w: 0.7118049021127535
+              x: -0
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+        - name: Door_13
+          pose:
+            orientation:
+              y: 0
+              w: 0
+              z: 1
+              x: 0
+            position:
+              y: 7.77491283416748
+              z: 5
+              x: 12.20378875732422
+            frame_id: world
+          scale:
+            z: 2
+            y: 1
+            x: 0.1
+        - pose:
+            frame_id: world
+            orientation:
+              z: 0.7157805575401883
+              y: 0
+              x: 0
+              w: 0.6983252776804353
+            position:
+              x: 6.041347980499268
+              y: 7.38832950592041
+              z: 1
+          name: Door_14
+          scale:
+            z: 2
+            y: 1
+            x: 0.1
+        - pose:
+            frame_id: world
+            position:
+              z: 1
+              x: 9.617436408996582
+              y: 4.020304203033447
+            orientation:
+              x: -0
+              z: -0.6963157276465665
+              y: 0
+              w: 0.71773561109369
+          name: Door_15
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - name: Door_16
+          pose:
+            position:
+              y: 7.323309898376465
+              z: 5
+              x: 6.054351806640625
+            orientation:
+              x: -0
+              z: -0.7122864760881901
+              w: 0.7018888629846383
+              y: 0
+            frame_id: world
+          scale:
+            x: 0.1
+            z: 2
+            y: 1
+        - scale:
+            x: 0.1
+            z: 2
+            y: 1
+          name: Door_17
+          pose:
+            frame_id: world
+            orientation:
+              y: 0
+              w: 0.7027282514155169
+              x: -0
+              z: -0.7114583646725157
+            position:
+              z: 5
+              y: 3.955284357070923
+              x: 9.604433059692383
+        - pose:
+            position:
+              y: 2.566190719604492
+              x: 6.419074058532715
+              z: 13
+            frame_id: world
+            orientation:
+              z: 0.73808346457893
+              x: 0
+              y: 0
+              w: 0.6747094184277876
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+          name: Door_18
+        - name: Door_19
+          scale:
+            y: 1
+            x: 0.1
+            z: 2
+          pose:
+            frame_id: world
+            position:
+              z: 13
+              x: 4.870031356811523
+              y: 5.666353225708008
+            orientation:
+              x: 0
+              z: 0.9999360255621381
+              w: 0.01131126796583908
+              y: 0
+        - name: Door_2
+          pose:
+            frame_id: world
+            position:
+              z: 1
+              y: 2.516289710998535
+              x: 10.06132507324219
+            orientation:
+              z: 0.6989347908971209
+              x: 0
+              y: 0
+              w: 0.7151854011888092
+          scale:
+            y: 1
+            x: 0.1
+            z: 2
+        - name: Door_20
+          pose:
+            orientation:
+              z: 0.007809090166752607
+              y: 0
+              w: 0.9999695085905207
+              x: 0
+            position:
+              x: 10.63118743896484
+              z: 9
+              y: 5.708656311035156
+            frame_id: world
+          scale:
+            x: 0.1
+            z: 2
+            y: 1
+        - name: Door_21
+          pose:
+            frame_id: world
+            position:
+              z: 9
+              x: 5.121413230895996
+              y: 2.664506912231445
+            orientation:
+              x: 0
+              w: 0.6851569173258307
+              y: 0
+              z: 0.7283954960325912
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_22
+          pose:
+            orientation:
+              w: 0.9997978211942755
+              x: -0
+              y: 0
+              z: -0.02010762878062693
+            frame_id: world
+            position:
+              y: 3.191555500030518
+              z: 9
+              x: 1.875117301940918
+        - name: Door_23
+          pose:
+            frame_id: world
+            position:
+              x: 9.672286987304688
+              y: 8.6868896484375
+              z: 13
+            orientation:
+              x: -0
+              y: 0
+              z: -0.7164528949535928
+              w: 0.697635470222534
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_24
+          pose:
+            orientation:
+              x: -0
+              y: 0
+              z: -0.6964479553911628
+              w: 0.7176073058654496
+            frame_id: world
+            position:
+              x: 3.953613042831421
+              y: 8.731695175170898
+              z: 9
+        - name: Door_25
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+          pose:
+            orientation:
+              z: -0.6978905453808009
+              w: 0.7162044307794307
+              x: -0
+              y: 0
+            frame_id: world
+            position:
+              x: 9.96241569519043
+              y: 2.539517879486084
+              z: 9
+        - name: Door_26
+          pose:
+            orientation:
+              y: 0
+              w: 0.7191417463906563
+              z: 0.6948634028341089
+              x: 0
+            frame_id: world
+            position:
+              z: 9
+              x: 11.57087516784668
+              y: 8.708769798278809
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          pose:
+            orientation:
+              x: 0
+              z: 0.9999426906914449
+              y: 0
+              w: -0.01070585506876448
+            frame_id: world
+            position:
+              x: 12.20952224731445
+              y: 7.814760684967041
+              z: 9
+          name: Door_27
+        - name: Door_28
+          pose:
+            position:
+              x: 2.897759914398193
+              y: 2.613931179046631
+              z: 13
+            frame_id: world
+            orientation:
+              x: 0
+              y: 0
+              z: 0.7048438577580338
+              w: 0.7093624857439056
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_29
+          pose:
+            orientation:
+              x: -0
+              y: 0
+              z: -0.7047096049953641
+              w: 0.7094958580761962
+            position:
+              z: 13
+              x: 10.77663421630859
+              y: 2.538022994995117
+            frame_id: world
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_3
+          pose:
+            orientation:
+              w: 0.7228793388117092
+              x: -0
+              y: 0
+              z: -0.6909742842676174
+            frame_id: world
+            position:
+              z: 1
+              x: 3.044752597808838
+              y: 8.759465217590332
+        - scale:
+            x: 0.1
+            z: 2
+            y: 1
+          name: Door_30
+          pose:
+            orientation:
+              x: 0
+              z: 0.9997005963752341
+              y: 0
+              w: -0.02446870668836609
+            frame_id: world
+            position:
+              x: 12.23444843292236
+              y: 7.813703060150146
+              z: 13
+        - name: Door_31
+          pose:
+            frame_id: world
+            position:
+              x: 14.03393745422363
+              y: 8.671555519104004
+              z: 13
+            orientation:
+              z: 0.6991539109285591
+              w: 0.7149711944080688
+              x: 0
+              y: 0
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+        - name: Door_32
+          pose:
+            position:
+              x: 10.62834644317627
+              z: 13
+              y: 6.112508773803711
+            frame_id: world
+            orientation:
+              x: -0
+              y: 0
+              z: -0.007361597086594058
+              w: 0.9999729030770457
+          scale:
+            z: 2
+            x: 0.1
+            y: 1
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_33
+          pose:
+            orientation:
+              x: 0
+              y: 0
+              z: 0.008222797787356738
+              w: 0.9999661922267914
+            frame_id: world
+            position:
+              x: 10.90205669403076
+              z: 9.000001907348633
+              y: 10.23535633087158
+        - name: Door_4
+          pose:
+            frame_id: world
+            position:
+              x: 9.233072280883789
+              z: 1
+              y: 8.675803184509277
+            orientation:
+              z: -0.7051636894384177
+              w: 0.7090445480346061
+              x: -0
+              y: 0
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - name: Door_5
+          pose:
+            frame_id: world
+            position:
+              x: 11.58887100219727
+              y: 8.711679458618164
+              z: 1
+            orientation:
+              x: -0
+              y: 0
+              z: -0.7054195410700946
+              w: 0.7087900049213851
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_6
+          pose:
+            orientation:
+              w: 0.005218306888430117
+              x: 0
+              y: 0
+              z: 0.9999863845439189
+            frame_id: world
+            position:
+              x: 12.20934581756592
+              y: 7.744901180267334
+              z: 1
+        - name: Door_7
+          pose:
+            orientation:
+              x: 0
+              y: -4.05196970111568e-07
+              z: 0.7411980611120609
+              w: 0.6712864025165097
+            frame_id: world
+            position:
+              y: 2.584616537246518
+              z: 4.999999046325355
+              x: 2.917314939086829
+          scale:
+            y: 1
+            z: 2
+            x: 0.1
+        - name: Door_8
+          pose:
+            orientation:
+              x: 0
+              y: -2.447110268333634e-07
+              z: 0.7210256308555743
+              w: 0.6929083919604823
+            frame_id: world
+            position:
+              x: 5.130681175615342
+              z: 4.99999999999988
+              y: 2.568961744282124
+          scale:
+            x: 0.1
+            z: 2
+            y: 1
+        - scale:
+            y: 1
+            z: 2
+            x: 0.1
+          name: Door_9
+          pose:
+            frame_id: world
+            position:
+              x: 3.434069633483887
+              y: 8.782358169555664
+              z: 5
+            orientation:
+              x: -0
+              y: 0
+              z: -0.7030223862684759
+              w: 0.7111677188999638
+    module_stairs:
+      stairs:
+        - start:
+            frame_id: global
+            position:
+              x: 14.7364673614502
+              y: 6.995715141296387
+              z: 0
+            orientation:
+              x: 0
+              y: 0
+              z: -0.7044011466529314
+              w: 0.7098021024159026
+          end:
+            frame_id: global
+            position:
+              x: 14.78282833099365
+              y: 3.724822521209717
+              z: 4
+            orientation:
+              x: 0
+              y: 0
+              w: 0.7076325369652199
+              z: -0.7065806342011977
+          width: 1.5
+          name: Stairs_0
+        - width: 1.5
+          name: Stairs_1
+          start:
+            frame_id: global
+            position:
+              y: 6.983603954315186
+              x: 14.78417015075684
+              z: 4
+            orientation:
+              x: 0
+              y: 0
+              w: 0.7071067811865476
+              z: -0.7071067811865475
+          end:
+            orientation:
+              x: 0
+              y: 0
+              z: -0.7071067811865475
+              w: 0.7071067811865476
+            frame_id: global
+            position:
+              z: 8
+              x: 14.79483222961426
+              y: 3.710124969482422
+        - name: Stairs_2
+          start:
+            orientation:
+              x: 0
+              y: 0
+              z: -0.7088464326129378
+              w: 0.7053628392337605
+            frame_id: global
+            position:
+              z: 8
+              x: 14.7735071182251
+              y: 6.951615333557129
+          width: 1.5
+          end:
+            orientation:
+              x: 0
+              y: 0
+              z: -0.7036990582008962
+              w: 0.7104981600871122
+            frame_id: global
+            position:
+              x: 14.69886684417725
+              y: 3.72078800201416
+              z: 12
+      default_costs_down: 1.5
+      default_costs_up: 2
+    module_step:
+      default_costs_down: 3
+      default_costs_up: 3
+      step:
+        []
+    module_elevator_door:
+      default_costs: 2
+      elevator_door:
+        - pose:
+            frame_id: world
+            orientation:
+              x: -0
+              z: -0.01071985717388852
+              y: 0
+              w: 0.999942540680299
+            position:
+              x: 1.8423752784729
+              y: 5.145027160644531
+              z: 13
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_0
+        - scale:
+            x: 0.1
+            y: 1
+            z: 2
+          name: Door_1
+          pose:
+            orientation:
+              x: -0
+              y: 0
+              z: -0.0007081080024649007
+              w: 0.999999749291497
+            frame_id: world
+            position:
+              x: 1.891406059265137
+              y: 5.212087631225586
+              z: 9
+        - name: Door_2
+          pose:
+            frame_id: world
+            position:
+              x: 1.944421768188477
+              y: 5.247932910919189
+              z: 5
+            orientation:
+              x: -0
+              y: 0
+              z: -0.008422306709394657
+              w: 0.9999645317458479
+          scale:
+            x: 0.1
+            y: 1
+            z: 2
+        - name: Door_3
+          pose:
+            frame_id: world
+            position:
+              x: 1.927279710769653
+              y: 5.134527683258057
+              z: 1
+            orientation:
+              x: 0
+              y: 0
+              z: 0.007644414804724565
+              w: 0.9999707810342727
+          scale:
+            x: 0.1
+            z: 2
+            y: 1
+  node_parser:
+    module_flat:
+      maps:
+        map3:
+          planner: GridMapCostsPlanner
+        map2:
+          planner: GridMapCostsPlanner
+        map1:
+          planner: GridMapCostsPlanner
+        map4:
+          planner: GridMapCostsPlanner
+    module_elevator: ~
+nodes:
+  - node_data:
+      pos_min:
+        x: 0
+        y: 4.18
+        z: -0.5
+      pos_max:
+        x: 1.8
+        z: 16
+        y: 6
+      frame_id: world
+    type: elevator
+    name: elevator_1
+  - name: map1_node_0
+    type: flat
+    node_data:
+      x: 517
+      y: 0
+      map: map1
+      height: 0
+  - name: map1_node_1
+    type: flat
+    node_data:
+      x: 517
+      y: 89
+      map: map1
+      height: 0
+  - name: map1_node_2
+    type: flat
+    node_data:
+      x: 517
+      y: 296
+      map: map1
+      height: 0
+  - name: map1_node_3
+    type: flat
+    node_data:
+      x: 405
+      y: 90
+      height: 0
+      map: map1
+  - name: map1_node_4
+    type: flat
+    node_data:
+      x: 362
+      y: 66
+      map: map1
+      height: 0
+  - name: map1_node_5
+    type: flat
+    node_data:
+      x: 352
+      y: 133
+      map: map1
+      height: 0
+  - name: map1_node_6
+    type: flat
+    node_data:
+      x: 274
+      y: 343
+      map: map1
+      height: 0
+  - name: map1_node_7
+    type: flat
+    node_data:
+      x: 125
+      y: 294
+      map: map1
+      height: 0
+  - node_data:
+      height: 0
+      x: 517
+      y: 0
+      map: map2
+    name: map2_node_0
+    type: flat
+  - name: map2_node_1
+    type: flat
+    node_data:
+      x: 517
+      y: 89
+      map: map2
+      height: 0
+  - node_data:
+      height: 0
+      x: 517
+      y: 296
+      map: map2
+    name: map2_node_2
+    type: flat
+  - name: map2_node_3
+    type: flat
+    node_data:
+      x: 405
+      y: 90
+      map: map2
+      height: 0
+  - name: map2_node_4
+    type: flat
+    node_data:
+      x: 362
+      y: 66
+      map: map2
+      height: 0
+  - node_data:
+      height: 0
+      x: 352
+      y: 133
+      map: map2
+    name: map2_node_5
+    type: flat
+  - name: map2_node_6
+    type: flat
+    node_data:
+      x: 274
+      y: 343
+      map: map2
+      height: 0
+  - name: map2_node_7
+    type: flat
+    node_data:
+      x: 125
+      y: 294
+      map: map2
+      height: 0
+  - name: map3_node_0
+    type: flat
+    node_data:
+      x: 517
+      y: 0
+      map: map3
+      height: 0
+  - name: map3_node_1
+    type: flat
+    node_data:
+      x: 517
+      y: 89
+      map: map3
+      height: 0
+  - node_data:
+      map: map3
+      height: 0
+      x: 517
+      y: 296
+    name: map3_node_2
+    type: flat
+  - name: map3_node_3
+    type: flat
+    node_data:
+      x: 405
+      y: 90
+      map: map3
+      height: 0
+  - name: map3_node_4
+    type: flat
+    node_data:
+      x: 362
+      y: 66
+      map: map3
+      height: 0
+  - node_data:
+      map: map3
+      height: 0
+      x: 352
+      y: 133
+    name: map3_node_5
+    type: flat
+  - node_data:
+      x: 274
+      y: 343
+      map: map3
+      height: 0
+    name: map3_node_6
+    type: flat
+  - name: map3_node_7
+    type: flat
+    node_data:
+      x: 125
+      map: map3
+      y: 294
+      height: 0
+  - name: map4_node_0
+    type: flat
+    node_data:
+      x: 517
+      y: 0
+      map: map4
+      height: 0
+  - name: map4_node_1
+    type: flat
+    node_data:
+      x: 517
+      y: 89
+      map: map4
+      height: 0
+  - name: map4_node_2
+    type: flat
+    node_data:
+      x: 517
+      map: map4
+      y: 296
+      height: 0
+  - node_data:
+      y: 90
+      map: map4
+      height: 0
+      x: 405
+    name: map4_node_3
+    type: flat
+  - name: map4_node_4
+    type: flat
+    node_data:
+      y: 66
+      x: 362
+      map: map4
+      height: 0
+  - name: map4_node_5
+    type: flat
+    node_data:
+      x: 352
+      map: map4
+      y: 133
+      height: 0
+  - name: map4_node_6
+    type: flat
+    node_data:
+      x: 274
+      y: 343
+      map: map4
+      height: 0
+  - name: map4_node_7
+    type: flat
+    node_data:
+      x: 125
+      y: 294
+      map: map4
+      height: 0
+edges:
+  - out_data:
+      approach:
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 3.022198059327984
+          y: 9.258956251337601
+          z: 0
+        end:
+          x: 3.022198059327984
+          y: 9.258956251337601
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          w: 0.7228793388117092
+          z: -0.6909742842676174
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 3.067307136289692
+          y: 8.259974183843063
+          z: 0
+        frame_id: flat_layer_map1_frame
+        orientation:
+          z: -0.6909742842676174
+          w: 0.7228793388117092
+          x: 0
+          y: 0
+        end:
+          y: 8.259974183843063
+          z: 0
+          x: 3.067307136289692
+    edge_data:
+      door_name: Door_3
+    name: door_10_map1_node_4_map1_node_3
+    type: door
+    source: map1_node_4
+    target: map1_node_3
+  - name: door_11_map1_node_3_map1_node_4
+    type: door
+    source: map1_node_3
+    target: map1_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 3.067307136289692
+          y: 8.259974183843063
+          z: 0
+        end:
+          x: 3.067307136289692
+          y: 8.259974183843063
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7228793388117091
+          w: 0.6909742842676175
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 3.022198059327984
+          z: 0
+          y: 9.258956251337601
+        end:
+          x: 3.022198059327984
+          y: 9.258956251337601
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7228793388117091
+          w: 0.6909742842676175
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_3
+  - out_data:
+      approach:
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7051636894384177
+          w: 0.7090445480346061
+        frame_id: flat_layer_map1_frame
+        end:
+          x: 9.230328109786191
+          y: 9.175795653977556
+          z: 0
+        type: LineArea
+        start:
+          z: 0
+          x: 9.230328109786191
+          y: 9.175795653977556
+    name: door_12_map1_node_4_map1_node_3
+    type: door
+    source: map1_node_4
+    target: map1_node_3
+    in_data:
+      exit:
+        end:
+          x: 9.235816451981387
+          z: 0
+          y: 8.175810715040999
+        type: LineArea
+        start:
+          y: 8.175810715040999
+          z: 0
+          x: 9.235816451981387
+        orientation:
+          x: 0
+          y: 0
+          w: 0.7090445480346061
+          z: -0.7051636894384177
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_4
+  - target: map1_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.235816451981387
+          y: 8.175810715040999
+          z: 0
+        frame_id: flat_layer_map1_frame
+        orientation:
+          x: 0
+          y: 0
+          w: 0.7051636894384177
+          z: 0.7090445480346061
+        end:
+          z: 0
+          x: 9.235816451981387
+          y: 8.175810715040999
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.230328109786191
+          y: 9.175795653977556
+          z: 0
+        frame_id: flat_layer_map1_frame
+        orientation:
+          x: 0
+          y: 0
+          w: 0.7051636894384177
+          z: 0.7090445480346061
+        end:
+          z: 0
+          x: 9.230328109786191
+          y: 9.175795653977556
+    edge_data:
+      door_name: Door_4
+    name: door_13_map1_node_3_map1_node_4
+    type: door
+    source: map1_node_3
+  - name: door_14_map1_node_0_map1_node_3
+    type: door
+    source: map1_node_0
+    target: map1_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.58648773112081
+          y: 9.211673778604878
+          z: 0
+        end:
+          x: 11.58648773112081
+          z: 0
+          y: 9.211673778604878
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7054195410700946
+          w: 0.7087900049213851
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.59125427327372
+          y: 8.21168513863145
+          z: 0
+        end:
+          x: 11.59125427327372
+          z: 0
+          y: 8.21168513863145
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7054195410700946
+          w: 0.7087900049213851
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_5
+  - in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.58648773112081
+          y: 9.211673778604878
+          z: 0
+        end:
+          x: 11.58648773112081
+          y: 9.211673778604878
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7087900049213851
+          w: 0.7054195410700946
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_5
+    name: door_15_map1_node_3_map1_node_0
+    type: door
+    source: map1_node_3
+    target: map1_node_0
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.59125427327372
+          y: 8.21168513863145
+          z: 0
+        end:
+          x: 11.59125427327372
+          y: 8.21168513863145
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7087900049213851
+          w: 0.7054195410700946
+        frame_id: flat_layer_map1_frame
+  - name: door_16_map1_node_1_map1_node_3
+    type: door
+    source: map1_node_1
+    target: map1_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 12.70931858683914
+          y: 7.739682944428532
+          z: 0
+        end:
+          x: 12.70931858683914
+          y: 7.739682944428532
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999863845439189
+          w: 0.005218306888430122
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.7093730482927
+          z: 0
+          y: 7.750119416106136
+        end:
+          x: 11.7093730482927
+          y: 7.750119416106136
+          z: 0
+        orientation:
+          y: 0
+          x: 0
+          z: 0.9999863845439189
+          w: 0.005218306888430122
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_6
+  - out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.7093730482927
+          y: 7.750119416106136
+          z: 0
+        end:
+          x: 11.7093730482927
+          y: 7.750119416106136
+          z: 0
+        frame_id: flat_layer_map1_frame
+        orientation:
+          z: -0.005218306888430183
+          w: 0.9999863845439189
+          x: 0
+          y: 0
+    in_data:
+      exit:
+        end:
+          x: 12.70931858683914
+          y: 7.739682944428532
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.005218306888430183
+          w: 0.9999863845439189
+        type: LineArea
+        start:
+          z: 0
+          x: 12.70931858683914
+          y: 7.739682944428532
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_6
+    name: door_17_map1_node_3_map1_node_1
+    type: door
+    source: map1_node_3
+    target: map1_node_1
+  - name: door_18_map2_node_7_map2_node_3
+    type: door
+    source: map2_node_7
+    target: map2_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          y: 2.087060957912808
+          x: 2.966690048889704
+          z: 0
+        end:
+          x: 2.966690048889704
+          y: 2.087060957912808
+          z: 0
+        orientation:
+          x: 0
+          z: 0.7411980611120609
+          y: -4.05196970111568e-07
+          w: 0.6712864025165097
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.867940917296819
+          y: 3.082173317905063
+          z: 0
+        end:
+          x: 2.867940917296819
+          y: 3.082173317905063
+          z: 0
+        orientation:
+          x: 0
+          y: -4.05196970111568e-07
+          z: 0.7411980611120609
+          w: 0.6712864025165097
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_7
+  - edge_data:
+      door_name: Door_7
+    name: door_19_map2_node_3_map2_node_7
+    type: door
+    source: map2_node_3
+    target: map2_node_7
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.867940917296819
+          y: 3.082173317905063
+          z: 0
+        end:
+          x: 2.867940917296819
+          y: 3.082173317905063
+          z: 0
+        orientation:
+          x: 4.051969701115678e-07
+          y: 3.571215440307925e-23
+          z: -0.6712864025165097
+          w: 0.7411980611120609
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.966690048889704
+          y: 2.087060957912808
+          z: 0
+        end:
+          x: 2.966690048889704
+          z: 0
+          y: 2.087060957912808
+        orientation:
+          x: 4.051969701115678e-07
+          y: 3.571215440307925e-23
+          z: -0.6712864025165097
+          w: 0.7411980611120609
+        frame_id: flat_layer_map2_frame
+  - name: door_20_map2_node_6_map2_node_3
+    type: door
+    source: map2_node_6
+    target: map2_node_3
+    in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 5.110803554389252
+          y: 3.068566807606397
+          z: 0
+        end:
+          x: 5.110803554389252
+          y: 3.068566807606397
+          z: 0
+        orientation:
+          y: -2.447110268333634e-07
+          z: 0.7210256308555743
+          w: 0.6929083919604823
+          x: 0
+    edge_data:
+      door_name: Door_8
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 5.150559475090729
+          y: 2.069357386729541
+          z: 0
+        end:
+          x: 5.150559475090729
+          y: 2.069357386729541
+          z: 0
+        orientation:
+          x: 0
+          y: -2.447110268333634e-07
+          z: 0.7210256308555743
+          w: 0.6929083919604823
+        frame_id: flat_layer_map2_frame
+  - out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 5.110803554389252
+          y: 3.068566807606397
+          z: 0
+        frame_id: flat_layer_map2_frame
+        end:
+          x: 5.110803554389252
+          y: 3.068566807606397
+          z: 0
+        orientation:
+          x: 2.447110268333634e-07
+          y: 1.835564400830498e-23
+          z: -0.6929083919604823
+          w: 0.7210256308555743
+    in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 5.150559475090729
+          z: 0
+          y: 2.069357386729541
+        end:
+          x: 5.150559475090729
+          y: 2.069357386729541
+          z: 0
+        orientation:
+          x: 2.447110268333634e-07
+          y: 1.835564400830498e-23
+          z: -0.6929083919604823
+          w: 0.7210256308555743
+    edge_data:
+      door_name: Door_8
+    name: door_21_map2_node_3_map2_node_6
+    type: door
+    source: map2_node_3
+    target: map2_node_6
+  - in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        orientation:
+          z: -0.7030223862684759
+          w: 0.7111677188999638
+          x: 0
+          y: 0
+        type: LineArea
+        start:
+          x: 3.439829157889265
+          y: 8.282391342777503
+          z: 0
+        end:
+          x: 3.439829157889265
+          y: 8.282391342777503
+          z: 0
+    edge_data:
+      door_name: Door_9
+    name: door_22_map2_node_4_map2_node_3
+    type: door
+    source: map2_node_4
+    target: map2_node_3
+    out_data:
+      approach:
+        end:
+          x: 3.428310109078509
+          y: 9.282324996333825
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7030223862684759
+          w: 0.7111677188999638
+        type: LineArea
+        start:
+          x: 3.428310109078509
+          y: 9.282324996333825
+          z: 0
+        frame_id: flat_layer_map2_frame
+  - name: door_23_map2_node_3_map2_node_4
+    type: door
+    source: map2_node_3
+    target: map2_node_4
+    edge_data:
+      door_name: Door_9
+    out_data:
+      approach:
+        start:
+          x: 3.439829157889265
+          y: 8.282391342777503
+          z: 0
+        end:
+          x: 3.439829157889265
+          y: 8.282391342777503
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          w: 0.7030223862684759
+          z: 0.7111677188999638
+        type: LineArea
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        end:
+          x: 3.428310109078509
+          z: 0
+          y: 9.282324996333825
+        type: LineArea
+        start:
+          x: 3.428310109078509
+          y: 9.282324996333825
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7111677188999638
+          w: 0.7030223862684759
+  - in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 9.239687999286687
+          y: 8.245938972520188
+          z: 0
+        end:
+          x: 9.239687999286687
+          y: 8.245938972520188
+          z: 0
+        orientation:
+          z: -0.6892448591995736
+          w: 0.7245284839583328
+          x: 0
+          y: 0
+    name: door_24_map2_node_4_map2_node_3
+    type: door
+    source: map2_node_4
+    target: map2_node_3
+    edge_data:
+      door_name: Door_10
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.189804951152766
+          y: 9.24469403834407
+          z: 0
+        frame_id: flat_layer_map2_frame
+        end:
+          x: 9.189804951152766
+          y: 9.24469403834407
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6892448591995736
+          w: 0.7245284839583328
+  - in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7245284839583327
+          w: 0.6892448591995736
+        type: LineArea
+        start:
+          x: 9.189804951152766
+          z: 0
+          y: 9.24469403834407
+        end:
+          z: 0
+          x: 9.189804951152766
+          y: 9.24469403834407
+    edge_data:
+      door_name: Door_10
+    type: door
+    source: map2_node_3
+    target: map2_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.239687999286687
+          y: 8.245938972520188
+          z: 0
+        frame_id: flat_layer_map2_frame
+        end:
+          x: 9.239687999286687
+          y: 8.245938972520188
+          z: 0
+        orientation:
+          y: 0
+          z: 0.7245284839583327
+          w: 0.6892448591995736
+          x: 0
+    name: door_25_map2_node_3_map2_node_4
+  - name: door_26_map2_node_0_map2_node_3
+    type: door
+    source: map2_node_0
+    target: map2_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.58014104279978
+          y: 9.165770185800918
+          z: 0
+        end:
+          x: 11.58014104279978
+          y: 9.165770185800918
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7185542456012335
+          w: 0.6954709168099285
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.54750063505666
+          z: 0
+          y: 8.166303025869004
+        end:
+          x: 11.54750063505666
+          y: 8.166303025869004
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7185542456012335
+          w: 0.6954709168099285
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_11
+  - in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 11.58014104279978
+          y: 9.165770185800918
+          z: 0
+        end:
+          x: 11.58014104279978
+          y: 9.165770185800918
+          z: 0
+        orientation:
+          y: 0
+          z: 0.6954709168099283
+          w: 0.7185542456012335
+          x: 0
+    edge_data:
+      door_name: Door_11
+    out_data:
+      approach:
+        end:
+          x: 11.54750063505666
+          y: 8.166303025869004
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6954709168099283
+          w: 0.7185542456012335
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 11.54750063505666
+          y: 8.166303025869004
+          z: 0
+    name: door_27_map2_node_3_map2_node_0
+    type: door
+    source: map2_node_3
+    target: map2_node_0
+  - source: map2_node_3
+    target: map2_node_2
+    in_data:
+      exit:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 10.07356074992175
+          y: 2.022440289674238
+          z: 0
+        end:
+          x: 10.07356074992175
+          y: 2.022440289674238
+          z: 0
+        orientation:
+          y: 0
+          z: -0.7023772357702472
+          w: 0.7118049021127535
+          x: 0
+    out_data:
+      approach:
+        end:
+          x: 10.06022831257825
+          y: 3.022351408781573
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7023772357702472
+          w: 0.7118049021127535
+        type: LineArea
+        start:
+          x: 10.06022831257825
+          y: 3.022351408781573
+          z: 0
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_12
+    name: door_28_map2_node_3_map2_node_2
+    type: door
+  - name: door_29_map2_node_2_map2_node_3
+    type: door
+    source: map2_node_2
+    target: map2_node_3
+    out_data:
+      approach:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7118049021127534
+          w: 0.7023772357702474
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 10.07356074992175
+          y: 2.022440289674238
+          z: 0
+        end:
+          x: 10.07356074992175
+          y: 2.022440289674238
+          z: 0
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7118049021127534
+          w: 0.7023772357702474
+        type: LineArea
+        start:
+          x: 10.06022831257825
+          y: 3.022351408781573
+          z: 0
+        end:
+          x: 10.06022831257825
+          y: 3.022351408781573
+          z: 0
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_12
+  - name: door_30_map2_node_1_map2_node_3
+    type: door
+    source: map2_node_1
+    target: map2_node_3
+    out_data:
+      approach:
+        start:
+          x: 12.70378875732422
+          y: 7.77491283416748
+          z: 0
+        end:
+          x: 12.70378875732422
+          y: 7.77491283416748
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 1
+          w: 0
+        type: LineArea
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_13
+    in_data:
+      exit:
+        end:
+          x: 11.70378875732422
+          y: 7.77491283416748
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 1
+          w: 0
+        type: LineArea
+        start:
+          x: 11.70378875732422
+          y: 7.77491283416748
+          z: 0
+        frame_id: flat_layer_map2_frame
+  - name: door_31_map2_node_3_map2_node_1
+    type: door
+    source: map2_node_3
+    target: map2_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.70378875732422
+          y: 7.77491283416748
+          z: 0
+        end:
+          x: 11.70378875732422
+          y: 7.77491283416748
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -6.123233995736766e-17
+          w: 1
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: -6.123233995736766e-17
+          w: 1
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 12.70378875732422
+          y: 7.77491283416748
+          z: 0
+        end:
+          x: 12.70378875732422
+          y: 7.77491283416748
+          z: 0
+    edge_data:
+      door_name: Door_13
+  - source: map1_node_5
+    target: map1_node_3
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7157805575401883
+          w: 0.6983252776804353
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 6.029006173946724
+          y: 7.888177162522919
+          z: 0
+        end:
+          x: 6.029006173946724
+          z: 0
+          y: 7.888177162522919
+    edge_data:
+      door_name: Door_14
+    name: door_34_map1_node_5_map1_node_3
+    type: door
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 6.053689787051811
+          y: 6.888481849317901
+          z: 0
+        end:
+          x: 6.053689787051811
+          y: 6.888481849317901
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7157805575401883
+          w: 0.6983252776804353
+        frame_id: flat_layer_map1_frame
+  - edge_data:
+      door_name: Door_14
+    target: map1_node_5
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 6.029006173946724
+          y: 7.888177162522919
+          z: 0
+        end:
+          x: 6.029006173946724
+          y: 7.888177162522919
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6983252776804353
+          w: 0.7157805575401883
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 6.053689787051811
+          y: 6.888481849317901
+          z: 0
+        end:
+          x: 6.053689787051811
+          y: 6.888481849317901
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6983252776804353
+          w: 0.7157805575401883
+        frame_id: flat_layer_map1_frame
+    name: door_35_map1_node_3_map1_node_5
+    type: door
+    source: map1_node_3
+  - name: door_36_map1_node_5_map1_node_3
+    type: door
+    source: map1_node_5
+    target: map1_node_3
+    out_data:
+      approach:
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 9.60229200156455
+          y: 4.520074797330003
+          z: 0
+        end:
+          x: 9.60229200156455
+          y: 4.520074797330003
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6963157276465666
+          w: 0.7177356110936899
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.632580816428614
+          y: 3.520533608736891
+          z: 0
+        frame_id: flat_layer_map1_frame
+        end:
+          x: 9.632580816428614
+          y: 3.520533608736891
+          z: 0
+        orientation:
+          w: 0.7177356110936899
+          x: 0
+          z: -0.6963157276465666
+          y: 0
+    edge_data:
+      door_name: Door_15
+  - out_data:
+      approach:
+        end:
+          x: 9.632580816428614
+          y: 3.520533608736891
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7177356110936898
+          w: 0.6963157276465667
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          z: 0
+          x: 9.632580816428614
+          y: 3.520533608736891
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7177356110936898
+          w: 0.6963157276465667
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 9.60229200156455
+          y: 4.520074797330003
+          z: 0
+        end:
+          z: 0
+          x: 9.60229200156455
+          y: 4.520074797330003
+    edge_data:
+      door_name: Door_15
+    name: door_37_map1_node_3_map1_node_5
+    type: door
+    source: map1_node_3
+    target: map1_node_5
+  - out_data:
+      approach:
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7122864760881901
+          w: 0.7018888629846383
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 6.061703830658757
+          y: 7.823255843197339
+          z: 0
+        end:
+          x: 6.061703830658757
+          z: 0
+          y: 7.823255843197339
+    target: map2_node_5
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 6.046999782622493
+          y: 6.823363953555591
+          z: 0
+        end:
+          x: 6.046999782622493
+          y: 6.823363953555591
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7122864760881901
+          w: 0.7018888629846383
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      door_name: Door_16
+    name: door_38_map2_node_3_map2_node_5
+    type: door
+    source: map2_node_3
+  - in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7018888629846383
+          w: 0.7122864760881901
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 6.061703830658757
+          y: 7.823255843197339
+          z: 0
+        end:
+          z: 0
+          x: 6.061703830658757
+          y: 7.823255843197339
+    edge_data:
+      door_name: Door_16
+    name: door_39_map2_node_5_map2_node_3
+    type: door
+    source: map2_node_5
+    target: map2_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 6.046999782622493
+          y: 6.823363953555591
+          z: 0
+        end:
+          x: 6.046999782622493
+          y: 6.823363953555591
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7018888629846383
+          w: 0.7122864760881901
+        frame_id: flat_layer_map2_frame
+  - out_data:
+      approach:
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 9.610606064354872
+          y: 4.455246249632183
+          z: 0
+        end:
+          x: 9.610606064354872
+          y: 4.455246249632183
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7114583646725154
+          w: 0.7027282514155171
+    name: door_40_map2_node_5_map2_node_3
+    type: door
+    source: map2_node_5
+    target: map2_node_3
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.598260055029893
+          y: 3.455322464509663
+          z: 0
+        frame_id: flat_layer_map2_frame
+        end:
+          x: 9.598260055029893
+          y: 3.455322464509663
+          z: 0
+        orientation:
+          w: 0.7027282514155171
+          x: 0
+          y: 0
+          z: -0.7114583646725154
+    edge_data:
+      door_name: Door_17
+  - name: door_41_map2_node_3_map2_node_5
+    type: door
+    source: map2_node_3
+    target: map2_node_5
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7027282514155171
+          w: 0.7114583646725154
+        frame_id: flat_layer_map2_frame
+        type: LineArea
+        start:
+          x: 9.610606064354872
+          y: 4.455246249632183
+          z: 0
+        end:
+          x: 9.610606064354872
+          y: 4.455246249632183
+          z: 0
+    edge_data:
+      door_name: Door_17
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.598260055029893
+          y: 3.455322464509663
+          z: 0
+        end:
+          x: 9.598260055029893
+          y: 3.455322464509663
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7027282514155171
+          w: 0.7114583646725154
+        frame_id: flat_layer_map2_frame
+  - in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7380834645789299
+          w: 0.6747094184277878
+        frame_id: flat_layer_map4_frame
+        type: LineArea
+        start:
+          x: 6.374306857847879
+          y: 3.064182584741709
+          z: 0
+        end:
+          x: 6.374306857847879
+          y: 3.064182584741709
+          z: 0
+    out_data:
+      approach:
+        end:
+          x: 6.463841259217551
+          y: 2.068198854467276
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          w: 0.6747094184277878
+          z: 0.7380834645789299
+        frame_id: flat_layer_map4_frame
+        type: LineArea
+        start:
+          x: 6.463841259217551
+          y: 2.068198854467276
+          z: 0
+    edge_data:
+      door_name: Door_18
+    name: door_42_map4_node_6_map4_node_3
+    type: door
+    source: map4_node_6
+    target: map4_node_3
+  - name: door_43_map4_node_3_map4_node_6
+    type: door
+    source: map4_node_3
+    target: map4_node_6
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6747094184277879
+          w: 0.7380834645789298
+        frame_id: flat_layer_map4_frame
+        type: LineArea
+        start:
+          x: 6.463841259217551
+          y: 2.068198854467276
+          z: 0
+        end:
+          x: 6.463841259217551
+          z: 0
+          y: 2.068198854467276
+    edge_data:
+      door_name: Door_18
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 6.374306857847879
+          y: 3.064182584741709
+          z: 0
+        end:
+          x: 6.374306857847879
+          y: 3.064182584741709
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6747094184277879
+          w: 0.7380834645789298
+        frame_id: flat_layer_map4_frame
+  - in_data:
+      exit:
+        frame_id: flat_layer_map4_frame
+        type: LineArea
+        start:
+          x: 4.370159301594518
+          y: 5.677663770041837
+          z: 0
+        end:
+          x: 4.370159301594518
+          y: 5.677663770041837
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999360255621381
+          w: 0.01131126796583907
+    edge_data:
+      door_name: Door_19
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 5.369903412028528
+          y: 5.655042681374178
+          z: 0
+        end:
+          x: 5.369903412028528
+          y: 5.655042681374178
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999360255621381
+          w: 0.01131126796583907
+        frame_id: flat_layer_map4_frame
+    name: door_48_map4_node_5_map4_node_3
+    type: door
+    source: map4_node_5
+    target: map4_node_3
+  - in_data:
+      exit:
+        frame_id: flat_layer_map4_frame
+        start:
+          x: 5.369903412028528
+          y: 5.655042681374178
+          z: 0
+        end:
+          x: 5.369903412028528
+          y: 5.655042681374178
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          w: 0.9999360255621381
+          z: -0.01131126796583913
+        type: LineArea
+    edge_data:
+      door_name: Door_19
+    name: door_49_map4_node_3_map4_node_5
+    type: door
+    source: map4_node_3
+    target: map4_node_5
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 4.370159301594518
+          y: 5.677663770041837
+          z: 0
+        end:
+          x: 4.370159301594518
+          y: 5.677663770041837
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.01131126796583913
+          w: 0.9999360255621381
+        frame_id: flat_layer_map4_frame
+  - target: map1_node_3
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6962697409655759
+          w: 0.7177802225024941
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 4.95909043634112
+          y: 3.085359012140853
+          z: 0
+        end:
+          y: 3.085359012140853
+          z: 0
+          x: 4.95909043634112
+    edge_data:
+      door_name: Door_0
+    name: door_4_map1_node_6_map1_node_3
+    type: door
+    source: map1_node_6
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 4.928673540709661
+          y: 2.085821712956803
+          z: 0
+        end:
+          x: 4.928673540709661
+          y: 2.085821712956803
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6962697409655759
+          w: 0.7177802225024941
+        frame_id: flat_layer_map1_frame
+  - name: door_50_map3_node_5_map3_node_3
+    type: door
+    source: map3_node_5
+    target: map3_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.13124842085408
+          y: 5.700847458978569
+          z: 0
+        end:
+          x: 10.13124842085408
+          y: 5.700847458978569
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.007809090166752594
+          w: 0.9999695085905207
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          y: 5.716465163091743
+          x: 11.13112645707561
+          z: 0
+        end:
+          x: 11.13112645707561
+          y: 5.716465163091743
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.007809090166752594
+          w: 0.9999695085905207
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_20
+  - out_data:
+      approach:
+        type: LineArea
+        start:
+          y: 5.716465163091743
+          x: 11.13112645707561
+          z: 0
+        end:
+          x: 11.13112645707561
+          y: 5.716465163091743
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999695085905207
+          w: -0.007809090166752532
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.13124842085408
+          y: 5.700847458978569
+          z: 0
+        end:
+          x: 10.13124842085408
+          y: 5.700847458978569
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999695085905207
+          w: -0.007809090166752532
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_20
+    name: door_51_map3_node_3_map3_node_5
+    type: door
+    source: map3_node_3
+    target: map3_node_5
+  - in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7283954960325912
+          w: 0.6851569173258307
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          x: 5.090853232255432
+          y: 3.163572124887155
+          z: 0
+        end:
+          z: 0
+          x: 5.090853232255432
+          y: 3.163572124887155
+    edge_data:
+      door_name: Door_21
+    name: door_52_map3_node_6_map3_node_3
+    type: door
+    source: map3_node_6
+    target: map3_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 5.15197322953656
+          y: 2.165441699575736
+          z: 0
+        end:
+          x: 5.15197322953656
+          y: 2.165441699575736
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7283954960325912
+          w: 0.6851569173258307
+        frame_id: flat_layer_map3_frame
+  - name: door_53_map3_node_3_map3_node_6
+    type: door
+    source: map3_node_3
+    target: map3_node_6
+    in_data:
+      exit:
+        end:
+          x: 5.15197322953656
+          y: 2.165441699575736
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6851569173258308
+          w: 0.7283954960325912
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          z: 0
+          x: 5.15197322953656
+          y: 2.165441699575736
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 5.090853232255432
+          y: 3.163572124887155
+          z: 0
+        end:
+          x: 5.090853232255432
+          y: 3.163572124887155
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6851569173258308
+          w: 0.7283954960325912
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_21
+  - in_data:
+      exit:
+        frame_id: flat_layer_map3_frame
+        start:
+          x: 2.374712985205738
+          y: 3.171451936586263
+          z: 0
+        end:
+          x: 2.374712985205738
+          y: 3.171451936586263
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.02010762878062693
+          w: 0.9997978211942755
+        type: LineArea
+    edge_data:
+      door_name: Door_22
+    out_data:
+      approach:
+        end:
+          x: 1.375521618676097
+          y: 3.211659063474772
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.02010762878062693
+          w: 0.9997978211942755
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          y: 3.211659063474772
+          z: 0
+          x: 1.375521618676097
+    name: door_54_map3_node_7_map3_node_3
+    type: door
+    source: map3_node_7
+    target: map3_node_3
+  - name: door_55_map3_node_3_map3_node_7
+    type: door
+    source: map3_node_3
+    target: map3_node_7
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.374712985205738
+          y: 3.171451936586263
+          z: 0
+        end:
+          x: 2.374712985205738
+          y: 3.171451936586263
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9997978211942755
+          w: 0.020107628780627
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 1.375521618676097
+          y: 3.211659063474772
+          z: 0
+        end:
+          x: 1.375521618676097
+          y: 3.211659063474772
+          z: 0
+        orientation:
+          x: 0
+          z: 0.9997978211942755
+          y: 0
+          w: 0.020107628780627
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_22
+  - name: door_56_map4_node_4_map4_node_3
+    type: door
+    source: map4_node_4
+    target: map4_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.685591737992072
+          y: 9.186712600700746
+          z: 0
+        end:
+          x: 9.685591737992072
+          y: 9.186712600700746
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7164528949535928
+          w: 0.697635470222534
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.658982236617303
+          y: 8.187066696174254
+          z: 0
+        end:
+          x: 9.658982236617303
+          y: 8.187066696174254
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7164528949535928
+          w: 0.697635470222534
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_23
+  - in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.697635470222534
+          w: 0.7164528949535928
+        frame_id: flat_layer_map4_frame
+        type: LineArea
+        start:
+          x: 9.685591737992072
+          y: 9.186712600700746
+          z: 0
+        end:
+          x: 9.685591737992072
+          y: 9.186712600700746
+          z: 0
+    edge_data:
+      door_name: Door_23
+    name: door_57_map4_node_3_map4_node_4
+    type: door
+    source: map4_node_3
+    target: map4_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.658982236617303
+          y: 8.187066696174254
+          z: 0
+        end:
+          x: 9.658982236617303
+          y: 8.187066696174254
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.697635470222534
+          w: 0.7164528949535928
+        frame_id: flat_layer_map4_frame
+  - out_data:
+      approach:
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6964479553911628
+          w: 0.7176073058654496
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          x: 3.938652797399952
+          y: 9.231471316114652
+          z: 0
+        end:
+          z: 0
+          x: 3.938652797399952
+          y: 9.231471316114652
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 3.96857328826289
+          y: 8.231919034227145
+          z: 0
+        end:
+          x: 3.96857328826289
+          y: 8.231919034227145
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6964479553911628
+          w: 0.7176073058654496
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_24
+    name: door_58_map3_node_4_map3_node_3
+    type: door
+    source: map3_node_4
+    target: map3_node_3
+  - in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7176073058654496
+          w: 0.6964479553911628
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          x: 3.938652797399952
+          y: 9.231471316114652
+          z: 0
+        end:
+          x: 3.938652797399952
+          y: 9.231471316114652
+          z: 0
+    edge_data:
+      door_name: Door_24
+    name: door_59_map3_node_3_map3_node_4
+    type: door
+    source: map3_node_3
+    target: map3_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 3.96857328826289
+          y: 8.231919034227145
+          z: 0
+        end:
+          x: 3.96857328826289
+          y: 8.231919034227145
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7176073058654496
+          w: 0.6964479553911628
+        frame_id: flat_layer_map3_frame
+  - out_data:
+      approach:
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7177802225024942
+          w: 0.6962697409655758
+        frame_id: flat_layer_map1_frame
+        type: LineArea
+        start:
+          x: 4.95909043634112
+          y: 3.085359012140853
+          z: 0
+        end:
+          x: 4.95909043634112
+          y: 3.085359012140853
+          z: 0
+    name: door_5_map1_node_3_map1_node_6
+    type: door
+    source: map1_node_3
+    target: map1_node_6
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 4.928673540709661
+          y: 2.085821712956803
+          z: 0
+        end:
+          x: 4.928673540709661
+          y: 2.085821712956803
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7177802225024942
+          w: 0.6962697409655758
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_0
+  - name: door_60_map3_node_3_map3_node_2
+    type: door
+    source: map3_node_3
+    target: map3_node_2
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.949466908522341
+          y: 3.039350180286887
+          z: 0
+        end:
+          x: 9.949466908522341
+          y: 3.039350180286887
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6978905453808009
+          w: 0.7162044307794307
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.975364481858518
+          y: 2.039685578685281
+          z: 0
+        end:
+          x: 9.975364481858518
+          y: 2.039685578685281
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6978905453808009
+          w: 0.7162044307794307
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_25
+  - name: door_61_map3_node_2_map3_node_3
+    type: door
+    source: map3_node_2
+    target: map3_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 9.975364481858518
+          y: 2.039685578685281
+          z: 0
+        end:
+          x: 9.975364481858518
+          y: 2.039685578685281
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7162044307794309
+          w: 0.6978905453808009
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 9.949466908522341
+          y: 3.039350180286887
+          z: 0
+        end:
+          x: 9.949466908522341
+          y: 3.039350180286887
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          w: 0.6978905453808009
+          z: 0.7162044307794309
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_25
+  - in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.58804001924848
+          y: 9.208475079295884
+          z: 0
+        end:
+          x: 11.58804001924848
+          y: 9.208475079295884
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6948634028341089
+          w: 0.7191417463906563
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_26
+    name: door_62_map3_node_3_map3_node_0
+    type: door
+    source: map3_node_3
+    target: map3_node_0
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.55371031644488
+          y: 8.209064517261734
+          z: 0
+        end:
+          x: 11.55371031644488
+          y: 8.209064517261734
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6948634028341089
+          w: 0.7191417463906563
+        frame_id: flat_layer_map3_frame
+  - edge_data:
+      door_name: Door_26
+    name: door_63_map3_node_0_map3_node_3
+    type: door
+    source: map3_node_0
+    target: map3_node_3
+    in_data:
+      exit:
+        end:
+          x: 11.55371031644488
+          y: 8.209064517261734
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7191417463906564
+          w: 0.6948634028341087
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          z: 0
+          x: 11.55371031644488
+          y: 8.209064517261734
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.58804001924848
+          y: 9.208475079295884
+          z: 0
+        end:
+          x: 11.58804001924848
+          y: 9.208475079295884
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7191417463906564
+          w: 0.6948634028341087
+        frame_id: flat_layer_map3_frame
+  - name: door_64_map3_node_1_map3_node_3
+    type: door
+    source: map3_node_1
+    target: map3_node_3
+    in_data:
+      exit:
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999426906914448
+          w: -0.01070585506876448
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          x: 11.70963686264721
+          y: 7.804055443443428
+          z: 0
+        end:
+          z: 0
+          x: 11.70963686264721
+          y: 7.804055443443428
+    edge_data:
+      door_name: Door_27
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 12.7094076319817
+          y: 7.825465926490654
+          z: 0
+        end:
+          x: 12.7094076319817
+          y: 7.825465926490654
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999426906914448
+          w: -0.01070585506876448
+        frame_id: flat_layer_map3_frame
+  - out_data:
+      approach:
+        frame_id: flat_layer_map3_frame
+        type: LineArea
+        start:
+          x: 11.70963686264721
+          y: 7.804055443443428
+          z: 0
+        end:
+          x: 11.70963686264721
+          y: 7.804055443443428
+          z: 0
+        orientation:
+          z: 0.01070585506876442
+          w: 0.9999426906914448
+          x: 0
+          y: 0
+    name: door_65_map3_node_3_map3_node_1
+    type: door
+    source: map3_node_3
+    target: map3_node_1
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 12.7094076319817
+          y: 7.825465926490654
+          z: 0
+        end:
+          x: 12.7094076319817
+          y: 7.825465926490654
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.01070585506876442
+          w: 0.9999426906914448
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_27
+  - out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.894564778217421
+          y: 2.113941388046068
+          z: 0
+        end:
+          x: 2.894564778217421
+          y: 2.113941388046068
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7048438577580338
+          w: 0.7093624857439056
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.900955050578966
+          y: 3.113920970047193
+          z: 0
+        end:
+          x: 2.900955050578966
+          y: 3.113920970047193
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7048438577580338
+          w: 0.7093624857439056
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_28
+    name: door_66_map4_node_7_map4_node_3
+    type: door
+    source: map4_node_7
+    target: map4_node_3
+  - name: door_67_map4_node_3_map4_node_7
+    type: door
+    source: map4_node_3
+    target: map4_node_7
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          y: 3.113920970047193
+          x: 2.900955050578966
+          z: 0
+        end:
+          x: 2.900955050578966
+          y: 3.113920970047193
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7093624857439055
+          w: 0.7048438577580338
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.894564778217421
+          y: 2.113941388046068
+          z: 0
+        end:
+          x: 2.894564778217421
+          y: 2.113941388046068
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7093624857439055
+          w: 0.7048438577580338
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_28
+  - out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.77324984368132
+          y: 3.03801154088584
+          z: 0
+        end:
+          x: 10.77324984368132
+          y: 3.03801154088584
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7047096049953641
+          w: 0.7094958580761962
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          y: 2.038034449104394
+          x: 10.78001858893587
+          z: 0
+        end:
+          x: 10.78001858893587
+          y: 2.038034449104394
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7047096049953641
+          w: 0.7094958580761962
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_29
+    name: door_68_map4_node_3_map4_node_2
+    type: door
+    source: map4_node_3
+    target: map4_node_2
+  - name: door_69_map4_node_2_map4_node_3
+    type: door
+    source: map4_node_2
+    target: map4_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.78001858893587
+          z: 0
+          y: 2.038034449104394
+        end:
+          x: 10.78001858893587
+          y: 2.038034449104394
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7094958580761962
+          w: 0.7047096049953641
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.77324984368132
+          y: 3.03801154088584
+          z: 0
+        end:
+          x: 10.77324984368132
+          y: 3.03801154088584
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7094958580761962
+          w: 0.7047096049953641
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_29
+  - name: door_6_map1_node_7_map1_node_3
+    type: door
+    source: map1_node_7
+    target: map1_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.694162091675208
+          y: 2.079314860243072
+          z: 0
+        end:
+          x: 2.694162091675208
+          y: 2.079314860243072
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7136869545267609
+          w: 0.7004647963590441
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.675463953551843
+          y: 3.07914003477646
+          z: 0
+        end:
+          x: 2.675463953551843
+          y: 3.07914003477646
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7136869545267609
+          w: 0.7004647963590441
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_1
+  - name: door_70_map4_node_1_map4_node_3
+    type: door
+    source: map4_node_1
+    target: map4_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 12.73384971531536
+          y: 7.838164440819036
+          z: 0
+        end:
+          x: 12.73384971531536
+          y: 7.838164440819036
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9997005963752341
+          w: -0.02446870668836608
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.73504715052936
+          y: 7.789241679481257
+          z: 0
+        end:
+          x: 11.73504715052936
+          y: 7.789241679481257
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9997005963752341
+          w: -0.02446870668836608
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_30
+  - name: door_71_map4_node_3_map4_node_1
+    type: door
+    source: map4_node_3
+    target: map4_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.73504715052936
+          y: 7.789241679481257
+          z: 0
+        end:
+          x: 11.73504715052936
+          y: 7.789241679481257
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.02446870668836601
+          w: 0.9997005963752341
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 12.73384971531536
+          y: 7.838164440819036
+          z: 0
+        end:
+          x: 12.73384971531536
+          y: 7.838164440819036
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.02446870668836601
+          w: 0.9997005963752341
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_30
+  - name: door_72_map4_node_1_map4_node_0
+    type: door
+    source: map4_node_1
+    target: map4_node_0
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.02275364539033
+          y: 8.17168061233234
+          z: 0
+        end:
+          x: 14.02275364539033
+          y: 8.17168061233234
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6991539109285591
+          w: 0.7149711944080688
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.04512126305693
+          y: 9.171430425875668
+          z: 0
+        end:
+          x: 14.04512126305693
+          y: 9.171430425875668
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6991539109285591
+          w: 0.7149711944080688
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_31
+  - name: door_73_map4_node_0_map4_node_1
+    type: door
+    source: map4_node_0
+    target: map4_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.04512126305693
+          y: 9.171430425875668
+          z: 0
+        end:
+          x: 14.04512126305693
+          y: 9.171430425875668
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7149711944080688
+          w: 0.6991539109285591
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.02275364539033
+          y: 8.17168061233234
+          z: 0
+        end:
+          x: 14.02275364539033
+          y: 8.17168061233234
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7149711944080688
+          w: 0.6991539109285591
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_31
+  - name: door_74_map4_node_5_map4_node_3
+    type: door
+    source: map4_node_5
+    target: map4_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.12840063628794
+          y: 6.119870171413676
+          z: 0
+        end:
+          x: 10.12840063628794
+          y: 6.119870171413676
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.007361597086594051
+          w: 0.9999729030770457
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.1282922500646
+          y: 6.105147376193746
+          z: 0
+        end:
+          x: 11.1282922500646
+          y: 6.105147376193746
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.007361597086594051
+          w: 0.9999729030770457
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_32
+  - name: door_75_map4_node_3_map4_node_5
+    type: door
+    source: map4_node_3
+    target: map4_node_5
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.1282922500646
+          y: 6.105147376193746
+          z: 0
+        end:
+          x: 11.1282922500646
+          y: 6.105147376193746
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999729030770457
+          w: 0.007361597086594112
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.12840063628794
+          y: 6.119870171413676
+          z: 0
+        end:
+          x: 10.12840063628794
+          y: 6.119870171413676
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999729030770457
+          w: 0.007361597086594112
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      door_name: Door_32
+  - name: door_76_map3_node_4_map3_node_0
+    type: door
+    source: map3_node_4
+    target: map3_node_0
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.40212430843421
+          y: 10.22713381107871
+          z: 0
+        end:
+          x: 10.40212430843421
+          y: 10.22713381107871
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.008222797787356738
+          w: 0.9999661922267914
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 11.40198907962731
+          y: 10.24357885066446
+          z: 0
+        end:
+          x: 11.40198907962731
+          y: 10.24357885066446
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.008222797787356738
+          w: 0.9999661922267914
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_33
+  - name: door_77_map3_node_0_map3_node_4
+    type: door
+    source: map3_node_0
+    target: map3_node_4
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 11.40198907962731
+          y: 10.24357885066446
+          z: 0
+        end:
+          x: 11.40198907962731
+          y: 10.24357885066446
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999661922267914
+          w: -0.008222797787356677
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.40212430843421
+          y: 10.22713381107871
+          z: 0
+        end:
+          x: 10.40212430843421
+          y: 10.22713381107871
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999661922267914
+          w: -0.008222797787356677
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      door_name: Door_33
+  - name: door_7_map1_node_3_map1_node_7
+    type: door
+    source: map1_node_3
+    target: map1_node_7
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.675463953551843
+          y: 3.07914003477646
+          z: 0
+        end:
+          x: 2.675463953551843
+          y: 3.07914003477646
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7004647963590441
+          w: 0.7136869545267609
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 2.694162091675208
+          y: 2.079314860243072
+          z: 0
+        end:
+          x: 2.694162091675208
+          y: 2.079314860243072
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7004647963590441
+          w: 0.7136869545267609
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_1
+  - name: door_8_map1_node_2_map1_node_3
+    type: door
+    source: map1_node_2
+    target: map1_node_3
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.04983491516859
+          y: 2.016421752165961
+          z: 0
+        end:
+          x: 10.04983491516859
+          y: 2.016421752165961
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6989347908971209
+          w: 0.7151854011888092
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.07281523131579
+          y: 3.016157669831109
+          z: 0
+        end:
+          x: 10.07281523131579
+          y: 3.016157669831109
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6989347908971209
+          w: 0.7151854011888092
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_2
+  - name: door_9_map1_node_3_map1_node_2
+    type: door
+    source: map1_node_3
+    target: map1_node_2
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 10.07281523131579
+          y: 3.016157669831109
+          z: 0
+        end:
+          x: 10.07281523131579
+          y: 3.016157669831109
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7151854011888095
+          w: 0.6989347908971207
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 10.04983491516859
+          y: 2.016421752165961
+          z: 0
+        end:
+          x: 10.04983491516859
+          y: 2.016421752165961
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7151854011888095
+          w: 0.6989347908971207
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      door_name: Door_2
+  - name: elevator_door_74_elevator_1_map4_node_3
+    type: elevator_door
+    source: elevator_1
+    target: map4_node_3
+    out_data:
+      approach: 12
+    in_data:
+      exit:
+        frame_id: /flat_layer_map4_frame
+        position:
+          x: 2.342260363135072
+          y: 5.134307919426343
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.01071985717388852
+          w: 0.999942540680299
+    edge_data:
+      door_name: Door_0
+      direction: out
+  - name: elevator_door_75_map4_node_3_elevator_1
+    type: elevator_door
+    source: map4_node_3
+    target: elevator_1
+    out_data:
+      approach:
+        frame_id: /flat_layer_map4_frame
+        position:
+          x: 2.342260363135072
+          y: 5.134307919426343
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.999942540680299
+          w: 0.01071985717388858
+    in_data:
+      exit: 12
+    edge_data:
+      door_name: Door_0
+      direction: into
+  - name: elevator_door_76_elevator_1_map3_node_3
+    type: elevator_door
+    source: elevator_1
+    target: map3_node_3
+    out_data:
+      approach: 8
+    in_data:
+      exit:
+        frame_id: /flat_layer_map3_frame
+        position:
+          x: 2.391405557848194
+          y: 5.21137952340065
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.0007081080024649007
+          w: 0.999999749291497
+    edge_data:
+      door_name: Door_1
+      direction: out
+  - name: elevator_door_77_map3_node_3_elevator_1
+    type: elevator_door
+    source: map3_node_3
+    target: elevator_1
+    out_data:
+      approach:
+        frame_id: /flat_layer_map3_frame
+        position:
+          x: 2.391405557848194
+          y: 5.21137952340065
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.999999749291497
+          w: 0.000708108002464962
+    in_data:
+      exit: 8
+    edge_data:
+      door_name: Door_1
+      direction: into
+  - name: elevator_door_78_elevator_1_map2_node_3
+    type: elevator_door
+    source: elevator_1
+    target: map2_node_3
+    out_data:
+      approach: 4
+    in_data:
+      exit:
+        frame_id: /flat_layer_map2_frame
+        position:
+          y: 5.23951090293431
+          x: 2.44435083293817
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.008422306709394657
+          w: 0.9999645317458479
+    edge_data:
+      door_name: Door_2
+      direction: out
+  - name: elevator_door_79_map2_node_3_elevator_1
+    type: elevator_door
+    source: map2_node_3
+    target: elevator_1
+    out_data:
+      approach:
+        frame_id: /flat_layer_map2_frame
+        position:
+          x: 2.44435083293817
+          y: 5.23951090293431
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999645317458479
+          w: 0.008422306709394718
+    in_data:
+      exit: 4
+    edge_data:
+      door_name: Door_2
+      direction: into
+  - name: elevator_door_80_elevator_1_map1_node_3
+    type: elevator_door
+    source: elevator_1
+    target: map1_node_3
+    out_data:
+      approach: 0
+    in_data:
+      exit:
+        frame_id: /flat_layer_map1_frame
+        position:
+          x: 2.427221273691947
+          y: 5.142171874700887
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.007644414804724565
+          w: 0.9999707810342727
+    edge_data:
+      door_name: Door_3
+      direction: out
+  - name: elevator_door_81_map1_node_3_elevator_1
+    type: elevator_door
+    source: map1_node_3
+    target: elevator_1
+    out_data:
+      approach:
+        frame_id: /flat_layer_map1_frame
+        position:
+          x: 2.427221273691947
+          y: 5.142171874700887
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999707810342727
+          w: -0.007644414804724504
+    in_data:
+      exit: 0
+    edge_data:
+      door_name: Door_3
+      direction: into
+  - name: stairs_76_map1_node_1_map2_node_1
+    type: stairs
+    source: map1_node_1
+    target: map2_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.6444149017334
+          y: 7.908769035339356
+          z: 0
+        end:
+          x: 14.6444149017334
+          y: 7.908769035339356
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.7240099677336373
+          w: 0.6897895089245248
+        frame_id: flat_layer_map1_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.71155548095703
+          y: 3.059787702560425
+          z: 0
+        end:
+          x: 14.71155548095703
+          y: 3.059787702560425
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6893618108113813
+          w: 0.7244172097588885
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      stairs_name: Stairs_0
+      stairs_type: up
+  - name: stairs_77_map2_node_1_map3_node_1
+    type: stairs
+    source: map2_node_1
+    target: map3_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.74018859863281
+          y: 7.915405178070069
+          z: 0
+        end:
+          x: 14.74018859863281
+          y: 7.915405178070069
+          z: 0
+        orientation:
+          x: 0
+          y: -2.469721205747295e-07
+          z: -0.7205631721222979
+          w: 0.6933892954040974
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.82101249694824
+          y: 3.039146375656128
+          z: 0
+        end:
+          x: 14.82101249694824
+          y: 3.039146375656128
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6619253594808273
+          w: 0.7495697555772762
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      stairs_name: Stairs_1
+      stairs_type: up
+  - name: stairs_78_map3_node_1_map4_node_1
+    type: stairs
+    source: map3_node_1
+    target: map4_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.74602603912354
+          y: 7.998205184936523
+          z: 0
+        end:
+          x: 14.74602603912354
+          y: 7.998205184936523
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6888335335117505
+          w: 0.7249195563024329
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.60766983032227
+          y: 3.060179090499878
+          z: 0
+        end:
+          x: 14.60766983032227
+          y: 3.060179090499878
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: -0.6766751510270284
+          w: 0.7362816987964242
+        frame_id: flat_layer_map4_frame
+    edge_data:
+      stairs_name: Stairs_2
+      stairs_type: up
+  - name: stairs_79_map4_node_1_map3_node_1
+    type: stairs
+    source: map4_node_1
+    target: map3_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.62201976776123
+          y: 3.098749971389771
+          z: 0
+        end:
+          x: 14.62201976776123
+          y: 3.098749971389771
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6976925434796247
+          w: 0.7163973162798224
+        frame_id: flat_layer_map4_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.70038223266602
+          y: 7.962063980102539
+          z: 0
+        end:
+          x: 14.70038223266602
+          y: 7.962063980102539
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7255998007839686
+          w: 0.6881169443504971
+        frame_id: flat_layer_map3_frame
+    edge_data:
+      stairs_name: Stairs_2
+      stairs_type: down
+  - name: stairs_80_map3_node_1_map2_node_1
+    type: stairs
+    source: map3_node_1
+    target: map2_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.78939056396484
+          y: 3.079451084136963
+          z: 0
+        end:
+          x: 14.78939056396484
+          y: 3.079451084136963
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.709710240125756
+          w: 0.7044937012214103
+        frame_id: flat_layer_map3_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.6629524230957
+          y: 7.938372611999512
+          z: 0
+        end:
+          x: 14.6629524230957
+          y: 7.938372611999512
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7190105994156794
+          w: 0.6949991064223791
+        frame_id: flat_layer_map2_frame
+    edge_data:
+      stairs_name: Stairs_1
+      stairs_type: down
+  - name: stairs_81_map2_node_1_map1_node_1
+    type: stairs
+    source: map2_node_1
+    target: map1_node_1
+    out_data:
+      approach:
+        type: LineArea
+        start:
+          x: 14.79310894012451
+          y: 3.078113651275635
+          z: 0
+        end:
+          x: 14.79310894012451
+          y: 3.078113651275635
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.6999338520189375
+          w: 0.7142076748383008
+        frame_id: flat_layer_map2_frame
+    in_data:
+      exit:
+        type: LineArea
+        start:
+          x: 14.56019306182861
+          y: 7.966968441009522
+          z: 0
+        end:
+          x: 14.56019306182861
+          y: 7.966968441009522
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7022279053850947
+          w: 0.7119522237471153
+        frame_id: flat_layer_map1_frame
+    edge_data:
+      stairs_name: Stairs_0
+      stairs_type: down

@@ -1,9 +1,11 @@
 <!-- Run the aruco_detect node -->
 <launch>
   <!-- namespace for camera input -->
-  <arg name="camera" default="/kinect/rgb"/>
-  <arg name="image" default="image_color"/>
-  <arg name="transport" default="compressed"/>
+  <arg name="image_info_topic" default="/kinect/rgb/camera_info"/>
+  <arg name="image_topic" default="/kinect/rgb/image_color"/>
+  <arg name="depth_topic" default="/kinect/depth_registered/image_raw"/>
+  <arg name="image_transport" default="compressed"/>
+  <arg name="depth_transport" default="raw"/>
   <arg name="fiducial_len" default="0.06"/>
   <arg name="dictionary" default="5"/>
   <arg name="do_pose_estimation" default="true"/>
@@ -12,16 +14,17 @@
 
   <node pkg="aruco_detect" name="aruco_detect"
     type="aruco_detect" output="screen" respawn="false">
-    <param name="image_transport" value="$(arg transport)"/>
+    <param name="image_info_topic" value="$(arg image_info_topic)"/>
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="depth_topic" value="$(arg depth_topic)"/>
+    <param name="image_transport" value="$(arg image_transport)"/>
+    <param name="depth_transport" value="$(arg depth_transport)"/>
     <param name="publish_images" value="true" />
     <param name="fiducial_len" value="$(arg fiducial_len)"/>
     <param name="dictionary" value="$(arg dictionary)"/>
     <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
     <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
     <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
-    <remap from="/camera/compressed" 
-        to="$(arg camera)/$(arg image)/$(arg transport)"/>
-    <remap from="/camera_info" to="$(arg camera)/camera_info"/>
   </node>
 </launch>
 

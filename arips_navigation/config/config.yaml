@@ -1,0 +1,11 @@
+topo_planner:
+  global_frame_id: global
+  planner_type: PathRepairTopoPlanner
+  
+DijkstraTopoPlanner:
+  dijkstra_discovery: true
+  dijkstra_region_heuristics: true
+  dijkstra_back_heuristics: false
+
+PathRepairTopoPlanner: []
+

@@ -1,0 +1,1061 @@
+parser_data:
+  node_parser:
+    module_elevator:
+      []
+    module_flat:
+      maps:
+        map1:
+          floorName: "floor1"
+          planner: NavfnCostsPlanner
+        map2:
+          floorName: "floor2"
+          planner: NavfnCostsPlanner
+        map3:
+          floorName: "floor3"
+          planner: NavfnCostsPlanner
+        map4:
+          floorName: "floor4"
+          planner: NavfnCostsPlanner
+        map5:
+          floorName: "floor5"
+          planner: NavfnCostsPlanner
+  edge_parser:
+    module_door:
+      default_costs: 2.0
+      door:
+        []
+    module_elevator_door:
+      default_costs: 2.0
+      elevator_door:
+        []
+    module_stairs:
+      default_costs_down: 1.5
+      default_costs_up: 2.0
+      stairs:
+        []
+    module_step:
+      default_costs_up:
+        time: 15
+        energy: 2.5
+        distance: 1
+      default_costs_down:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_cross_gravel:
+        energy: 1
+        time: 10
+        distance: 1
+      default_costs_cross_over:
+        distance: 1
+        energy: 3
+        time: 15
+      step:
+        []
+nodes:
+  - name: "elevator_1"
+    type: "elevator"
+    node_data:
+      pos_min:
+        x: 2.2999999999999998
+        y: 11.0
+        z: -0.5
+      pos_max:
+        x: 3.9500000000000002
+        y: 12.800000000000001
+        z: 20.0
+      frame_id: "world"
+  - name: "elevator_2"
+    type: "elevator"
+    node_data:
+      pos_min:
+        x: 28.0
+        y: 11.0
+        z: -0.5
+      pos_max:
+        x: 29.75
+        y: 12.800000000000001
+        z: 20.0
+      frame_id: "world"
+  - name: "map1_node_0"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_1"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 81
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_10"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 241
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_11"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_12"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_13"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_14"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_15"
+    type: "flat"
+    node_data:
+      x: 365
+      y: 141
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_16"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 141
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_17"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 241
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_18"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_19"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_2"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 160
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_20"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_21"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_22"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_23"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 81
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_24"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 160
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_25"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 261
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_26"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 322
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_27"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_3"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 243
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_4"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 322
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_5"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_6"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 2
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_7"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 81
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_8"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 401
+      map: "map1"
+      height: 0.0
+  - name: "map1_node_9"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 141
+      map: "map1"
+      height: 0.0
+  - name: "map2_node_0"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_1"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 81
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_10"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 241
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_11"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_12"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_13"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_14"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_15"
+    type: "flat"
+    node_data:
+      x: 365
+      y: 141
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_16"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 141
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_17"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 241
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_18"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_19"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_2"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 160
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_20"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_21"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_22"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_23"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 81
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_24"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 160
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_25"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 261
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_26"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 322
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_27"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_3"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 243
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_4"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 322
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_5"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_6"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 2
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_7"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 81
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_8"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 401
+      map: "map2"
+      height: 0.0
+  - name: "map2_node_9"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 141
+      map: "map2"
+      height: 0.0
+  - name: "map3_node_0"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_1"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 81
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_10"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 241
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_11"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_12"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_13"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_14"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_15"
+    type: "flat"
+    node_data:
+      x: 365
+      y: 141
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_16"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 141
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_17"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 241
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_18"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_19"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_2"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 160
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_20"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_21"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_22"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_23"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 81
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_24"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 160
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_25"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 261
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_26"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 322
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_27"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_3"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 243
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_4"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 322
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_5"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_6"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 2
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_7"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 81
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_8"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 401
+      map: "map3"
+      height: 0.0
+  - name: "map3_node_9"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 141
+      map: "map3"
+      height: 0.0
+  - name: "map4_node_0"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_1"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 81
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_10"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 241
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_11"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_12"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_13"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_14"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_15"
+    type: "flat"
+    node_data:
+      x: 365
+      y: 141
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_16"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 141
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_17"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 241
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_18"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_19"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_2"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 160
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_20"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_21"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_22"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_23"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 81
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_24"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 160
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_25"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 261
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_26"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 322
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_27"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_3"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 243
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_4"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 322
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_5"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_6"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 2
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_7"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 81
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_8"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 401
+      map: "map4"
+      height: 0.0
+  - name: "map4_node_9"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 141
+      map: "map4"
+      height: 0.0
+  - name: "map5_node_0"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_1"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 81
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_10"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 241
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_11"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_12"
+    type: "flat"
+    node_data:
+      x: 479
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_13"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_14"
+    type: "flat"
+    node_data:
+      x: 400
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_15"
+    type: "flat"
+    node_data:
+      x: 365
+      y: 141
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_16"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 141
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_17"
+    type: "flat"
+    node_data:
+      x: 265
+      y: 241
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_18"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_19"
+    type: "flat"
+    node_data:
+      x: 236
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_2"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 160
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_20"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_21"
+    type: "flat"
+    node_data:
+      x: 157
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_22"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_23"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 81
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_24"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 160
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_25"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 261
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_26"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 322
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_27"
+    type: "flat"
+    node_data:
+      x: 78
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_3"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 243
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_4"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 322
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_5"
+    type: "flat"
+    node_data:
+      x: 637
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_6"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 2
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_7"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 81
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_8"
+    type: "flat"
+    node_data:
+      x: 558
+      y: 401
+      map: "map5"
+      height: 0.0
+  - name: "map5_node_9"
+    type: "flat"
+    node_data:
+      x: 498
+      y: 141
+      map: "map5"
+      height: 0.0
+edges:
+  []

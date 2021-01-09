@@ -1,0 +1,10 @@
+costmaps:
+  map1:
+    map_topic: flat_layer_map1
+  map2:
+     map_topic: flat_layer_map2
+  map3:
+     map_topic: flat_layer_map3
+  map4:
+     map_topic: flat_layer_map4
+

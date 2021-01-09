@@ -1,0 +1,10 @@
+costmaps:
+  map1:
+    map_topic: /flat_layer_map1
+    global_frame: flat_layer_map1_frame
+    robot_base_frame: base_link
+    robot_radius: 0.2
+    inflation_radius: 0.25
+    static_map: true
+    map_type: costmap
+    observation_sources: {}

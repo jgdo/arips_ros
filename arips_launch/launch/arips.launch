@@ -1,7 +1,0 @@
-<launch>
-  <!--- arips node -->
-  <include file="$(find arips_launch)/launch/arips_node.launch" />
-
-  <!-- kinect -->
-  <include file="$(find arips_launch)/launch/kinect.launch" />
-</launch>
