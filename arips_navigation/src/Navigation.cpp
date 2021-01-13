@@ -12,6 +12,7 @@
 #include <toponav_ros/utils/EdgeModuleContainer.h>
 #include <arips_navigation/StepEdgeModule.h>
 #include <toponav_ros/utils/CostsProfileModuleContainer.h>
+#include <base_local_planner/trajectory_planner_ros.h>
 
 #include <memory>
 
@@ -57,6 +58,12 @@ Navigation::Navigation() {
     m_TopoPlanner.init("topo_planner", factory, &m_tfBuffer);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 10, &Navigation::poseCallbackNavGoal, this);
+    mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
+
+    mLocalPlanner = std::make_unique<base_local_planner::TrajectoryPlannerROS>();
+    mLocalPlanner->initialize("TrajectoryPlannerROS", &m_tfBuffer, &m_LocalCostmap);
+
+    mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
 }
 
 // from https://github.com/strawlab/navigation/blob/master/move_base/src/move_base.cpp
@@ -92,10 +99,13 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
 
     tf2::Stamped<tf2::Transform> robotPose;
     robotPose.setRotation(createQuaternionFromYaw(0));
-    robotPose.frame_id_ = "flat_layer_map1_frame";
+    robotPose.frame_id_ = "base_link";
     robotPose.stamp_ = ros::Time::now();
 
-    GlobalPosition start = m_TopoPlanner.getContext().poseService->findGlobalPose(robotPose, *m_TopoPlanner.getContext().topoMap).first;
+    tf2::Stamped<tf2::Transform> startPoseOdom = m_tfBuffer.transform(robotPose, "odom");
+    startPoseOdom.frame_id_ = "odom"; // TODO bug?
+
+    GlobalPosition start = m_TopoPlanner.getContext().poseService->findGlobalPose(startPoseOdom, *m_TopoPlanner.getContext().topoMap).first;
     ROS_INFO_STREAM("found start node for robot pose: " << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
 
     GlobalPosition goal = m_TopoPlanner.getContext().poseService->findGlobalPose(pose, *m_TopoPlanner.getContext().topoMap).first;
@@ -104,11 +114,35 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
     if (start.node && goal.node) {
         try {
             TopoPath lastPlan;
-            m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr);
-            m_TopoPlanner.getPathViz().visualizePath(lastPlan);
-            m_TopoPlanner.getContext().planQueue.addPath(lastPlan);
+            if(m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr)) {
+                m_TopoPlanner.getPathViz().visualizePath(lastPlan);
+
+                nav_msgs::Path pathMsg;
+                m_TopoPlanner.getPathViz().fillNavPath(lastPlan, &pathMsg);
+                for(auto& p: pathMsg.poses) {
+                    p.header.stamp = robotPose.stamp_;
+                }
+                mLocalPlanner->setPlan(pathMsg.poses);
+
+                mState = State::NAVIGATING;
+            }
         } catch (const std::exception &e) {
             ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
         }
     }
+}
+
+void Navigation::timerCallback(const ros::TimerEvent& e) {
+    if(mState != State::NAVIGATING) {
+        return;
+    }
+
+    geometry_msgs::Twist cmd_vel;
+
+    if(mLocalPlanner->isGoalReached()) {
+        mState = State::IDLE;
+    } else {
+        mLocalPlanner->computeVelocityCommands(cmd_vel);
+    }
+    mCmdVelPub.publish(cmd_vel);
 }

@@ -23,7 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   toponav_core
   toponav_ros
-        interactive_markers
+  interactive_markers
+  arips_local_planner
 )
 
 ## System dependencies are found with CMake's conventions

@@ -210,7 +210,7 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node *node, LocalPosition 
       planTransformed.push_back(tp);
     }
     
-    *pathData = planTransformed;
+    *pathData = plan; // planTransformed;
   }
   
   auto pos_data = std::make_shared<PositionData>(actualApproachPose);

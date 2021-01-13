@@ -36,7 +36,7 @@ parser_data:
             x: 1.650795459747314
             y: 0.4351365864276886
             z: -2.384185791015625e-07
-          frame_id: flat_layer_map1_frame
+          frame_id: odom
 nodes:
   - name: map1_node_0
     type: flat
@@ -101,7 +101,7 @@ edges:
           y: 0
           z: 0.002284409098896746
           w: -0.9999973907341304
-        frame_id: flat_layer_map1_frame
+        frame_id: odom
     exit_data: ~
     edge_data:
       step_name: Step_0
@@ -126,7 +126,7 @@ edges:
           y: 0
           z: 0.9999973907341304
           w: 0.002284409098896685
-        frame_id: flat_layer_map1_frame
+        frame_id: odom
     exit_data: ~
     edge_data:
       step_name: Step_0

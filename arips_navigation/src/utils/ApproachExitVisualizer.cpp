@@ -152,9 +152,9 @@ toponav_ros::ApproachExitVisualizer::createEdgeMarkers(const toponav_core::TopoM
     try {
         tf2::Stamped<tf2::Transform> transformedApproach = transformAt(_context.tfBuffer, centerApproach,
                                                                                         _context.globalFrame,
-                                                                       ros::Time::now());
+                                                                       centerApproach.stamp_ /* ros::Time::now()*/);
         tf2::Stamped<tf2::Transform> transformedExit = transformAt(_context.tfBuffer,
-                centerExit, _context.globalFrame, ros::Time::now());
+                centerExit, _context.globalFrame, centerExit.stamp_  /* ros::Time::now()*/);
 
 
         visualization_msgs::Marker edgeMarker1;

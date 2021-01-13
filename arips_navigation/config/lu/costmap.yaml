@@ -1,10 +1,86 @@
 costmaps:
   map1:
     map_topic: /flat_layer_map1
-    global_frame: flat_layer_map1_frame
+    global_frame: odom
     robot_base_frame: base_link
     robot_radius: 0.2
     inflation_radius: 0.25
     static_map: true
     map_type: costmap
     observation_sources: {}
+
+local_costmap:
+  map_topic: /flat_layer_map1
+  global_frame: odom
+  robot_base_frame: base_link
+  robot_radius: 0.2
+  inflation_radius: 0.25
+  static_map: true
+  map_type: costmap
+  observation_sources: {}
+
+  #robot_base_frame: base_link
+  #obstacle_range: 3.5
+  #raytrace_range: 5.0
+  #robot_radius: 0.22
+  #inflation_radius: 0.5
+  #max_obstacle_height: 1.0
+  #observation_sources: scan
+  #transform_tolerance: 5.0
+
+#  scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}
+
+#  global_frame: flat_layer_map1_frame
+#  update_frequency: 10.0
+#  publish_frequency: 2.5
+#  static_map: false
+#  rolling_window: true
+#  width: 1.5
+#  height: 1.5
+#  resolution: 0.025
+#  publish_voxel_map: true
+#  map_type: costmap
+#  z_resolution: 0.1
+#  z_voxels: 9
+#  unknown_threshold: 8
+
+TrajectoryPlannerROS:
+  global_frame_id: flat_layer_map1_frame
+
+  # Robot Configuration Parameters
+  max_vel_x: 0.35
+  min_vel_x: 0.1
+
+  max_vel_theta:  0.5
+  min_vel_theta: -0.5
+  min_in_place_vel_theta: 0.4
+
+  acc_lim_x: 0.8
+  acc_lim_theta: 1.2
+
+  # Goal Tolerance Parameters
+  yaw_goal_tolerance: 0.1
+  xy_goal_tolerance: 0.15
+
+  # Forward Simulation Parameters
+  sim_time: 1.0
+  vx_samples: 6
+  vtheta_samples: 20
+
+  # Trajectory Scoring Parameters
+  meter_scoring: true
+  pdist_scale: 0.3
+  gdist_scale: 0.2
+  occdist_scale: 0.15
+  heading_lookahead: 0.2
+  dwa: false
+
+  # Oscillation Prevention Parameters
+  oscillation_reset_dist: 0.05
+
+  # Differential-drive robot configuration
+  holonomic_robot: false
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+  acc_lim_y: 0.0
+  vy_samples: 0
