@@ -116,7 +116,11 @@ public:
 	virtual void parseEdgeInData(YAML::Node const &config, toponav_core::TopoMap::Edge *edge) override;
   
   virtual YAML::Node saveEdgeInData(toponav_core::TopoMap::Edge const *edge) override;
-  
+
+  /**
+   * Update exit data of edge and the src/dst node according to 3d center and exit position
+   * @param edge
+   */
   virtual void onEdgeApproachChanged(const toponav_core::TopoMap::Edge *edge) override;
 
 private:

@@ -1,0 +1,28 @@
+# if start frame_id is empty, start is current robot pose
+geometry_msgs/PoseStamped start
+geometry_msgs/PoseStamped goal
+
+# if true, the plan won't be stored for later, returned id will be 0
+bool forgetAfter
+
+# costs profile
+string profile
+---
+nav_msgs/Path plan
+float64 costs
+float64 planning_time
+
+# id invalid if 0
+uint32 id
+
+uint32 error_code
+uint32 SUCCESS=0
+uint32 INVALID_START=1
+uint32 INVALID_GOAL=2
+uint32 NO_PATH_FOUND=3
+
+uint32 number_region_evaluations
+uint32 number_region_heuristic_evaluations
+uint32 number_transition_evaluations
+uint32 number_transition_heuristic_evaluations
+

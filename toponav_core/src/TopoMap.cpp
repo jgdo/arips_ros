@@ -131,7 +131,6 @@ void TopoMap::removeEdge(TopoMap::Edge *edge) {
   edge->_dst->_inEdges.erase(edge);
   this->_edges.erase(edge->getName()); // now edge is a dangling pointer!
 	edge = nullptr;
-	
 	changed();
 }
 
@@ -153,6 +152,36 @@ void TopoMap::Node::addInEdge(const TopoMap::Edge *edge) {
 TopoMap::Edge::Edge(TopoMap* map, TopoMap::Node *src, TopoMap::Node *dst, std::string name, std::string transitionType): _parentMap(map), _src(src), _dst(dst), _name(name), _transitionType(transitionType) {
 	src->addOutEdge(this);
   dst->addInEdge(this);
+}
+
+/*
+ *
+ */
+void TopoMap::Edge::setSrc(Node* newSrc) {
+        checkTrue(newSrc, "TopoMap::Edge::setSrc(): newSrc is null");
+    if(_src != newSrc) {
+        _src->_outEdges.erase(this);
+        _src = newSrc;
+        _src->addOutEdge(this);
+
+        ROS_INFO("Updated edge %s src to %s", getName().c_str(), _src->getName().c_str());
+    }
+
+    _parentMap->changed();
+}
+
+
+void TopoMap::Edge::setDst(Node* newDst) {
+    checkTrue(newDst, "TopoMap::Edge::setDst(): newDst is null");
+    if(_dst != newDst) {
+        _dst->_inEdges.erase(this);
+        _dst = newDst;
+        _dst->addInEdge(this);
+
+        ROS_INFO("Updated edge %s src to %s", getName().c_str(), _dst->getName().c_str());
+    }
+
+    _parentMap->changed();
 }
 	
 }; // namespace topo_nav

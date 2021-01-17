@@ -7,6 +7,9 @@
 
 #include "utils/DataMap.h"
 
+#include <ros/console.h>
+
+
 namespace toponav_core {
 
 /**
@@ -189,6 +192,18 @@ public:
 		inline const std::string& getTransitionType() const {
 			return _transitionType;
 		}
+
+		/**
+		 * Assign a new source to this edge
+		 * @param newSrc must not be null
+		 */
+		void setSrc(Node* newSrc);
+
+        /**
+         * Assign a new destination to this edge
+         * @param newDst must not be null
+         */
+        void setDst(Node* newDst);
 
 	protected:
 		TopoMap* _parentMap;

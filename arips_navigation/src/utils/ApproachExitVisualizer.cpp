@@ -192,7 +192,7 @@ toponav_ros::ApproachExitVisualizer::createEdgeMarkers(const toponav_core::TopoM
         insert(names, edgeIntMarker);
 
     } catch (tf2::TransformException &ex) {
-        ROS_WARN("%s",ex.what());
+        ROS_WARN("%s: %s",__func__, ex.what());
     }
   }
   

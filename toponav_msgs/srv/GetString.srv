@@ -1,0 +1,10 @@
+uint8 GET_STR = 1
+uint8 GET_WRITE_FILE = 2
+uint8 GET_READ_FILE = 3
+
+string title
+uint8 type
+
+---
+bool success
+string str

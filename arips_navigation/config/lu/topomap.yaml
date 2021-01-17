@@ -29,13 +29,23 @@ parser_data:
       step:
         - name: Step_0
           start:
-            x: 1.647662878036499
-            y: -0.250501811504364
-            z: -2.384185791015625e-07
+            x: 1.727037310600281
+            y: -0.2690128982067108
+            z: -3.075599670410156e-05
           end:
-            x: 1.650795459747314
-            y: 0.4351365864276886
-            z: -2.384185791015625e-07
+            x: 1.715111494064331
+            y: 0.4312114715576172
+            z: -3.075599670410156e-05
+          frame_id: odom
+        - name: Step_1
+          start:
+            x: 2.077819108963013
+            y: 2.166691303253174
+            z: 0
+          end:
+            x: 2.84944748878479
+            y: 2.175362348556519
+            z: 0
           frame_id: odom
 nodes:
   - name: map1_node_0
@@ -57,6 +67,20 @@ nodes:
     node_data:
       x: 316
       y: 241
+      map: map1
+      height: 0
+  - name: map1_node_4
+    type: flat
+    node_data:
+      x: 314
+      y: 198
+      map: map1
+      height: 0
+  - name: map1_node_5
+    type: flat
+    node_data:
+      x: 311
+      y: 316
       map: map1
       height: 0
   - name: map1_node_71
@@ -81,53 +105,103 @@ nodes:
       map: map1
       height: 0
 edges:
-  - name: step_0_map1_node_19_map1_node_19
+  - name: step_0_map1_node_19_map1_node_4
     type: step
-    source: map1_node_19
-    target: map1_node_19
+    source: map1_node_3
+    target: map1_node_4
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 1.399493009809577
-          y: 0.1506362152448242
-          z: -2.384185791015625e-07
+          x: 1.470261980537801
+          y: 0.1266718625199365
+          z: -3.075599670410156e-05
         end:
-          x: 1.398970546499167
-          y: 0.03628296281676641
-          z: -2.384185791015625e-07
+          x: 1.471959325685735
+          y: 0.02701223477854203
+          z: -3.075599670410156e-05
         orientation:
           x: 0
           y: 0
-          z: 0.002284409098896746
-          w: -0.9999973907341304
+          z: -0.008514784725605936
+          w: -0.9999637485634549
         frame_id: odom
     exit_data: ~
     edge_data:
       step_name: Step_0
       step_type: cross_over
-  - name: step_1_map1_node_3_map1_node_3
+  - name: step_1_map1_node_4_map1_node_19
     type: step
-    source: map1_node_3
+    source: map1_node_4
     target: map1_node_3
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 1.899487791284646
-          y: 0.1483518121065582
-          z: -2.384185791015625e-07
+          x: 1.970189478978877
+          y: 0.1351863385723643
+          z: -3.075599670410156e-05
         end:
-          x: 1.898965327974236
-          y: 0.03399855967850041
-          z: -2.384185791015625e-07
+          x: 1.971886824126812
+          y: 0.03552671083096987
+          z: -3.075599670410156e-05
         orientation:
           x: 0
           y: 0
-          z: 0.9999973907341304
-          w: 0.002284409098896685
+          z: 0.9999637485634549
+          w: -0.008514784725605996
         frame_id: odom
     exit_data: ~
     edge_data:
       step_name: Step_0
       step_type: cross_over
+  - name: step_2_map1_node_4_map1_node_5
+    type: step
+    source: map1_node_4
+    target: map1_node_5
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.480603011791454
+          y: 1.921201736016012
+          z: 0
+        end:
+          x: 2.45228189789398
+          y: 1.920883482219149
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7110684298558266
+          w: 0.7031228115076124
+        frame_id: odom
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
+      step_type: up
+  - name: step_3_map1_node_5_map1_node_4
+    type: step
+    source: map1_node_5
+    target: map1_node_4
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.474984699853824
+          y: 2.421170169590544
+          z: 0
+        end:
+          x: 2.446663585956349
+          y: 2.420851915793681
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7031228115076124
+          w: -0.7110684298558266
+        frame_id: odom
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
+      step_type: up

@@ -1,0 +1,10 @@
+uint32 id
+
+string filename
+---
+uint32 error_code
+
+uint32 SUCCESS=0
+uint32 INVALID_ID=1
+uint32 FILE_ACCESS_ERROR=2
+uint32 SYNTHESIZE_ERROR=3

@@ -7,9 +7,8 @@
 #include <memory>
 
 #include <costmap_2d/costmap_2d_ros.h>
-
 #include <toponav_ros/TopoPlannerROS.h>
-#include <nav_core/base_local_planner.h>
+#include <arips_navigation/TopoExecuter.h>
 
 class Navigation {
 public:
@@ -33,9 +32,8 @@ private:
     costmap_2d::Costmap2DROS m_LocalCostmap {"local_costmap", m_tfBuffer};
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 
-    std::unique_ptr<nav_core::BaseLocalPlanner> mLocalPlanner;
+    TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap};
 
-    ros::Publisher mCmdVelPub;
     ros::Subscriber psub_nav;
 
     ros::Timer mControlTimer;

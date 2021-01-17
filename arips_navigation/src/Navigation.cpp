@@ -12,7 +12,6 @@
 #include <toponav_ros/utils/EdgeModuleContainer.h>
 #include <arips_navigation/StepEdgeModule.h>
 #include <toponav_ros/utils/CostsProfileModuleContainer.h>
-#include <base_local_planner/trajectory_planner_ros.h>
 
 #include <memory>
 
@@ -58,10 +57,6 @@ Navigation::Navigation() {
     m_TopoPlanner.init("topo_planner", factory, &m_tfBuffer);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 10, &Navigation::poseCallbackNavGoal, this);
-    mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
-
-    mLocalPlanner = std::make_unique<base_local_planner::TrajectoryPlannerROS>();
-    mLocalPlanner->initialize("TrajectoryPlannerROS", &m_tfBuffer, &m_LocalCostmap);
 
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
 }
@@ -116,13 +111,7 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
             TopoPath lastPlan;
             if(m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr)) {
                 m_TopoPlanner.getPathViz().visualizePath(lastPlan);
-
-                nav_msgs::Path pathMsg;
-                m_TopoPlanner.getPathViz().fillNavPath(lastPlan, &pathMsg);
-                for(auto& p: pathMsg.poses) {
-                    p.header.stamp = robotPose.stamp_;
-                }
-                mLocalPlanner->setPlan(pathMsg.poses);
+                m_TopoExec.setNewPlan(lastPlan);
 
                 mState = State::NAVIGATING;
             }
@@ -137,12 +126,10 @@ void Navigation::timerCallback(const ros::TimerEvent& e) {
         return;
     }
 
-    geometry_msgs::Twist cmd_vel;
-
-    if(mLocalPlanner->isGoalReached()) {
-        mState = State::IDLE;
+    if(m_TopoExec.isRunning()) {
+        m_TopoExec.runControlCycle();
     } else {
-        mLocalPlanner->computeVelocityCommands(cmd_vel);
+        ROS_INFO("Finished plan.");
+        mState = State::IDLE;
     }
-    mCmdVelPub.publish(cmd_vel);
 }

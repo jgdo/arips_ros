@@ -91,6 +91,7 @@ public:
   inline TopoPath() {}
   inline TopoPath(const TopoPath& other) = default;
   inline TopoPath(TopoPath&& other): pathElements(std::move(other.pathElements)) {}
+  inline TopoPath& operator=(const TopoPath& other) = default;
 };
 
 class ComposedPlanVisitor: public TopoPath::PathVisitor {

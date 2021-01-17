@@ -512,8 +512,6 @@ void StepEdgeModule::setApproachFromStepCB(const visualization_msgs::Interactive
   double robotWidth2 = 0.4; // FIXME
   double robotLength2 = 0.25;
 
-
-
   auto diff = tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
   double yaw = atan2(diff.y(), diff.x());
   
@@ -534,10 +532,8 @@ void StepEdgeModule::setApproachFromStepCB(const visualization_msgs::Interactive
   
   auto approachLine = std::make_shared<ApproachLineArea>(start, end, tf2::Stamped<tf2::Quaternion>(rot, ros::Time::now(), approachCenter.frame_id_));
   setApproachData(edge, approachLine);
-  
-  auto exitPose = getExitPoseFromApproach(stepInfo, approachLine->getCenter());
-  setExitData(edge, std::make_shared<FixedPosition>(exitPose));
-    
+
+    onEdgeApproachChanged(edge); // set exit data and update node connections
   _context.mapChanged();
 }
 
@@ -583,12 +579,32 @@ YAML::Node StepEdgeModule::saveEdgeInData(TopoMap::Edge const *edge) {
 void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge *constEdge) {
   TopoMap::Edge* edge = _context.topoMap->getEdge(constEdge->getName());
   auto const& approach = getApproachData(edge);
+
+    {
+        GlobalPosition aproachPosition = _context.poseService->findGlobalPose(approach->getCenter(),
+                                                                              *_context.topoMap).first;
+        if (aproachPosition.node) {
+            edge->setSrc(_context.topoMap->getNode(aproachPosition.node->getName()));
+        } else {
+            ROS_WARN("StepEdgeModule::onEdgeApproachChanged(): edge approach center could not be mapped to a node");
+        }
+    }
+
   EdgeStepData const& edgeData = getEdgeData(edge);
   MapStepData& stepData = getMapData(mapEditor->getMap());
   StepInfo const& stepInfo = stepData.steps.at(edgeData.stepName);
   
   auto exitPose = getExitPoseFromApproach(stepInfo, approach->getCenter());
   setExitData(edge, std::make_shared<FixedPosition>(exitPose));
+
+    {
+        GlobalPosition exitPosition = _context.poseService->findGlobalPose(exitPose, *_context.topoMap).first;
+        if (exitPosition.node) {
+            edge->setDst(_context.topoMap->getNode(exitPosition.node->getName()));
+        } else {
+            ROS_WARN("StepEdgeModule::onEdgeApproachChanged(): edge exit could not be mapped to a node");
+        }
+    }
 }
 
 void StepEdgeModule::deleteStepCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback, BaseTraits<StepEdgeModule>::StepInfo *stepInfo) {
