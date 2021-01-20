@@ -92,32 +92,43 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
     if(!isQuaternionValid(pose.getRotation()))
         return;
 
-    tf2::Stamped<tf2::Transform> robotPose;
-    robotPose.setRotation(createQuaternionFromYaw(0));
-    robotPose.frame_id_ = "base_link";
-    robotPose.stamp_ = ros::Time::now();
+    try {
+        geometry_msgs::TransformStamped startTransform;
+        startTransform = m_tfBuffer.lookupTransform("map", "arips_base", ros::Time(0));
+        geometry_msgs::PoseStamped startPose;
+        startPose.header = startTransform.header;
+        startPose.pose.position.x = startTransform.transform.translation.x;
+        startPose.pose.position.y = startTransform.transform.translation.y;
+        startPose.pose.position.z = startTransform.transform.translation.z;
+        startPose.pose.orientation = startTransform.transform.rotation;
 
-    tf2::Stamped<tf2::Transform> startPoseOdom = m_tfBuffer.transform(robotPose, "odom");
-    startPoseOdom.frame_id_ = "odom"; // TODO bug?
+        GlobalPosition start = m_TopoPlanner.getContext().poseService->findGlobalPose(startPose,
+                                                                                      *m_TopoPlanner.getContext().topoMap).first;
+        ROS_INFO_STREAM("found start node for robot pose: "
+                                << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
 
-    GlobalPosition start = m_TopoPlanner.getContext().poseService->findGlobalPose(startPoseOdom, *m_TopoPlanner.getContext().topoMap).first;
-    ROS_INFO_STREAM("found start node for robot pose: " << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
+        GlobalPosition goal = m_TopoPlanner.getContext().poseService->findGlobalPose(pose,
+                                                                                     *m_TopoPlanner.getContext().topoMap).first;
+        ROS_INFO_STREAM(
+                "found goal node for pose: " << (goal.node ? goal.node->getName() : std::string("<NOT FOUND>")));
 
-    GlobalPosition goal = m_TopoPlanner.getContext().poseService->findGlobalPose(pose, *m_TopoPlanner.getContext().topoMap).first;
-    ROS_INFO_STREAM("found goal node for pose: " << (goal.node ? goal.node->getName() : std::string("<NOT FOUND>")));
+        if (start.node && goal.node) {
+            try {
+                TopoPath lastPlan;
+                if (m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal,
+                                                                 &lastPlan, nullptr)) {
+                    m_TopoPlanner.getPathViz().visualizePath(lastPlan);
+                    m_TopoExec.setNewPlan(lastPlan);
 
-    if (start.node && goal.node) {
-        try {
-            TopoPath lastPlan;
-            if(m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr)) {
-                m_TopoPlanner.getPathViz().visualizePath(lastPlan);
-                m_TopoExec.setNewPlan(lastPlan);
-
-                mState = State::NAVIGATING;
+                    mState = State::NAVIGATING;
+                }
+            } catch (const std::exception &e) {
+                ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
             }
-        } catch (const std::exception &e) {
-            ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
         }
+
+    } catch(const tf2::TransformException& ex) {
+        ROS_WARN("poseCallbackNavGoal(): %s",ex.what());
     }
 }
 

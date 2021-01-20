@@ -1,0 +1,21 @@
+<launch>
+  <!--- run stage -->
+  <arg name="world_file" default="$(find arips_navigation)/maps/world.world"/>
+  <node name="stageros" pkg="stage_ros" type="stageros" args="$(arg world_file)" >
+    <remap from="base_scan" to="scan"/>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="stage_base_link" args="0 0 0 0 0 0 base_link arips_base 30"/>
+  
+  <!-- Run the map server 
+  <arg name="map_file" default="$(find arips_launch)/stage/map.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  -->
+
+  <!--- Run AMCL -->
+  <!-- 
+  <node pkg="amcl" type="amcl" name="amcl">
+  	<remap from="scan" to="scan"/>
+  </node>
+  -->
+</launch>

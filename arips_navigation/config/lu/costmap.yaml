@@ -1,8 +1,8 @@
 costmaps:
   map1:
     map_topic: /flat_layer_map1
-    global_frame: odom
-    robot_base_frame: base_link
+    global_frame: map
+    robot_base_frame: arips_base
     robot_radius: 0.2
     inflation_radius: 0.3
     static_map: true
@@ -11,8 +11,8 @@ costmaps:
 
 local_costmap:
   map_topic: /flat_layer_map1
-  global_frame: odom
-  robot_base_frame: base_link
+  global_frame: map
+  robot_base_frame: arips_base
   robot_radius: 0.2
   inflation_radius: 0.3
   static_map: true
@@ -141,7 +141,7 @@ AripsPlannerROS:
   # Debugging
   publish_traj_pc : true
   publish_cost_grid_pc: true
-  global_frame_id: odom
+  global_frame_id: map
 
 
   # Differential-drive robot configuration - necessary?
