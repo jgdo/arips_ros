@@ -11,13 +11,22 @@ costmaps:
 
 local_costmap:
   map_topic: /flat_layer_map1
-  global_frame: map
+  global_frame: odom
   robot_base_frame: arips_base
   robot_radius: 0.2
-  inflation_radius: 0.3
-  static_map: true
+  inflation_radius: 0.5
   map_type: costmap
-  observation_sources: {}
+  observation_sources: scan
+
+  static_map: false
+  rolling_window: true
+  width: 1.5
+  height: 1.5
+  resolution: 0.015
+
+  update_frequency: 10.0
+  publish_frequency: 2.5
+  transform_tolerance: 1.0
 
   #robot_base_frame: base_link
   #obstacle_range: 3.5
@@ -26,9 +35,9 @@ local_costmap:
   #inflation_radius: 0.5
   #max_obstacle_height: 1.0
   #observation_sources: scan
-  #transform_tolerance: 5.0
 
-#  scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}
+
+  scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}
 
 #  global_frame: flat_layer_map1_frame
 #  update_frequency: 10.0
@@ -45,7 +54,7 @@ local_costmap:
 #  unknown_threshold: 8
 
 TrajectoryPlannerROS:
-  global_frame_id: flat_layer_map1_frame
+  global_frame_id: odom
 
   # Robot Configuration Parameters
   max_vel_x: 0.35
@@ -141,7 +150,7 @@ AripsPlannerROS:
   # Debugging
   publish_traj_pc : true
   publish_cost_grid_pc: true
-  global_frame_id: map
+  global_frame_id: odom
 
 
   # Differential-drive robot configuration - necessary?
