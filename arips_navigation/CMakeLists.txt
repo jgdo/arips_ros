@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   costmap_2d
   dynamic_reconfigure
   nav_core
-        navfn
+  navfn
   nav_msgs
   pluginlib
   roscpp
@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   toponav_core
   toponav_ros
   interactive_markers
-  arips_local_planner
+  base_local_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -102,10 +102,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+ generate_dynamic_reconfigure_options(
+   cfg/AripsPlanner.cfg
+)
 
 ###################################
 ## catkin specific configuration ##

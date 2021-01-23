@@ -108,17 +108,17 @@ edges:
   - name: step_0_map1_node_19_map1_node_4
     type: step
     source: map1_node_3
-    target: map1_node_4
+    target: map1_node_3
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 1.173322081565857
-          y: 0.0409407839179039
+          x: 1.179624676704407
+          y: 0.04091442003846169
           z: -9.179115295410156e-05
         end:
-          x: 1.175407767295837
-          y: -0.05248664692044258
+          x: 1.188419342041016
+          y: -0.0525413416326046
           z: -6.127357482910156e-05
         orientation:
           x: 8.64730511269495e-09
@@ -132,7 +132,7 @@ edges:
       step_type: cross_over
   - name: step_1_map1_node_4_map1_node_19
     type: step
-    source: map1_node_4
+    source: map1_node_3
     target: map1_node_3
     approach_data:
       approach:
@@ -142,14 +142,14 @@ edges:
           y: 0.05466179549694061
           z: -3.075599670410156e-05
         end:
-          x: 1.854380965232849
-          y: -0.04308817163109779
+          x: 1.860422968864441
+          y: -0.04917892813682556
           z: -6.127357482910156e-05
         orientation:
-          x: -1.164934927743332e-08
-          y: 1.088345269926357e-09
-          z: 0.9999241699244812
-          w: -0.01231480413312661
+          x: -1.529939710697058e-08
+          y: 9.604008575365585e-10
+          z: 0.9999241699752116
+          w: -0.01231480001396638
         frame_id: map
     exit_data: ~
     edge_data:
@@ -157,18 +157,18 @@ edges:
       step_type: cross_over
   - name: step_2_map1_node_4_map1_node_5
     type: step
-    source: map1_node_4
+    source: map1_node_3
     target: map1_node_5
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 2.447945833206177
-          y: 1.493216395378113
+          x: 2.447945594787598
+          y: 1.493216037750244
           z: 0
         end:
-          x: 2.485207507833747
-          y: 1.496765954119086
+          x: 2.485206842422485
+          y: 1.496765494346619
           z: 0
         orientation:
           x: 5.649473544420466e-09
@@ -183,23 +183,23 @@ edges:
   - name: step_3_map1_node_5_map1_node_4
     type: step
     source: map1_node_5
-    target: map1_node_4
+    target: map1_node_3
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 2.460068225860596
-          y: 2.08887791633606
+          x: 2.487733364105225
+          y: 2.084807395935059
           z: 0
         end:
-          x: 2.532130718231201
-          y: 2.091890573501587
+          x: 2.567689180374146
+          y: 2.083832502365112
           z: 0
         orientation:
-          x: 6.542194283678878e-09
-          y: 8.099093556687627e-09
-          z: -0.7047366672603085
-          w: 0.7094689773477294
+          x: 9.333121013709723e-09
+          y: 9.381828718616374e-09
+          z: -0.700861936175366
+          w: 0.7132969552861675
         frame_id: map
     exit_data: ~
     edge_data:

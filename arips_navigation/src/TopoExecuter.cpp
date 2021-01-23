@@ -5,8 +5,8 @@
 #include "arips_navigation/TopoExecuter.h"
 
 #include <memory>
-#include <base_local_planner/trajectory_planner_ros.h>
-#include <arips_local_planner/arips_planner_ros.h>
+
+#include <arips_navigation/local_planner/arips_planner_ros.h>
 
 
 TopoExecuter::TopoExecuter(tf2_ros::Buffer &tfBuffer, costmap_2d::Costmap2DROS &costmap) {
