@@ -1,0 +1,207 @@
+parser_data:
+  node_parser:
+    module_flat:
+      default_costs:
+        distance_factor: 1
+        energy_factor: 1
+        time_factor: 1
+      maps:
+        map1:
+          planner: NavfnCostsPlanner
+  edge_parser:
+    module_step:
+      default_costs_down:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_up:
+        distance: 1
+        energy: 2.5
+        time: 15
+      default_costs_cross_over:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_cross_gravel:
+        distance: 1
+        energy: 1
+        time: 10
+      step:
+        - name: Step_0
+          start:
+            x: 1.471131086349487
+            y: -0.3248428106307983
+            z: -3.075599670410156e-05
+          end:
+            x: 1.470346093177795
+            y: 0.3605566918849945
+            z: -3.075599670410156e-05
+          frame_id: map
+        - name: Step_1
+          start:
+            x: 2.065991640090942
+            y: 1.742993474006653
+            z: 0
+          end:
+            x: 2.882935523986816
+            y: 1.750364899635315
+            z: 0
+          frame_id: map
+nodes:
+  - name: map1_node_0
+    type: flat
+    node_data:
+      x: 543
+      y: 0
+      map: map1
+      height: 0
+  - name: map1_node_19
+    type: flat
+    node_data:
+      x: 277
+      y: 272
+      map: map1
+      height: 0
+  - name: map1_node_3
+    type: flat
+    node_data:
+      x: 316
+      y: 241
+      map: map1
+      height: 0
+  - name: map1_node_4
+    type: flat
+    node_data:
+      x: 314
+      y: 198
+      map: map1
+      height: 0
+  - name: map1_node_5
+    type: flat
+    node_data:
+      x: 311
+      y: 316
+      map: map1
+      height: 0
+  - name: map1_node_71
+    type: flat
+    node_data:
+      x: 239
+      y: 347
+      map: map1
+      height: 0
+  - name: map1_node_74
+    type: flat
+    node_data:
+      x: 201
+      y: 250
+      map: map1
+      height: 0
+  - name: map1_node_75
+    type: flat
+    node_data:
+      x: 200
+      y: 293
+      map: map1
+      height: 0
+edges:
+  - name: step_0_map1_node_19_map1_node_4
+    type: step
+    source: map1_node_19
+    target: map1_node_4
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 1.179624676704407
+          y: 0.04091442003846169
+          z: -9.179115295410156e-05
+        end:
+          x: 1.188419580459595
+          y: -0.0525413490831852
+          z: -6.127357482910156e-05
+        orientation:
+          x: 8.64730511269495e-09
+          y: 7.996919654890659e-09
+          z: 0.0272641303537107
+          w: 0.9996282645043885
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over
+  - name: step_1_map1_node_4_map1_node_19
+    type: step
+    source: map1_node_4
+    target: map1_node_3
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 1.861236214637756
+          y: 0.05466179549694061
+          z: -3.075599670410156e-05
+        end:
+          x: 1.860424041748047
+          y: -0.049178846180439
+          z: -6.127357482910156e-05
+        orientation:
+          x: -1.529939710697058e-08
+          y: 9.604008575365585e-10
+          z: 0.9999241699752116
+          w: -0.01231480001396638
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over
+  - name: step_2_map1_node_4_map1_node_5
+    type: step
+    source: map1_node_4
+    target: map1_node_19
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.447945594787598
+          y: 1.493216037750244
+          z: 0
+        end:
+          x: 2.485207557678223
+          y: 1.496765494346619
+          z: 0
+        orientation:
+          x: 5.649473544420466e-09
+          y: 1.834787801430164e-10
+          z: 0.7337894136724727
+          w: 0.6793769913547327
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
+      step_type: up
+  - name: step_3_map1_node_5_map1_node_4
+    type: step
+    source: map1_node_5
+    target: map1_node_4
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.487733364105225
+          y: 2.084807395935059
+          z: 0
+        end:
+          x: 2.567689418792725
+          y: 2.083832740783691
+          z: 0
+        orientation:
+          x: 9.333121013709723e-09
+          y: 9.381828718616374e-09
+          z: -0.700861936175366
+          w: 0.7132969552861675
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
+      step_type: up

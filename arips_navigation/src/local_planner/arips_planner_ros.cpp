@@ -271,10 +271,9 @@ namespace arips_local_planner {
     ROS_DEBUG_NAMED("arips_local_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
 
     // update plan in arips_planner even if we just stop and rotate, to allow checkTrajectory
-    dp_->updatePlanAndLocalCosts(current_pose_, transformed_plan, costmap_ros_->getRobotFootprint());
+    dp_->updatePlanAndLocalCosts(current_pose_, transformed_plan);
 
     if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)) {
-      ROS_INFO_STREAM("Rotating to goal");
       //publish an empty plan because we've reached our goal position
       std::vector<geometry_msgs::PoseStamped> local_plan;
       std::vector<geometry_msgs::PoseStamped> transformed_plan;

@@ -94,7 +94,7 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
 
     try {
         geometry_msgs::TransformStamped startTransform;
-        startTransform = m_tfBuffer.lookupTransform("map", "arips_base", ros::Time(0));
+        startTransform = m_tfBuffer.lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
         geometry_msgs::PoseStamped startPose;
         startPose.header = startTransform.header;
         startPose.pose.position.x = startTransform.transform.translation.x;

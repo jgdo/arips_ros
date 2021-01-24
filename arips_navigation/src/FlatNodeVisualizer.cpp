@@ -10,6 +10,13 @@ namespace toponav_ros {
 
 using namespace toponav_core;
 
+FlatNodeVisualizer::FlatNodeVisualizer(PlanningContext& context, std::string const& nodeType): 
+  _context(context), own_node_type_(nodeType) 
+{
+  ros::NodeHandle nh;
+  m_nodeMarkerPub = nh.advertise<visualization_msgs::Marker>("node_segment_markers", 10);
+}
+
 void FlatNodeVisualizer::initializeVisualization(MapEditor *editor) {
 	NodeVisualizationInterface::initializeVisualization(editor);
   
@@ -54,7 +61,72 @@ void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path *pathPtr, std::st
 }
 
 void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node *node) {
-	// nothing to do here for now
+  if(m_nodeMarkerPub.getNumSubscribers() == 0) return;
+
+  // Visualize flat costmap segments with different colors
+
+  const FlatGroundModule::NodeData& data = FlatGroundModule::getNodeData(node);
+  const float res = data.planner->getMap().getCostmap()->getResolution();
+
+   visualization_msgs::Marker nodeMarkers;
+   nodeMarkers.header.stamp = ros::Time::now();
+   nodeMarkers.header.frame_id = data.planner->getMap().getGlobalFrameID();
+   nodeMarkers.type = visualization_msgs::Marker::POINTS;
+   nodeMarkers.action = visualization_msgs::Marker::ADD;
+   nodeMarkers.ns = "topo_node";
+   nodeMarkers.scale.x = res;
+   nodeMarkers.scale.y = res;
+
+   using Color = std::array<uint8_t, 3>;
+   const std::vector<Color> allColors = {
+      {255, 0, 0},
+      {0, 255, 0},
+      {0, 0, 255},
+      {255, 255, 0},
+      {255, 0, 255},
+      {0, 255, 255},
+   };
+
+    std::map<const TopoMap::Node*, Color> nodeColors;
+
+    const double x_off = data.planner->getMap().getCostmap()->getOriginX();
+    const double y_off = data.planner->getMap().getCostmap()->getOriginY();
+
+    const FlatGroundModule::NodeMatrix& mat = (*data.nodeMatrix);
+    for(int x = 0; x < mat.rows(); x++) { // rows = x coordinate, see regionGrow() impl
+      for(int y = 0; y < mat.cols(); y++) {
+        auto n = mat(x,y);
+        if(!n){
+          continue;
+        } 
+
+        geometry_msgs::Point p;
+        p.x = x*res + x_off;
+        p.y = y*res + y_off;
+
+        std_msgs::ColorRGBA colorMsg;
+
+        auto colorIter = nodeColors.find(n);
+        if(colorIter == nodeColors.end()) {
+          // if no color is set for this node yet, pick next color or generate a random one
+           const Color newColor = nodeColors.size() < allColors.size()? allColors.at(nodeColors.size())
+                                                         : Color { (uint8_t) rand(), (uint8_t) rand(), (uint8_t) rand()};
+
+          colorIter = nodeColors.insert({n, newColor}).first;
+        } 
+
+        const auto color = colorIter->second;
+        colorMsg.r = color[0] / 255.0;
+        colorMsg.g = color[1] / 255.0;
+        colorMsg.b = color[2] / 255.0;
+        colorMsg.a = 1;
+
+        nodeMarkers.points.push_back(p);
+        nodeMarkers.colors.push_back(colorMsg);
+      }
+    }
+
+    m_nodeMarkerPub.publish(nodeMarkers);
 }
 
 void FlatNodeVisualizer::segmentLayerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,

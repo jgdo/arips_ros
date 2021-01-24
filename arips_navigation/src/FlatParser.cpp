@@ -108,11 +108,27 @@ void FlatParser::parseNodeData(YAML::Node const &config, TopoMap::Node *node) {
         }
 	}
   
-  FlatGroundModule::initNodeData(node, costmapIter->second.planner, costmapIter->second.nodeMatrix,
+FlatGroundModule::initNodeData(node, costmapIter->second.planner, costmapIter->second.nodeMatrix,
                                    _context.tfBuffer, nodeX, nodeY, costmapName, height);
   
-  // FIXME: what if layer not present?
-  FlatGroundModule::regionGrow(node, costmapIter->second.planner->getMap().getCostmap(), nodeX, nodeY, costmapIter->second.nodeMatrix.get());
+  // retry segmenting region, wait in between
+  for(int i = 30; i > 0; i--) { 
+    // FIXME: what if layer not present?
+    const size_t cells = FlatGroundModule::regionGrow(node, costmapIter->second.planner->getMap().getCostmap(), 
+                                                      nodeX, nodeY, costmapIter->second.nodeMatrix.get());
+    if(cells > 0) {                             
+      ROS_DEBUG_STREAM("FlatGroundModule: segmented " << cells << " cells for node " << node->getName());
+      break;
+    } 
+
+    if(i > 1){
+      ros::Duration(0.3).sleep();
+      ros::spinOnce();
+    } else { 
+      ROS_ERROR_STREAM("FlatGroundModule: Failed to segments cells for node '" << node->getName() 
+                        << "'. Planning with this node will likely fail!");
+    }
+  }
 }
 
 YAML::Node FlatParser::beginSaving(TopoMap *map) {

@@ -52,7 +52,7 @@ size_t FlatGroundModule::regionGrow(TopoMap::Node *node, const costmap_2d::Costm
 
     if(!(*mat)(p.first, p.second)
             && cost != costmap_2d::LETHAL_OBSTACLE
-            && cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE
+//            && cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE
             && cost != costmap_2d::NO_INFORMATION) {
       (*mat) (p.first, p.second) = node;
       counter++;
@@ -101,6 +101,7 @@ std::pair<GlobalPosition, tf2::Stamped<tf2::Transform>> FlatGroundModule::findGl
 
       // returns false if outside costmap bounds
       if (costmap_ros.getCostmap()->worldToMap(localPose.getOrigin().x(), localPose.getOrigin().y(), mx, my)) {
+        ROS_INFO_STREAM("Checking flat pose at xy: " << mx << ", " << my);
         realNode = (*mapEntry.second.nodeMatrix)(mx, my);
         if (realNode) {
           localPose.getOrigin().setZ(getNodeData(realNode).areaHeight); // lookup the configured height of this node

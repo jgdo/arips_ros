@@ -28,6 +28,8 @@ local_costmap:
   update_frequency: 10.0
   publish_frequency: 2.5
   transform_tolerance: 1.0
+  
+  cost_scaling_factor: 5.0
 
   #robot_base_frame: base_link
   #obstacle_range: 3.5
@@ -64,16 +66,16 @@ AripsPlannerROS:
   max_vel_y: 0.0  # diff drive robot
   min_vel_y: 0.0  # diff drive robot
 
-  max_vel_trans: 0.55 # choose slightly less than the base's capability
-  min_vel_trans: 0.1  # this is the min trans velocity when there is negligible rotational velocity
+  max_vel_trans: 0.3 # choose slightly less than the base's capability
+  min_vel_trans: 0.03  # this is the min trans velocity when there is negligible rotational velocity
   trans_stopped_vel: 0.2
 
   # Warning!
   #   do not set min_trans_vel to 0.0 otherwise dwa will always think translational velocities
   #   are non-negligible and small in place rotational velocities will be created.
 
-  max_vel_theta: 1.0  # choose slightly less than the base's capability
-  min_vel_theta: 0.4  # this is the min angular velocity when there is negligible translational velocity
+  max_vel_theta: 2.0  # choose slightly less than the base's capability
+  min_vel_theta: 0.2  # this is the min angular velocity when there is negligible translational velocity
   theta_stopped_vel: 0.3
 
   acc_lim_x: 1.0 # maximum is theoretically 2.0, but we

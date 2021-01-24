@@ -29,177 +29,142 @@ parser_data:
       step:
         - name: Step_0
           start:
-            x: 1.471131086349487
-            y: -0.3248428106307983
-            z: -3.075599670410156e-05
+            x: 1.493298530578613
+            y: -0.3006691336631775
+            z: 0
           end:
-            x: 1.470346093177795
-            y: 0.3605566918849945
-            z: -3.075599670410156e-05
+            x: 1.493717551231384
+            y: 0.4518000483512878
+            z: -4.76837158203125e-07
           frame_id: map
         - name: Step_1
           start:
-            x: 2.065991640090942
-            y: 1.742993474006653
-            z: 0
+            x: 2.87273120880127
+            y: 1.727324604988098
+            z: 4.76837158203125e-07
           end:
-            x: 2.882935523986816
-            y: 1.750364899635315
+            x: 2.064034938812256
+            y: 1.715994834899902
             z: 0
           frame_id: map
 nodes:
-  - name: map1_node_0
+  - name: arbeitszimmer
     type: flat
     node_data:
-      x: 543
-      y: 0
+      x: 270
+      y: 235
       map: map1
       height: 0
-  - name: map1_node_19
+  - name: wohnung
     type: flat
     node_data:
-      x: 277
-      y: 272
+      x: 218
+      y: 235
       map: map1
       height: 0
-  - name: map1_node_3
+  - name: wohnzimmer
     type: flat
     node_data:
-      x: 316
-      y: 241
-      map: map1
-      height: 0
-  - name: map1_node_4
-    type: flat
-    node_data:
-      x: 314
-      y: 198
-      map: map1
-      height: 0
-  - name: map1_node_5
-    type: flat
-    node_data:
-      x: 311
-      y: 316
-      map: map1
-      height: 0
-  - name: map1_node_71
-    type: flat
-    node_data:
-      x: 239
-      y: 347
-      map: map1
-      height: 0
-  - name: map1_node_74
-    type: flat
-    node_data:
-      x: 201
-      y: 250
-      map: map1
-      height: 0
-  - name: map1_node_75
-    type: flat
-    node_data:
-      x: 200
-      y: 293
+      x: 224
+      y: 330
       map: map1
       height: 0
 edges:
-  - name: step_0_map1_node_19_map1_node_4
+  - name: step_0_arbeitszimmer_wohnung
     type: step
-    source: map1_node_3
-    target: map1_node_3
+    source: arbeitszimmer
+    target: wohnung
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 1.179624676704407
-          y: 0.04091442003846169
-          z: -9.179115295410156e-05
+          x: 1.243736386299133
+          y: 0.07465887069702148
+          z: 0
         end:
-          x: 1.188419342041016
-          y: -0.0525413416326046
-          z: -6.127357482910156e-05
+          x: 1.244062662124634
+          y: -0.003754418343305588
+          z: -4.76837158203125e-07
         orientation:
-          x: 8.64730511269495e-09
-          y: 7.996919654890659e-09
-          z: 0.0272641303537107
-          w: 0.9996282645043885
+          x: 0
+          y: 0
+          z: 0.0002784304088860719
+          w: -0.999999961238253
         frame_id: map
     exit_data: ~
     edge_data:
       step_name: Step_0
-      step_type: cross_over
-  - name: step_1_map1_node_4_map1_node_19
+      step_type: up
+  - name: step_1_wohnung_arbeitszimmer
     type: step
-    source: map1_node_3
-    target: map1_node_3
+    source: wohnung
+    target: arbeitszimmer
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 1.861236214637756
-          y: 0.05466179549694061
-          z: -3.075599670410156e-05
+          x: 1.743521236135342
+          y: 0.09919158911898163
+          z: 0
         end:
-          x: 1.860422968864441
-          y: -0.04917892813682556
-          z: -6.127357482910156e-05
+          x: 1.743494768151163
+          y: 0.051660895171035
+          z: -4.76837158203125e-07
         orientation:
-          x: -1.529939710697058e-08
-          y: 9.604008575365585e-10
-          z: 0.9999241699752116
-          w: -0.01231480001396638
+          x: 0
+          y: 0
+          z: 0.999999961238253
+          w: 0.0002784304088860106
         frame_id: map
     exit_data: ~
     edge_data:
       step_name: Step_0
-      step_type: cross_over
-  - name: step_2_map1_node_4_map1_node_5
+      step_type: up
+  - name: step_2_wohnung_wohnzimmer
     type: step
-    source: map1_node_3
-    target: map1_node_5
+    source: wohnung
+    target: wohnzimmer
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 2.447945594787598
-          y: 1.493216037750244
-          z: 0
+          x: 2.491488218307495
+          y: 1.476982474327087
+          z: 1.9073486328125e-06
         end:
-          x: 2.485206842422485
-          y: 1.496765494346619
-          z: 0
+          x: 2.529549121856689
+          y: 1.477324247360229
+          z: 4.76837158203125e-07
         orientation:
-          x: 5.649473544420466e-09
-          y: 1.834787801430164e-10
-          z: 0.7337894136724727
-          w: 0.6793769913547327
+          x: -4.039354123085081e-09
+          y: 5.601585160856573e-09
+          z: 0.7285536808032302
+          w: 0.6849887109931557
         frame_id: map
     exit_data: ~
     edge_data:
       step_name: Step_1
       step_type: up
-  - name: step_3_map1_node_5_map1_node_4
+  - name: step_3_wohnzimmer_wohnung
     type: step
-    source: map1_node_5
-    target: map1_node_3
+    source: wohnzimmer
+    target: wohnung
     approach_data:
       approach:
         type: LineArea
         start:
-          x: 2.487733364105225
-          y: 2.084807395935059
-          z: 0
+          x: 2.489840269088745
+          y: 1.96656322479248
+          z: 9.5367431640625e-07
         end:
-          x: 2.567689180374146
-          y: 2.083832502365112
+          x: 2.496468305587769
+          y: 1.971781134605408
           z: 0
         orientation:
-          x: 9.333121013709723e-09
-          y: 9.381828718616374e-09
-          z: -0.700861936175366
-          w: 0.7132969552861675
+          x: 1.059738569851641e-09
+          y: -1.742644080371254e-09
+          z: -0.6901345329178871
+          w: 0.7236810944568123
         frame_id: map
     exit_data: ~
     edge_data:

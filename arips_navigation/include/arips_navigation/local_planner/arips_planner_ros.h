@@ -34,8 +34,7 @@
 *
 * Author: Eitan Marder-Eppstein
 *********************************************************************/
-#ifndef DWA_LOCAL_PLANNER_DWA_PLANNER_ROS_H_
-#define DWA_LOCAL_PLANNER_DWA_PLANNER_ROS_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
@@ -156,4 +155,4 @@ namespace arips_local_planner {
       std::string odom_topic_;
   };
 };
-#endif
+

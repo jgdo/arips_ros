@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <launch>
+
+    <arg name="no_vel" default="false" />
+
     <node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
      <node pkg="tf" type="static_transform_publisher" name="world_pub" args="0 0 0 0 0 0 map odom 30"/>
 
@@ -18,6 +21,8 @@
         <rosparam file="$(find arips_navigation)/config/lu/costmap.yaml" command="load" />
         <rosparam file="$(find arips_navigation)/config/config.yaml" command="load" />
         <rosparam param="topo_planner/topo_map_file" subst_value="True">$(find arips_navigation)/config/lu/topomap.yaml</rosparam>
+
+        <remap from="/cmd_vel" to="/cmd_vel_"/>
       </node>
 
 

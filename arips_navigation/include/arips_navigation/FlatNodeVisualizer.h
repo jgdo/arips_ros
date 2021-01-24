@@ -13,7 +13,7 @@ namespace toponav_ros {
 
 class FlatNodeVisualizer: public NodeVisualizationInterface {
 public:
-  inline FlatNodeVisualizer(PlanningContext& context, std::string const& nodeType): _context(context), own_node_type_(nodeType) {}
+  FlatNodeVisualizer(PlanningContext& context, std::string const& nodeType);
 	
 	virtual void initializeVisualization(MapEditor *editor);
   
@@ -24,12 +24,15 @@ public:
 	virtual void appendRegionEdgeToPlan(nav_msgs::Path *pathPtr, std::string regionType,
 										boost::any const &pathData) override;
 
+
 protected:
   void segmentLayerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback, std::string mapName);
   
 private:
   PlanningContext& _context;
 	std::string own_node_type_;
+
+	ros::Publisher m_nodeMarkerPub;
 };
 
 } // namespace topo_nav
