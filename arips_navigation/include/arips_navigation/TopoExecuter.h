@@ -12,17 +12,16 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_core/base_local_planner.h>
 
+#include <arips_navigation/DrivingState.h>
 
-namespace toponav_ros {
-    class TopoPlannerROS;
-}
 
 /**
  * Responsible for executing a planned topo path
  */
-class TopoExecuter: private toponav_core::TopoPath::PathVisitor  {
+class TopoExecuter: public DrivingState, private toponav_core::TopoPath::PathVisitor  {
 public:
-    TopoExecuter(tf2_ros::Buffer& tfBuffer, costmap_2d::Costmap2DROS& costmap);
+    TopoExecuter(tf2_ros::Buffer& tfBuffer, costmap_2d::Costmap2DROS& costmap, 
+        ros::Publisher& cmdVelPub);
 
     /**
      * Set new plan for execution. Assumes that current state is idle.
@@ -40,15 +39,9 @@ public:
      */
     void emergencyStop();
 
-    /**
-     * Run one control cycle given current plan and robot state.
-     */
-    void runControlCycle();
-
-    /**
-     * @return true iff currently following a plan.
-     */
-    bool isRunning();
+    
+    void runCycle() override;
+    bool isActive() override;
 
 private:
     struct SegmentExecuter {

@@ -12,6 +12,7 @@
 #include <toponav_ros/utils/EdgeModuleContainer.h>
 #include <arips_navigation/StepEdgeModule.h>
 #include <toponav_ros/utils/CostsProfileModuleContainer.h>
+#include <arips_navigation/TopoExecuter.h>
 
 #include <memory>
 
@@ -57,7 +58,8 @@ Navigation::Navigation() {
     m_TopoPlanner.init("topo_planner", factory, &m_tfBuffer);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 10, &Navigation::poseCallbackNavGoal, this);
-
+    mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
+    
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
 }
 
@@ -119,8 +121,7 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
                                                                  &lastPlan, nullptr)) {
                     m_TopoPlanner.getPathViz().visualizePath(lastPlan);
                     m_TopoExec.setNewPlan(lastPlan);
-
-                    mState = State::NAVIGATING;
+                    mDrivingState = &m_TopoExec;
                 }
             } catch (const std::exception &e) {
                 ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
@@ -133,14 +134,14 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
 }
 
 void Navigation::timerCallback(const ros::TimerEvent& e) {
-    if(mState != State::NAVIGATING) {
+    if(!mDrivingState) {
         return;
     }
 
-    if(m_TopoExec.isRunning()) {
-        m_TopoExec.runControlCycle();
+    if(mDrivingState->isActive()) {
+        mDrivingState->runCycle();
     } else {
         ROS_INFO("Finished plan.");
-        mState = State::IDLE;
+        mDrivingState = nullptr;
     }
 }

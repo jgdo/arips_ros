@@ -9,9 +9,9 @@
 #include <arips_navigation/local_planner/arips_planner_ros.h>
 
 
-TopoExecuter::TopoExecuter(tf2_ros::Buffer &tfBuffer, costmap_2d::Costmap2DROS &costmap) {
+TopoExecuter::TopoExecuter(tf2_ros::Buffer &tfBuffer, costmap_2d::Costmap2DROS &costmap,
+    ros::Publisher& cmdVelPub) : mCmdVelPub(cmdVelPub) {
     ros::NodeHandle nh;
-    mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
     //mLocalPlanner = std::make_unique<base_local_planner::TrajectoryPlannerROS>();
     //mLocalPlanner->initialize("TrajectoryPlannerROS", &tfBuffer, &costmap);
     mLocalPlanner = std::make_unique<arips_local_planner::AripsPlannerROS>();
@@ -38,7 +38,7 @@ void TopoExecuter::emergencyStop() {
     mCurrentPlan.reset();
 }
 
-void TopoExecuter::runControlCycle() {
+void TopoExecuter::runCycle() {
     if(mSegmentExec) {
         const bool segmentDone = mSegmentExec->runCycle(this);
         if(segmentDone) {
@@ -59,7 +59,7 @@ void TopoExecuter::runControlCycle() {
     }
 }
 
-bool TopoExecuter::isRunning() {
+bool TopoExecuter::isActive() {
     return !!mCurrentPlan;
 }
 

@@ -8,7 +8,9 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <toponav_ros/TopoPlannerROS.h>
+#include <arips_navigation/DrivingState.h>
 #include <arips_navigation/TopoExecuter.h>
+#include <arips_navigation/AutoDocker.h>
 
 class Navigation {
 public:
@@ -19,22 +21,21 @@ public:
     void timerCallback(const ros::TimerEvent& e);
 
 private:
-    enum class State {
-        IDLE,
-        NAVIGATING
-    };
-
-    State mState = State::IDLE;
-
     tf2_ros::Buffer m_tfBuffer;
     tf2_ros::TransformListener tfListener {m_tfBuffer};
     
     costmap_2d::Costmap2DROS m_LocalCostmap {"local_costmap", m_tfBuffer};
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 
-    TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap};
+    DrivingState* mDrivingState = nullptr;
 
+    ros::Publisher mCmdVelPub;
+    
+    TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
+    AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
+     
     ros::Subscriber psub_nav;
+    
 
     ros::Timer mControlTimer;
 };
