@@ -18,13 +18,19 @@ def battery_command_callback(data: Bool):
 def battery_loop():
     global serial_device
     global battery_on
+
     rospy.init_node('battery_node')
     pub = rospy.Publisher('battery_state', BatteryState, queue_size=10)
-    battery_device = rospy.get_param('~battery_device', '/dev/arips_battery_controller')
-    serial_device = serial.Serial(battery_device, 115200, timeout=1)
+    battery_device_path = rospy.get_param('~battery_device', '/dev/arips_battery_controller')
+    serial_device = serial.Serial(battery_device_path, 115200, timeout=1)
     rospy.Subscriber("battery_command", Bool, battery_command_callback)
 
     atexit.register(lambda: serial_device.write(b'0'))
+
+    battery_on = rospy.get_param('~battery_on', False)
+
+    rospy.loginfo("Connected to battery controller at {}".format(battery_device_path))
+    rospy.loginfo("Initial battery state is {}".format("ON" if battery_on else "OFF"))
 
     while not rospy.is_shutdown():
         line = serial_device.readline().decode("utf-8")

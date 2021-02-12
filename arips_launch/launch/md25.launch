@@ -9,4 +9,9 @@
     <param name="publish_odom_transformation" value="false" />
     <param name="velocity_timeout" value="0.5" />    
   </node>
+
+  <node name="battery_controller" pkg="arips_battery_controller" type="battery_controller" output="screen" respawn="true" respawn_delay="1">
+    <param name="battery_on" value="True" />
+    <param name="battery_device" value="/dev/arips_battery_controller" />
+  </node>
 </launch>
