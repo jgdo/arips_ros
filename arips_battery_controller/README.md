@@ -7,7 +7,7 @@ Connects to battery device serial port, can read battery state and turn on/off r
 Turn on/off power to robot.
 
 ## Published topics
-``battery_state`` (sensor_msgs/BatteryState)
+``battery_state`` (sensor_msgs/BatteryState)  
 Battery state
 
 ## Parameters
