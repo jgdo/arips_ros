@@ -3,29 +3,67 @@
 import serial
 import rospy
 import atexit
+from parse import parse
 
-from std_msgs.msg import Float32
+from sensor_msgs.msg import BatteryState
+from std_msgs.msg import Bool
 
-def talker():
+serial_device: serial.Serial
+battery_on = False
+
+def battery_command_callback(data: Bool):
+    global battery_on
+    battery_on = data.data
+
+def battery_loop():
+    global serial_device
+    global battery_on
     rospy.init_node('battery_node')
-    pub = rospy.Publisher('battery_level', Float32, queue_size=10)
-    ser = serial.Serial('/dev/arips_battery_controller', 115200)
-    ser.timeout = 0
+    pub = rospy.Publisher('battery_state', BatteryState, queue_size=10)
+    battery_device = rospy.get_param('~battery_device', '/dev/arips_battery_controller')
+    serial_device = serial.Serial(battery_device, 115200, timeout=1)
+    rospy.Subscriber("battery_command", Bool, battery_command_callback)
 
-    atexit.register(lambda: ser.write(b'0'))
+    atexit.register(lambda: serial_device.write(b'0'))
 
-    rate = rospy.Rate(1) # 10hz
     while not rospy.is_shutdown():
-        ser.read_all()
-        ser.write(b'1')
+        line = serial_device.readline().decode("utf-8")
 
-        hello_str = "hello world %s" % rospy.get_time()
-        pub.publish(hello_str)
+        bat_state = BatteryState()
+        parsed_data = parse(
+            "charge:{},battery:{},chargeRelay:{},robotPower:{}", line)
 
-        rate.sleep()
+        if not parsed_data:
+            rospy.logwarn("Could not parse '{}'".format(line))
+            continue
+
+        try:
+            charging_voltage, battery_voltage, relay, power_on = map(lambda x: float(x), parsed_data)
+        except ValueError:
+            rospy.logwarn("Could not get values from {}".format(parsed_data))
+            continue
+
+        bat_state.header.stamp = rospy.Time.now()
+        bat_state.voltage = battery_voltage
+        bat_state.current = float('nan')
+        bat_state.charge = float('nan')
+        bat_state.capacity = 9.0
+        bat_state.design_capacity = bat_state.capacity
+        bat_state.percentage = float('nan')
+        bat_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_CHARGING if charging_voltage > 10 \
+            else BatteryState.POWER_SUPPLY_STATUS_DISCHARGING  # TODO hardcoded
+        bat_state.power_supply_health = BatteryState.POWER_SUPPLY_HEALTH_GOOD
+        bat_state.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
+        bat_state.present = battery_voltage > 5  # TODO hardcoded
+        bat_state.location = "rear"
+
+        pub.publish(bat_state)
+
+        serial_device.write(b'1' if battery_on else b'0')
+
 
 if __name__ == '__main__':
     try:
-        talker()
+        battery_loop()
     except rospy.ROSInterruptException:
         pass
