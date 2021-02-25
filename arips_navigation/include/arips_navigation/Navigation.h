@@ -11,14 +11,11 @@
 #include <arips_navigation/DrivingState.h>
 #include <arips_navigation/TopoExecuter.h>
 #include <arips_navigation/AutoDocker.h>
+#include <arips_navigation/local_planner/HPNav.h>
 
 class Navigation {
 public:
     Navigation();
-
-    void poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg);
-
-    void timerCallback(const ros::TimerEvent& e);
 
 private:
     tf2_ros::Buffer m_tfBuffer;
@@ -33,9 +30,14 @@ private:
     
     TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
+    HPNav mHPNav {&m_tfBuffer, mCmdVelPub};
      
-    ros::Subscriber psub_nav;
-    
+    ros::Subscriber psub_nav, hp_sub;
 
     ros::Timer mControlTimer;
+
+    void poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg);
+    void poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg);
+
+    void timerCallback(const ros::TimerEvent& e);
 };

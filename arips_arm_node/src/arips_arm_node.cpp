@@ -145,8 +145,8 @@ public:
         mJointTrajActionServer(nh, "/arips_arm_controller/follow_joint_trajectory", false),
         mGripperActionServer(nh, "/arips_gripper_controller/gripper_action", false)
     {
-        mServos.reserve(NUM_JOINTS+2);
-        for(int i = 0; i < NUM_JOINTS+2; i++) {
+        mServos.reserve(NUM_JOINTS+3);
+        for(int i = 0; i < NUM_JOINTS+3; i++) {
             mServos.emplace_back(&mServoDevice, "servo_" + std::to_string(i));
         }
 

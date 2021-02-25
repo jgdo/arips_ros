@@ -112,7 +112,7 @@ void AripsPlanner::reconfigure(AripsPlannerConfig &config)
     vsamples_[1] = vy_samp;
     vsamples_[2] = vth_samp;
 
-
+    mConfig = config;
 }
 
 AripsPlanner::AripsPlanner(std::string name, base_local_planner::LocalPlannerUtil *planner_util) :
@@ -405,7 +405,7 @@ base_local_planner::Trajectory AripsPlanner::findBestPath(
             vx = 0;
         }
         
-        drive_velocities.pose.position.x = vx * 0.15;
+        drive_velocities.pose.position.x = vx * mConfig.max_velocity;
         drive_velocities.pose.position.y = 0;
         drive_velocities.pose.position.z = 0;
         tf2::Quaternion q;

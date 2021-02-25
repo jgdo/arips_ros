@@ -57,7 +57,9 @@ Navigation::Navigation() {
 
     m_TopoPlanner.init("topo_planner", factory, &m_tfBuffer);
 
-    psub_nav = nh.subscribe("/topo_planner/nav_goal", 10, &Navigation::poseCallbackNavGoal, this);
+    psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
+    hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
+
     mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
     
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
@@ -131,6 +133,11 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
     } catch(const tf2::TransformException& ex) {
         ROS_WARN("poseCallbackNavGoal(): %s",ex.what());
     }
+}
+
+void Navigation::poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg) {
+    mHPNav.setGoal(msg);
+    mDrivingState = &mHPNav;
 }
 
 void Navigation::timerCallback(const ros::TimerEvent& e) {
