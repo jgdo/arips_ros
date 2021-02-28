@@ -1,9 +1,11 @@
 <launch>
+	<arg name="joy" default="false"/>
+
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
   
-  
-  <node name="arips_monitor" pkg="arips_monitor" type="monitor" output="screen" respawn="true" />
+  <!---
+  <node name="arips_monitor" pkg="arips_monitor" type="monitor" output="screen" respawn="true" /> -->
   
   <!--- YD Lidar-->
   <include file="$(find arips_launch)/launch/lidar.launch" />

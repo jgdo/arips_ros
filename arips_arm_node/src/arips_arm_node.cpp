@@ -255,7 +255,7 @@ private:
             try {
                 mJointState.position.at(i) = mServos.at(i).updateState() * M_PI / 180.0F;
             } catch (const std::runtime_error& err) {
-                ROS_WARN_STREAM(err.what());
+                ROS_WARN_STREAM("error when reading servo " << i << ": " << err.what());
             }
         }
 
@@ -304,7 +304,7 @@ private:
             
             mTFBroadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect_base", "/kinect_link"));
         } catch (const std::runtime_error& err) {
-            ROS_WARN_STREAM(err.what());
+            ROS_WARN_STREAM("Updating kinect pose: " << err.what());
         }
     }
 

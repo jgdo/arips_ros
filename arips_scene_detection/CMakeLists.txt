@@ -16,6 +16,10 @@ find_package(catkin REQUIRED COMPONENTS
         cv_bridge
         image_transport
         image_geometry
+        tf2_ros
+        tf2
+        tf2_geometry_msgs
+        dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -93,10 +97,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+    cfg/SceneDetection.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -138,7 +141,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp src/ground_segmentation.h)
+add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp src/ground_segmentation.h src/door_handle_segmentation.cpp src/door_handle_segmentation.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,7 +151,7 @@ add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp src/grou
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(scene_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(scene_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(scene_detection

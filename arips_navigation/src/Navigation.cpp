@@ -59,6 +59,7 @@ Navigation::Navigation() {
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
     hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
+    clicked_sub = nh.subscribe("/clicked_point", 1, &Navigation::onClickedPoint, this);
 
     mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
     
@@ -151,4 +152,9 @@ void Navigation::timerCallback(const ros::TimerEvent& e) {
         ROS_INFO("Finished plan.");
         mDrivingState = nullptr;
     }
+}
+
+void Navigation::onClickedPoint(const geometry_msgs::PointStamped &point) {
+    mOpenDoor.init(point);
+    mDrivingState = &mOpenDoor;
 }

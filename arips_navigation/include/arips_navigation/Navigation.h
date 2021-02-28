@@ -12,6 +12,7 @@
 #include <arips_navigation/TopoExecuter.h>
 #include <arips_navigation/AutoDocker.h>
 #include <arips_navigation/local_planner/HPNav.h>
+#include <arips_navigation/OpenDoor.h>
 
 class Navigation {
 public:
@@ -31,13 +32,15 @@ private:
     TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
     HPNav mHPNav {&m_tfBuffer, mCmdVelPub};
+    OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub, mHPNav};
      
-    ros::Subscriber psub_nav, hp_sub;
+    ros::Subscriber psub_nav, hp_sub, clicked_sub;
 
     ros::Timer mControlTimer;
 
     void poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg);
     void poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg);
+    void onClickedPoint(const geometry_msgs::PointStamped& point);
 
     void timerCallback(const ros::TimerEvent& e);
 };

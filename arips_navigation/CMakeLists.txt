@@ -149,7 +149,7 @@ include_directories(
 
 FILE(GLOB_RECURSE NAV_SRCS src/*.cpp)
 FILE(GLOB_RECURSE NAV_INCS include/arips_navigation/*.h)
-add_executable(${PROJECT_NAME}_node ${NAV_SRCS} ${NAV_INCS})
+add_executable(${PROJECT_NAME}_node ${NAV_SRCS} ${NAV_INCS} src/OpenDoor.cpp include/arips_navigation/OpenDoor.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

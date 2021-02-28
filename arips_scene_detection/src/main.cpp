@@ -23,10 +23,17 @@
 #include <interactive_markers/menu_handler.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <image_transport/image_transport.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <std_msgs/Bool.h>
 
 #include <cv_bridge/cv_bridge.h>
 
 #include "ground_segmentation.h"
+#include "door_handle_segmentation.h"
+
+#include <dynamic_reconfigure/server.h>
+#include <arips_scene_detection/SceneDetectionConfig.h>
+
 
 using namespace visualization_msgs;
 
@@ -134,11 +141,38 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 
 image_geometry::PinholeCameraModel depth_camera_model;
 
+std::unique_ptr<DoorHandleSegmentation> door_seg;
+
+tf2_ros::Buffer tfBuffer;
+
+bool doorHandleEnabled = false;
+
+void dr_callback(arips_scene_detection::SceneDetectionConfig &config, uint32_t level) {
+    door_seg->DoorHandleDist = config.door_approach_dist;
+}
+
+void enable_cb(const std_msgs::Bool& enable) {
+    doorHandleEnabled = enable.data;
+    std::cout << "Enabling door processing: " << doorHandleEnabled << std::endl;
+}
+
+void clicked_cb(const geometry_msgs::PointStamped& point) {
+    auto pointWorld = tfBuffer.transform(point, "map", ros::Duration(0.5));
+    pointWorld.point.z = 1.04; // handle hight
+    tf2::Vector3 handle(pointWorld.point.x, pointWorld.point.y, pointWorld.point.z);
+    door_seg->setApproxDoorPos(handle);
+    std::cout << "Set door handle " << pointWorld << std::endl;
+}
+
 void info_cb(const sensor_msgs::CameraInfoConstPtr& info_msg) {
     depth_camera_model.fromCameraInfo(info_msg);
 }
 
 void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
+    if(!doorHandleEnabled) {
+        return;
+    }
+
     // ROS_INFO_STREAM("depth_cb");
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -153,7 +187,7 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
     }
 
     GroundPlaneFilterResult result;
-    extractGroundPlane(cv_ptr->image, depth_camera_model, result);
+    extractGroundPlane({cv_ptr->image, depth_camera_model, true}, result);
 
     result.planeCloud.header.frame_id = depth_msg->header.frame_id;
     pcl_conversions::toPCL(depth_msg->header.stamp, result.planeCloud.header.stamp);
@@ -166,6 +200,9 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
     pcl::toROSMsg(result.nonPlaneCloud, output);
     pub_cloud_neg.publish(output);
 
+    door_seg->getDoorHandlePosition(result);
+
+#ifdef PUBLISH_SCENE_OBJECTS
     tf::StampedTransform arm_transform;
     try {
         listener->lookupTransform("arm_base_link", depth_msg->header.frame_id,
@@ -246,345 +283,8 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
 
     planning_scene.is_diff = true;
     planning_scene_diff_publisher.publish(planning_scene);
-}
-
-#if 0
-void
-cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
-{
-
-    tf::StampedTransform arm_transform;
-    try{
-        listener->lookupTransform("arm_base_link", cloud_msg->header.frame_id,
-                                  ros::Time(0), arm_transform);
-    }
-    catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        return;
-    }
-
-    tf::StampedTransform baseTransform;
-    try{
-        listener->lookupTransform("arips_base", cloud_msg->header.frame_id,
-                                  ros::Time(0), baseTransform);
-    }
-    catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        return;
-    }
-
-
-    // Convert the sensor_msgs/PointCloud2 data to pcl/PointCloud
-    //pcl::PCLPointCloud2::Ptr cloud (new pcl::PCLPointCloud2);
-   pcl::PointCloud<pcl::PointXYZ> cloud;
-    pcl::fromROSMsg (*cloud_msg, cloud);
-
-    pcl::ModelCoefficients coefficients;
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
-    // Create the segmentation object
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
-    // Optional
-    seg.setOptimizeCoefficients (true);
-    // Mandatory
-    seg.setModelType (pcl::SACMODEL_PLANE);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setDistanceThreshold (0.015);
-
-    seg.setInputCloud (cloud.makeShared ());
-    seg.segment (*inliers, coefficients);
-
-
-    if (inliers->indices.size () == 0)
-    {
-        std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
-    } else {
-        pcl::PointCloud<pcl::PointXYZ> cloud_inliers;
-        pcl::ExtractIndices<pcl::PointXYZ> extract;
-        extract.setInputCloud(cloud.makeShared ());
-        extract.setIndices (inliers);
-        extract.setNegative (false);
-        extract.filter (cloud_inliers);
-
-        sensor_msgs::PointCloud2 output;
-        pcl::toROSMsg(cloud_inliers, output);
-        pub_cloud.publish(output);
-
-        extract.setNegative (true);
-        extract.filter (cloud_inliers);
-        pcl::toROSMsg(cloud_inliers, output);
-        pub_cloud_neg.publish(output);
-
-        // Publish the model coefficients
-        pcl_msgs::ModelCoefficients ros_coefficients;
-        pcl_conversions::fromPCL(coefficients, ros_coefficients);
-        pub.publish(ros_coefficients);
-
-        {
-            tf::Vector3 normal_orig = tf::Vector3(coefficients.values.at(0), coefficients.values.at(1),
-                                                  coefficients.values.at(2)).normalized();
-            tf::Vector3 normal_rotated = baseTransform.getBasis() * normal_orig;
-            float angle = -std::atan2(normal_rotated.x(), normal_rotated.z());
-            if (angle < -M_PI / 2.0) {
-                angle += M_PI;
-            }
-
-            // ROS_INFO_STREAM("angle: " << angle <<  " " << normal_rotated.x() << " " << normal_rotated.z());
-            std_msgs::Float32 msg;
-            msg.data = angle;
-            kinect_correction_angle_pub.publish(msg);
-        }
-
-        pcl::VoxelGrid<pcl::PointXYZ> vg;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
-        vg.setInputCloud (cloud_inliers.makeShared());
-        vg.setLeafSize (0.01f, 0.01f, 0.01f);
-        vg.filter (*cloud_filtered);
-
-        // Creating the KdTree object for the search method of the extraction
-        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-        tree->setInputCloud (cloud_filtered);
-
-        std::vector<pcl::PointIndices> cluster_indices;
-        pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-        ec.setClusterTolerance (0.015); // 1cm
-        ec.setMinClusterSize (15);
-        ec.setMaxClusterSize (5000);
-        ec.setSearchMethod (tree);
-        ec.setInputCloud (cloud_filtered);
-        ec.extract (cluster_indices);
-
-
-        visualization_msgs::Marker object;
-        object.header.frame_id = "arm_base_link";
-        object.header.stamp = ros::Time::now();
-        object.ns = "clustered_objects";
-        object.id = 0;
-        object.type = visualization_msgs::Marker::CUBE_LIST;
-        object.action = visualization_msgs::Marker::ADD;
-
-        tf::Pose pose(tf::createIdentityQuaternion());
-        tf::poseTFToMsg(pose, object.pose);
-
-        constexpr float tolerance_m = 0.03;
-        constexpr float maxDist_m = 0.3;
-
-        for(auto& obj: detectedObjects) {
-            obj.updated = false;
-        }
-
-        int j = 0;
-        for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-        {
-            pcl::CentroidPoint<pcl::PointXYZ> centroid;
-            for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit) {
-                centroid.add(cloud_filtered->points[*pit]);
-            }
-            pcl::PointXYZ center;
-            centroid.get(center);
-
-             // ROS_INFO_STREAM("Found cluster " << j << " containing " << it->indices.size() << " points: " << center.x << " " << center.y << " " << center.z);
-
-
-            tf::Vector3 tfc(center.x, center.y, center.z);
-            tf::Vector3 centerBase = arm_transform(tfc);
-
-            if(centerBase.length() < maxDist_m) {
-                if (centerBase.z() > 0)
-                    continue;
-
-                bool detected = false;
-                for (auto& obj: detectedObjects) {
-                    if (obj.pos.distance(centerBase) < tolerance_m) {
-                        obj.pos = obj.pos * 0.5 + centerBase * 0.5;
-                        obj.count++;
-                        obj.updated = true;
-                        detected = true;
-                        break;
-                    }
-                }
-
-                if (!detected) {
-                    detectedObjects.push_back(DetectedObject{centerBase, 1, true});
-                }
-            }
-
-            /*
-            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-            for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-                cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
-            cloud_cluster->width = cloud_cluster->points.size ();
-            cloud_cluster->height = 1;
-            cloud_cluster->is_dense = true; */
-
-            j++;
-        }
-
-        visualization_msgs::MarkerArray scene_objects;
-
-        {
-            visualization_msgs::Marker marker;
-            marker.action = visualization_msgs::Marker::DELETEALL;
-            scene_objects.markers.push_back(marker);
-        }
-
-        moveit_msgs::PlanningScene planning_scene;
-        {
-            moveit_msgs::CollisionObject object;
-            object.operation = moveit_msgs::CollisionObject::REMOVE;
-            planning_scene.world.collision_objects.push_back(object);
-        }
-
-        ROS_INFO_STREAM("##############");
-        for(auto iter = detectedObjects.begin(); iter != detectedObjects.end();) {
-            if(iter->updated) {
-                if(iter->count >= 3) {
-                    if(iter->pos.x() > 0.04) {
-                        ROS_INFO_STREAM("point " << iter->pos.x() << "  " << iter->pos.y() << "  " << iter->pos.z());
-
-                        geometry_msgs::Point point;
-                        tf::pointTFToMsg(iter->pos, point);
-                        object.points.push_back(point);
-
-                        std_msgs::ColorRGBA color;
-                        color.r = 0.0f;
-                        color.g = 1.0f;
-                        color.b = 0.0f;
-                        color.a = 1.0;
-                        object.colors.push_back(color);
-
-                        if(iter->count > 5) {
-                            pick_pose_pub.publish(point);
-                        }
-
-                        visualization_msgs::Marker marker;
-                        marker.header.frame_id = "arm_base_link";
-                        marker.header.stamp = ros::Time::now();
-                        marker.type = visualization_msgs::Marker::CUBE;
-                        marker.pose.position = point;
-                        marker.pose.orientation.w = 1;
-                        marker.id = iter->id;
-                        marker.color = color;
-                        marker.scale.x = 0.03;
-                        marker.scale.y = 0.03;
-                        marker.scale.z = 0.03;
-                        scene_objects.markers.push_back(marker);
-
-
-                        moveit_msgs::CollisionObject object;
-                        object.header = marker.header;
-                        object.operation = moveit_msgs::CollisionObject::ADD;
-                        object.id = std::to_string(marker.id);
-
-                        /* Define a box to be attached */
-                        shape_msgs::SolidPrimitive primitive;
-                        primitive.type = primitive.BOX;
-                        primitive.dimensions = {0.00, 0.00, 0.00};
-
-                        object.primitives.push_back(primitive);
-                        object.primitive_poses.push_back(marker.pose);
-
-                        planning_scene.world.collision_objects.push_back(object);
-                    }
-                }
-            } else {
-                if(--iter->count < 0) {
-                     iter = detectedObjects.erase(iter);
-                    continue;
-                }
-            }
-
-            ++iter;
-        }
-
-        scene_pub.publish(scene_objects);
-
-        planning_scene.is_diff = true;
-        planning_scene_diff_publisher.publish(planning_scene);
-
-        object.scale.x = 0.03;
-        object.scale.y = 0.03;
-        object.scale.z = 0.03;
-
-
-        InteractiveMarker int_marker;
-        int_marker.header = cloud_msg->header;
-        int_marker.header.stamp = ros::Time::now();
-        int_marker.scale = 1;
-
-        int_marker.name = "Objects";
-        int_marker.description = "Button\n(Left Click)";
-
-        InteractiveMarkerControl control;
-
-        control.interaction_mode = InteractiveMarkerControl::BUTTON;
-        control.name = "button_control";
-
-        control.markers.push_back( object );
-        control.always_visible = true;
-        int_marker.controls.push_back(control);
-
-        server->insert(int_marker, processFeedback);
-        server->applyChanges();
-
-        ROS_INFO_STREAM("Detected number of cubes: " << object.points.size());
-
-        visualization_msgs::Marker marker;
-        marker.header.frame_id = cloud_msg->header.frame_id;
-        marker.header.stamp = ros::Time::now();
-        marker.ns = "basic_shapes";
-        marker.id = 0;
-        marker.type = visualization_msgs::Marker::ARROW;
-        marker.action = visualization_msgs::Marker::ADD;
-        marker.scale.x = 0.05;
-        marker.scale.y = 0.1;
-        marker.color.r = 0.0f;
-        marker.color.g = 1.0f;
-        marker.color.b = 0.0f;
-        marker.color.a = 1.0;
-
-        marker.points.resize(2);
-        marker.points[0].x = coefficients.values.at(0) * -coefficients.values.at(3);
-        marker.points[0].y = coefficients.values.at(1) * -coefficients.values.at(3);
-        marker.points[0].z = coefficients.values.at(2) * -coefficients.values.at(3);
-        marker.points[1].x = marker.points[0].x + coefficients.values.at(0);
-        marker.points[1].y = marker.points[0].y + coefficients.values.at(1);
-        marker.points[1].z = marker.points[0].z + coefficients.values.at(2);
-
-        marker_pub.publish(marker);
-
-        tf::Vector3 z = tf::Vector3(coefficients.values.at(0), coefficients.values.at(1), coefficients.values.at(2)).normalized();
-        tf::Vector3 someVec(marker.points[0].x +10, marker.points[0].y, marker.points[0].z);
-        tf::Vector3 y = z.cross(someVec).normalized();
-        tf::Vector3 x = y.cross(z).normalized();
-
-        tf::Matrix3x3 mat(x.x(), x.y(), x.z(), y.x(), y.y(), y.z(), z.x(),x.y(),z.z());
-        tf::Quaternion quat;
-        mat.getRotation(quat);
-
-        tf::Vector3 center(marker.points[0].x, marker.points[0].y, marker.points[0].z);
-        tf::Vector3 p1 = center + -0.5*x + -0.5*y;
-        tf::Vector3 p2 = center + -0.5*x + 0.5*y;
-        tf::Vector3 p3 = center + 0.5*x + 0.5*y;
-        tf::Vector3 p4 = center + 0.5*x + -0.5*y;
-
-        object_recognition_msgs::TableArray tables;
-        tables.header = marker.header;
-        tables.tables.resize(1);
-        tables.tables.at(0).header = tables.header;
-        tables.tables.at(0).pose.position = marker.points[0];
-        tf::quaternionTFToMsg(quat.normalized(), tables.tables.at(0).pose.orientation);
-
-        tables.tables.at(0).convex_hull.resize(4);
-        tf::pointTFToMsg(p1, tables.tables.at(0).convex_hull.at(0));
-        tf::pointTFToMsg(p2, tables.tables.at(0).convex_hull.at(1));
-        tf::pointTFToMsg(p3, tables.tables.at(0).convex_hull.at(2));
-        tf::pointTFToMsg(p4, tables.tables.at(0).convex_hull.at(3));
-
-        pub_table.publish(tables);
-    }
-}
-
 #endif
+}
 
 int
 main (int argc, char** argv)
@@ -593,23 +293,28 @@ main (int argc, char** argv)
   ros::init (argc, argv, "arips_scene_detection");
   ros::NodeHandle nh;
 
+
+    tf2_ros::TransformListener tfListener(tfBuffer);
+
+    door_seg.reset(new DoorHandleSegmentation(tfBuffer, "map"));
+
     listener = std::make_shared<tf::TransformListener>();
 
   // Create a ROS publisher for the output point cloud
   pub = nh.advertise<pcl_msgs::ModelCoefficients> ("coefficients", 1);
     pub_cloud = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud", 1);
     pub_cloud_neg = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud_neg", 1);
-  marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  // TODO marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
-    scene_pub = nh.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
+    // TODO scene_pub = nh.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
 
-    server.reset( new interactive_markers::InteractiveMarkerServer("basic_controls","",false) );
+    // TODO server.reset( new interactive_markers::InteractiveMarkerServer("basic_controls","",false) );
 
-    pub_table = nh.advertise<object_recognition_msgs::TableArray>("/table_array", 1);
+    // TODO pub_table = nh.advertise<object_recognition_msgs::TableArray>("/table_array", 1);
 
-    pick_pose_pub = nh.advertise<geometry_msgs::Point>("/pick_pose", 1);
+    // TODO pick_pose_pub = nh.advertise<geometry_msgs::Point>("/pick_pose", 1);
 
-    kinect_correction_angle_pub = nh.advertise<std_msgs::Float32>("/kinect_correction_angle", 1);
+    // TODO kinect_correction_angle_pub = nh.advertise<std_msgs::Float32>("/kinect_correction_angle", 1);
 
     // Create a ROS subscriber for the input point cloud
     // ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/kinect/depth_registered/points", 1, cloud_cb);
@@ -617,11 +322,19 @@ main (int argc, char** argv)
 
     ros::Subscriber sub_info_ = nh.subscribe<sensor_msgs::CameraInfo>("/kinect/depth_registered/camera_info", 1, info_cb);
 
+    ros::Subscriber clicked_sub = nh.subscribe("approx_door_handle_pos", 1, clicked_cb);
+
+    ros::Subscriber enable_sub = nh.subscribe("enable_door_handle", 1, enable_cb);
+
     image_transport::ImageTransport it(nh);
     // image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
     image_transport::Subscriber sub_depth = it.subscribe("/kinect/depth_registered/image_raw", 2, depth_cb);
 
-    planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    // TODO planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+
+    dynamic_reconfigure::Server<arips_scene_detection::SceneDetectionConfig> server;
+    dynamic_reconfigure::Server<arips_scene_detection::SceneDetectionConfig>::CallbackType f = boost::bind(dr_callback, _1, _2);;
+    server.setCallback(f);
 
   // Spin
   ros::spin ();

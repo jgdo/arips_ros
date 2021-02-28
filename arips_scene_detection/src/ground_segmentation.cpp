@@ -130,18 +130,67 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr convertDepthToUnstructuredSkip(cv::Mat img, 
     return cloud;
 }
 
+//////////////////////////////////////////////////////////////////////////
+template <typename PointT> void
+selectOutsideDistance (const pcl::SampleConsensusModelPlane<PointT>& model_plane,
+        const Eigen::VectorXf &model_coefficients, const double threshold, pcl::Indices &inliers, bool nearerOnly)
+{
+    // Needs a valid set of model coefficients
+    if (!model_plane.isModelValid (model_coefficients))
+    {
+        PCL_ERROR ("[pcl::SampleConsensusModelPlane::selectWithinDistance] Given model is invalid!\n");
+        return;
+    }
 
-bool extractGroundPlane(cv::Mat img, const image_geometry::PinholeCameraModel& model, GroundPlaneFilterResult& result) {
-    const int pixel_inc = 8;
+    inliers.clear ();
+    inliers.reserve (model_plane.indices_->size ());
+
+    // Iterate through the 3d points and calculate the distances from them to the plane
+    for (std::size_t i = 0; i < model_plane.indices_->size (); ++i)
+    {
+        // Calculate the distance from the point to the plane normal as the dot product
+        // D = (P-A).N/|N|
+        Eigen::Vector4f pt ((*model_plane.input_)[(*model_plane.indices_)[i]].x,
+                            (*model_plane.input_)[(*model_plane.indices_)[i]].y,
+                            (*model_plane.input_)[(*model_plane.indices_)[i]].z,
+                            1.0f);
+
+        float distance = model_coefficients.dot (pt);
+        if(!nearerOnly) {
+            distance = std::abs(distance);
+        }
+
+        if (distance > threshold)
+        {
+            // Returns the indices of the points whose distances are smaller than the threshold
+            inliers.push_back ((*model_plane.indices_)[i]);
+        }
+    }
+}
+
+// plane normal will point towards camera
+Eigen::Vector4f getPlaneCoefficientsToCamera(const std::vector<float>& coefficients) {
+    Eigen::Vector4f coeff(coefficients.data());
+    if(coeff[2] > 0) {
+        coeff *= -1; // reverse of pointing away from camera
+    }
+
+    return coeff;
+}
+
+bool extractGroundPlane(const segmentationInput& input, GroundPlaneFilterResult& result) {
+    const int pixel_inc = 4;
     const float distThreshold = 0.01;
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudSimple, cloudFull;
-    if(img.type() == CV_32F) {
-        cloudSimple = convertDepthToUnstructuredSkip<float>(img, model, pixel_inc);
-        cloudFull = convertDepthToPointcloud<float>(img, model, 2);
-    } else if (img.type() == CV_16U) {
-        cloudSimple = convertDepthToUnstructuredSkip<uint16_t>(img, model, pixel_inc);
-        cloudFull = convertDepthToPointcloud<uint16_t>(img, model, 2);
+    result.frame_id = input.model.tfFrame();
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudSimple;
+    if(input.depthImage.type() == CV_32F) {
+        cloudSimple = convertDepthToUnstructuredSkip<float>(input.depthImage, input.model, pixel_inc);
+        result.cloudFull = convertDepthToPointcloud<float>(input.depthImage, input.model, 1);
+    } else if (input.depthImage.type() == CV_16U) {
+        cloudSimple = convertDepthToUnstructuredSkip<uint16_t>(input.depthImage, input.model, pixel_inc);
+        result.cloudFull = convertDepthToPointcloud<uint16_t>(input.depthImage, input.model, 1);
     } else {
         ROS_ERROR_STREAM("Depth image is neither float nor u16, ignoring");
         return false;
@@ -160,6 +209,8 @@ bool extractGroundPlane(cv::Mat img, const image_geometry::PinholeCameraModel& m
     seg.setInputCloud (cloudSimple);
     seg.segment (*inliers, coefficients);
 
+    result.planeCoefficients = coefficients.values;
+
     result.planeCloud.clear();
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud(cloudSimple);
@@ -167,24 +218,28 @@ bool extractGroundPlane(cv::Mat img, const image_geometry::PinholeCameraModel& m
     extract.setNegative(false);
     extract.filter(result.planeCloud);
 
-
     pcl::PointIndices::Ptr outlierIndices (new pcl::PointIndices ());
-    pcl::SampleConsensusModelPlane<pcl::PointXYZ> modelPlane(cloudFull);
-    modelPlane.selectWithinDistance(Eigen::Vector4f(coefficients.values.data()), distThreshold, outlierIndices->indices);
+    pcl::SampleConsensusModelPlane<pcl::PointXYZ> modelPlane(result.cloudFull);
+    selectOutsideDistance(modelPlane, getPlaneCoefficientsToCamera(coefficients.values),
+            distThreshold, outlierIndices->indices, input.nearerOnly);
+
 
     result.nonPlaneCloud.clear();
-    extract.setInputCloud(cloudFull);
+    extract.setInputCloud(result.cloudFull);
     extract.setIndices(outlierIndices);
-    extract.setNegative(true);
+    extract.setNegative(false);
     extract.filter(result.nonPlaneCloud);
 
-    //cv::Mat imgMask;
-    //cv::resize(img, imgMask, cv::Size(img.cols/2,img.rows/2), 0, 0, cv::INTER_NEAREST);
 
-    cv::Mat imgMask = cv::Mat(cv::Size{img.cols/2,img.rows/2}, CV_8U, cv::Scalar(255));
+    // std::cout << "dense: " << result.nonPlaneCloud.is_dense << std::endl;
+
+    //cv::Mat imgMask;
+    //cv::resize(depthImage, imgMask, cv::Size(depthImage.cols/2,depthImage.rows/2), 0, 0, cv::INTER_NEAREST);
+
+    cv::Mat imgMask = cv::Mat(cv::Size{input.depthImage.cols, input.depthImage.rows}, CV_8U, cv::Scalar(0));
 
     for(int i: outlierIndices->indices) {
-        imgMask.data[i] = 0;
+        imgMask.data[i] = 255;
     }
 
     //cv::erode(imgMask, imgMask, cv::Mat());
@@ -202,8 +257,11 @@ bool extractGroundPlane(cv::Mat img, const image_geometry::PinholeCameraModel& m
     cv::Mat labeledMask;
     cv::cvtColor(imgMask, labeledMask, cv::COLOR_GRAY2BGR);
 
-    result.objectPoints.clear();
+    // std::cout << labels << std::endl;
 
+    result.allObjectIndices.clear();
+
+    // go through each connected components
     for (int i = 0; i < label_count; i++)
     {
         int x = stats.at<int>(i, cv::CC_STAT_LEFT);
@@ -211,23 +269,32 @@ bool extractGroundPlane(cv::Mat img, const image_geometry::PinholeCameraModel& m
         int w = stats.at<int>(i, cv::CC_STAT_WIDTH);
         int h = stats.at<int>(i, cv::CC_STAT_HEIGHT);
         int area = stats.at<int>(i, cv::CC_STAT_AREA);
-        int cx = std::round(centroids.at<double>(i, 0));
-        int cy = std::round(centroids.at<double>(i, 1));
 
-        if(w >= 5 && w < 30 && h >= 5 && h < 30) {
+        // skip too big or too small objects
+        if(w >= input.minObjectWidth && w <= input.maxObjectWidth && h >= input.minObjectHeight && h <= input.maxObjectHeight) {
             cv::rectangle(labeledMask, {x, y}, {x + w - 1, y + h - 1}, {0, 0, 255}, 3);
 
-            const auto point = cloudFull->points.at(cy * cloudFull->width + cx);
-            if(!std::isnan(point.z)) {
-                result.objectPoints.push_back(point);
+            std::vector<int> objectIndices;
+            const cv::Rect2i objectRect(x, y, w, h);
+
+            // find object's indices by going through all outliers and checking if they are inside object rect
+            for(const int inlierIndex: outlierIndices->indices) {
+                const unsigned int inlierX = inlierIndex % result.cloudFull->width;
+                const unsigned int inlierY = inlierIndex / result.cloudFull->width;
+
+                if(objectRect.contains(cv::Point2i(inlierX, inlierY))) {
+                    objectIndices.push_back(inlierIndex);
+                }
             }
+
+            result.allObjectIndices.emplace_back(std::move(objectIndices));
         }
     }
 
     cv::imshow("labeledMask", labeledMask);
     cv::waitKey(3);
 
-    ROS_INFO_STREAM("found objects: " << result.objectPoints.size());
+    ROS_INFO_STREAM("found objects: " << result.allObjectIndices.size());
 
     return result.planeCloud.size() > 0;
 }
