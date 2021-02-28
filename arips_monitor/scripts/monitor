@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# license removed for brevity
+import rospy
+from diagnostic_msgs.msg import DiagnosticStatus
+from geometry_msgs.msg import Twist
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
+from std_msgs.msg import ColorRGBA
+import numpy as np
+
+class AripsMonitor:
+    def __init__(self):
+        self.robot_radius = 0.2
+        self.pub = rospy.Publisher('arips_status', DiagnosticStatus, queue_size=10)
+        self.marker_pub = rospy.Publisher('velocity_marker', Marker, queue_size=10)
+        self.sub = rospy.Subscriber("cmd_vel", Twist, self.velocity_callback)
+
+    def run(self):
+        rate = rospy.Rate(1)  # 1hz
+        while not rospy.is_shutdown():
+            msg = DiagnosticStatus()
+            self.pub.publish(msg)
+            rate.sleep()
+
+    def velocity_callback(self, twist):
+        marker = Marker()
+        marker.header.frame_id = "arips_base"
+        marker.header.stamp = rospy.Time.now()
+        marker.ns = "velocity_marker"
+        marker.id = 0
+        marker.type = Marker.LINE_LIST
+        marker.color = ColorRGBA(1, 0, 0, 1)
+        marker.pose.orientation.w = 1
+        marker.scale.x = 0.01
+        # marker.scale.y = 0.03
+
+        steps = 5
+        forward_time = 2.0
+        left = np.array([0, self.robot_radius])
+        right = np.array([0, -self.robot_radius])
+        for i in range(steps):
+            pos, theta = self.integrate_robot_pose(twist, float(i+1)/steps * forward_time)
+            left_next = self.robot_point_pos(pos, theta, np.array([0, self.robot_radius]))
+            right_next = self.robot_point_pos(pos, theta, np.array([0, -self.robot_radius]))
+            AripsMonitor.append_line_2d(marker.points, left, left_next)
+            AripsMonitor.append_line_2d(marker.points, right, right_next)
+            left = left_next
+            right = right_next
+
+        self.marker_pub.publish(marker)
+
+    def interpolate_robot_pose(self, twist: Twist, sec: float):
+        start_pos = np.array([0,0])
+        start_theta = 0.0
+
+        theta_diff = twist.angular.z * sec
+        pos_diff = twist.linear.x * np.array([
+            (np.sin(start_theta + theta_diff) - np.sin(start_theta)) / twist.angular.z,
+            (np.cos(start_theta) - np.cos(start_theta + theta_diff)) / twist.angular.z
+        ])
+
+        return start_pos + pos_diff, start_theta + theta_diff
+
+    def integrate_robot_pose(self, twist: Twist, sec: float):
+        start_pos = np.array([0.0,0.0])
+        start_theta = 0.0
+
+        pos = start_pos
+        theta = start_theta
+
+        steps = 50
+        dt = sec / steps
+        for i in range(steps):
+            v = np.array([np.cos(theta), np.sin(theta)]) * twist.linear.x
+            pos += v * dt
+            theta += twist.angular.z * dt
+
+        return pos, theta
+
+    def robot_point_pos(self, pos, theta, offset):
+        # create rotation matrix
+        c, s = np.cos(theta), np.sin(theta)
+        R = np.array(((c, -s), (s, c)))
+
+        return pos + R.dot(offset)
+
+    @staticmethod
+    def append_line_2d(lines: list, p1, p2):
+        lines.append(Point(p1[0], p1[1], 0))
+        lines.append(Point(p2[0], p2[1], 0))
+
+if __name__ == '__main__':
+    rospy.init_node('arips_monitor', anonymous=False)
+    try:
+        mon = AripsMonitor()
+        mon.run()
+    except rospy.ROSInterruptException:
+        pass
+        

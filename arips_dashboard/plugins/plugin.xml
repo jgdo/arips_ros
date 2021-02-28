@@ -1,0 +1,17 @@
+<library path="src">
+  <class name="AripsDashboard" type="arips_dashboard.dashboard.AripsDashboard" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Dashboard for Arips
+    </description>
+    <qtgui>
+      <group>
+        <label>Arips</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to specific robots.</statustip>
+      </group>
+      <label>Arips Dashboard</label>
+      <icon type="file">images/arips_icon.png</icon>
+      <statustip>Check what's going on with Arips</statustip>
+    </qtgui>
+  </class>
+</library>
