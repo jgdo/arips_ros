@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras import models
+from tensorflow.keras.utils import get_custom_objects
 import cv2
 import roslib
 import rospy
@@ -11,11 +13,24 @@ def denormalizeCoords(n, size):
     x = int((n+1)/2 * size)
     return x
 
+def my_loss_function(y_true, y_pred):
+    squared_difference = tf.square(y_true[:, 0:4] - y_pred[:, 0:4])
+    # print("squared_difference: ", squared_difference)
+    position_loss = tf.reduce_mean(squared_difference, axis=-1) * y_true[:, 4]
+    #print("position_loss: ", position_loss)
+    loss = position_loss + tf.square((y_true[:, 4]*2-1) - y_pred[:, 4]) * 0.25
+    #print("loss: ", loss)
+    return loss
+
 class DoorHandleDetector:
     def __init__(self):
         self.win = "DoorHandleDetector"
 
+        get_custom_objects().update({"my_loss_function": my_loss_function})
+        self.model = models.load_model("mymodel")
+
         # Load the TFLite model and allocate tensors.
+        '''
         self.interpreter = tf.lite.Interpreter(model_path="exported_model/model.tflite")
         self.interpreter.allocate_tensors()
 
@@ -30,6 +45,7 @@ class DoorHandleDetector:
 
         self.tf_input_index = input_details[0]['index']
         self.tf_output_index = output_details[0]['index']
+        '''
 
         x = np.linspace(-1, 1, 320)
         y = np.linspace(-1, 1, 240)
@@ -60,13 +76,17 @@ class DoorHandleDetector:
         # cv2.imshow(self.win, image_np)
         # cv2.waitKey(2)
 
+        ## image_np = image_np[:,:,::-1]
         image_np = np.concatenate([image_np.astype(np.float32) / 255.0, self.xx, self.yy], axis=2)
         image_np = np.expand_dims(image_np, axis=0)
 
+        '''
         self.interpreter.set_tensor(self.tf_input_index, image_np)
         self.interpreter.invoke()
 
         labels = self.interpreter.get_tensor(self.tf_output_index)[0]
+        '''
+        labels = self.model.predict(image_np)[0]
 
         coords = geometry_msgs.msg.PoseArray()
         coords.header = ros_image.header

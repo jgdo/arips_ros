@@ -8,6 +8,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PointStamped.h>
 #include <arips_navigation/local_planner/HPNav.h>
 
@@ -32,11 +33,13 @@ private:
     } mState = State::Idle;
 
     void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose);
+    void onDoorHandleVisualReceived(const geometry_msgs::PoseArray& pose);
 
     geometry_msgs::PoseStamped mDoorPose;
+    geometry_msgs::PoseArray mLastVisualHandlePoses;
 
     ros::Publisher mEnablePub, mApproxDoorPub;
-    ros::Subscriber mDoorHandleSub;
+    ros::Subscriber mDoorHandleSub, mDoorHandleVisualSub;
 
     HPNav& mNav;
 

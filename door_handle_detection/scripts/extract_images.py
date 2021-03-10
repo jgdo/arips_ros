@@ -3,13 +3,13 @@
 import rosbag
 import rospy
 
-out_folder = "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/all/"
+out_folder = "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/handle_3/"
 
 # export every nth frame
-every = 3
+every = 1
 
 count = 0
-bag = rosbag.Bag('/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/bags/2021-03-03-20-50-35.bag')
+bag = rosbag.Bag('/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/bags/2021-03-06-20-30-19.bag')
 for index, (topic, msg, t) in enumerate(bag.read_messages(topics=['/kinect/rgb/image_color/compressed'])):
     name = "frame_{}_{}.jpg".format(msg.header.stamp.secs, msg.header.stamp.nsecs)
 

@@ -16,6 +16,7 @@ OpenDoor::OpenDoor(tf2_ros::Buffer &tf, ros::Publisher &cmdVelPub, HPNav& nav) :
     mApproxDoorPub = nh.advertise<geometry_msgs::PointStamped>("approx_door_handle_pos", 1, true);
 
     mDoorHandleSub = nh.subscribe("door_handle_pose", 1, &OpenDoor::onDoorHandleReceived, this);
+    mDoorHandleVisualSub = nh.subscribe("/door_handle/poses", 1, &OpenDoor::onDoorHandleVisualReceived, this);
 }
 
 void OpenDoor::init(const geometry_msgs::PointStamped &approxDoorPose) {
@@ -38,9 +39,10 @@ bool OpenDoor::isActive() {
 void OpenDoor::runCycle() {
     switch (mState) {
         case State::Idle:
-        case State::WaitingDoorPose:
+        // case State::WaitingDoorPose:
             break;
 
+        case State::WaitingDoorPose:
         case State::RotatingStart:
             rotateAtStart();
             break;
@@ -56,6 +58,9 @@ void OpenDoor::runCycle() {
 }
 
 void OpenDoor::rotateAtStart() {
+    setState(State::DrivingDoor);
+
+#if 0
     // rotate away such that goal is at robot's back side
     const geometry_msgs::TransformStamped transform = mTfBuffer.lookupTransform("arips_base", mDoorPose.header.frame_id,  ros::Time(0));
     // get goal position relative to robot
@@ -80,14 +85,30 @@ void OpenDoor::rotateAtStart() {
     }
 
     mCmdVelPub.publish(cmd_vel);
+#endif
 }
 
 void OpenDoor::driveToDoor() {
+    geometry_msgs::Twist cmd_vel;
+    if(mLastVisualHandlePoses.poses.size() > 0) {
+        const float x = mLastVisualHandlePoses.poses[1].position.x;
+
+        if(x > 0.1) {
+            cmd_vel.angular.z = 0.2;
+        } else if(x < -0.1) {
+            cmd_vel.angular.z = -0.2;
+        }
+    }
+
+    mCmdVelPub.publish(cmd_vel);
+
+#if 0
     if(mNav.isActive()) {
         mNav.runCycle();
     } else {
         setState(State::RotatingFinal);
     }
+#endif
 }
 
 void OpenDoor::rotateFinal() {
@@ -108,4 +129,8 @@ void OpenDoor::onDoorHandleReceived(const geometry_msgs::PoseStamped &pose) {
         enable.data = false;
         mEnablePub.publish(enable);
     }
+}
+
+void OpenDoor::onDoorHandleVisualReceived(const geometry_msgs::PoseArray &poses) {
+    mLastVisualHandlePoses = poses;
 }
