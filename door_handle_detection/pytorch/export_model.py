@@ -39,4 +39,5 @@ if __name__ == "__main__":
     model = HeatmapModel()
     checkpoint = torch.load('models/my.pt')
     model.load_state_dict(checkpoint['model'])
+    model.eval()
     full_model_path = get_pytorch_onnx_model(model, "heatmap.onnx", (1, 3, 240, 320))

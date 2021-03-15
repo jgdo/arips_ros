@@ -12,6 +12,7 @@ batch_size = 20
 model = HeatmapModel().cuda()
 checkpoint = torch.load('models/my.pt')
 model.load_state_dict(checkpoint['model'])
+model.eval()
 
 # Loss
 criterion = nn.MSELoss().cuda()

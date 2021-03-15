@@ -76,8 +76,8 @@ def loadAllData():
     all_labels = []
 
     all_folders = [
-        "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/",
-        #  "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/",
+        # "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/",
+         "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/",
     ]
 
     for folder in all_folders:

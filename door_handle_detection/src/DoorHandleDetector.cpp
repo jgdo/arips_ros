@@ -66,20 +66,23 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
 
     ROS_INFO_STREAM("Labels size: " << labels.size);
 
-    return std::nullopt;
+    std::vector<cv::Mat> outputs;
+    cv::dnn::imagesFromBlob(labels, outputs);
 
+    assert(outputs.size() == 1);
 
-    // ROS_INFO_STREAM("Labels output: " << labels);
+    const cv::Mat& output = outputs.at(0);
+    std::vector<cv::Mat> heatmaps;
+    cv::split(output, heatmaps);
+    assert(heatmaps.size() == 2);
 
-    const bool handleDetected = labels.at<float>(4) > 0;
+    double handleStartMax, handleEndMax;
+    cv::Point2i handleStart, handleEnd;
+    cv::minMaxLoc(heatmaps.at(0), NULL, &handleStartMax, NULL, &handleStart );
+    cv::minMaxLoc(heatmaps.at(1), NULL, &handleEndMax, NULL, &handleEnd );
 
-    if(handleDetected) {
-        const cv::Point2i handlePxStart{denormalizeCoords(labels.at<float>(0), 320),
-                                        denormalizeCoords(labels.at<float>(1), 240)};
-        const cv::Point2i handlePxEnd{denormalizeCoords(labels.at<float>(2), 320),
-                                      denormalizeCoords(labels.at<float>(3), 240)};
-
-        return DoorHandleLocation {handlePxStart, handlePxEnd};
+    if(handleStartMax > 0.5 && handleEndMax > 0.5) {
+        return DoorHandleLocation {handleStart, handleEnd};
     } else {
         return std::nullopt;
     }

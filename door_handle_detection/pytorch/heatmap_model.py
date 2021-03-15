@@ -35,9 +35,9 @@ class HeatmapModel(nn.Module):
             chan = deconv_chan[lay+1]
             in_chan = chan * 3 if self.use_upsample else chan * 2
             seq = nn.Sequential(nn.Conv2d(in_chan, chan, kernel_size=(5, 5), padding=(2, 2), padding_mode='zeros'),
-                                nn.ReLU(),
+                                nn.LeakyReLU(),
                                 nn.Conv2d(chan, chan, kernel_size=(3, 3), padding=(1, 1), padding_mode='zeros'),
-                                nn.ReLU())
+                                nn.LeakyReLU())
             self.comb.append(seq)
 
         final_input_chan =  intermediate_channels[0] if self.use_upsample else output_channels*2
@@ -49,7 +49,7 @@ class HeatmapModel(nn.Module):
 
         for i in range(self.num):
             x = self.c[i](x)
-            x = F.relu(x)
+            x = F.leaky_relu(x)
             x = self.pool(x)
 
             if i != self.num-1:
@@ -68,8 +68,12 @@ class HeatmapModel(nn.Module):
             x = F.upsample_nearest(x, scale_factor=2)
         else:
             x = self.d[-1](x)
-        x = F.relu(x)
+        x = F.leaky_relu(x)
         x = self.final_conv(x)
-        x = F.relu(x)
+
+        if self.training:
+            x = F.leaky_relu(x)
+        else:
+            x = F.relu(x)
 
         return x

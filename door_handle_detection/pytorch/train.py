@@ -29,6 +29,8 @@ train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=
 #test_dataset = DoorDataGenerator(all_images, all_labels, train=False)
 #test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
+model.train()
+
 loss_history = []
 try:
     for epoch in range(num_epochs):
@@ -43,7 +45,7 @@ try:
 
             # loss = criterion(outputs, labels)
 
-            error = (labels - outputs)**2 # * (labels*0.8 + 0.2)
+            error = (labels - outputs)**2 * (labels*0.9 + 0.1)
             loss = torch.mean(error)
 
             #error_factor = 3
