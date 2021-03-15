@@ -36,8 +36,10 @@ model_path = "mymodel"
 model = models.load_model(model_path)
 
 full_model = tf.function(lambda x: model(x))
+
 full_model = full_model.get_concrete_function(
-  tf.TensorSpec(model.inputs[0].shape, model.inputs[0].dtype))
+  # tf.TensorSpec(model.input.shape, model.input.dtype))
+    tf.TensorSpec([1, 240, 320, 3]))
 
 # Get frozen graph def
 frozen_func = convert_variables_to_constants_v2(full_model)

@@ -22,7 +22,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(OpenCV REQUIRED)
-
+# find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -207,7 +208,7 @@ target_link_libraries(${PROJECT_NAME}_node
 ## Add gtest based cpp test target and link libraries
 catkin_add_gtest(${PROJECT_NAME}-test test/detector_test.cpp)
 if(TARGET ${PROJECT_NAME}-test)
-   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME}  ${catkin_LIBRARIES})
+   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME}  ${catkin_LIBRARIES} ${TORCH_LIBRARIES})
 
    target_include_directories(${PROJECT_NAME}-test
         PRIVATE

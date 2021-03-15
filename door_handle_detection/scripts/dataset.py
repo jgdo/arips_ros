@@ -27,17 +27,18 @@ def unison_shuffled_copies(a, b):
     return a[p], b[p]
 
 
-def loadDataFromFolder(folder):
+def loadDataFromFolder(folder, coord_labels = False):
     jpgs = glob.glob(folder + "*.jpg")
 
     imgs = []
     labels = []
 
-    x = np.linspace(-1, 1, 320)
-    y = np.linspace(-1, 1, 240)
-    xv, yv = np.meshgrid(x, y)
-    xv = np.expand_dims(xv, axis=2)
-    yv = np.expand_dims(yv, axis=2)
+    if coord_labels:
+        x = np.linspace(-1, 1, 320)
+        y = np.linspace(-1, 1, 240)
+        xv, yv = np.meshgrid(x, y)
+        xv = np.expand_dims(xv, axis=2)
+        yv = np.expand_dims(yv, axis=2)
 
     for img_path in jpgs:
         annot = getAnnotationName(img_path)
@@ -47,16 +48,32 @@ def loadDataFromFolder(folder):
             continue
 
         data = loadAnnotation(annot)
-        label = [normalizeCoords(data[0][0], 320),
-                 normalizeCoords(data[0][1], 240),
-                 normalizeCoords(data[1][0], 320),
-                 normalizeCoords(data[1][1], 240),
-                 1.0 if data[2] > 0.5 else 0.0]
 
-        img = cv2.imread(img_path)
-        img = np.concatenate([img / 255.0
-                                 , xv, yv
-                              ], axis=2)
+        img = cv2.imread(img_path) / 255.0
+
+        if coord_labels:
+            img = np.concatenate([img
+                                     , xv, yv
+                                  ], axis=2)
+            label = [normalizeCoords(data[0][0], 320),
+                     normalizeCoords(data[0][1], 240),
+                     normalizeCoords(data[1][0], 320),
+                     normalizeCoords(data[1][1], 240),
+                     1.0 if data[2] > 0.5 else 0.0]
+        else:
+            label = np.zeros((240, 320, 2), dtype=np.float32)
+            if data[2] > 0.5:
+                label[data[0][1], data[0][0], 0] = 1
+                label[data[1][1], data[1][0], 1] = 1
+                ksize = 17
+                label[:,:,0] = cv2.GaussianBlur(label[:,:,0], (ksize, ksize), 0)
+                label[:, :, 0] /= label[:,:,0].max()
+                label[:, :, 1] = cv2.GaussianBlur(label[:, :, 1], (ksize, ksize), 0)
+                label[:, :, 1] /= label[:, :, 1].max()
+
+                #kernel = np.ones((7, 7), np.uint8)
+                #label[:,:,0] = cv2.dilate(label[:,:,0], kernel, iterations=1)
+                #label[:, :, 1] = cv2.dilate(label[:, :, 1], kernel, iterations=1)
 
         imgs.append(img)
         labels.append(np.asarray(label))
@@ -67,7 +84,7 @@ def loadDataFromFolder(folder):
     return imgs, labels
 
 
-def loadAllData():
+def loadAllData(coord_labels = False):
     all_images = []
     all_labels = []
 
@@ -77,7 +94,7 @@ def loadAllData():
     ]
 
     for folder in all_folders:
-        images, labels = loadDataFromFolder(folder)
+        images, labels = loadDataFromFolder(folder, coord_labels)
         all_images.append(images)
         all_labels.append(labels)
 
@@ -89,7 +106,7 @@ def loadAllData():
 
 
 class DoorDataGenerator(Sequence):
-    def __init__(self, all_images, all_labels, train, batch_size=32, shuffle=True):
+    def __init__(self, all_images, all_labels, train, batch_size=32, shuffle=True, coord_labels = True):
         assert len(all_images) == len(all_labels)
 
         train_ratio = 0.8
@@ -105,9 +122,10 @@ class DoorDataGenerator(Sequence):
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-        self.on_epoch_end()
-
         self.get_with_indices = False
+        self.coord_labels = coord_labels
+
+        self.on_epoch_end()
 
     def __len__(self):
         return int(np.floor(len(self.images) / self.batch_size))
@@ -190,40 +208,51 @@ class DoorDataGenerator(Sequence):
         'Generate one batch of data'
         # Generate indexes of the batch
         indices = self.indexes[index * self.batch_size: (index + 1) * self.batch_size]
-        batch_images, batch_labels = self.images[indices].copy(), self.labels[indices].copy()
+
+        batch_images, batch_labels = self.images[indices], self.labels[indices]
 
         batch_images, batch_labels = self.augment(batch_images, batch_labels,
-                                                  [self.arugment_brightness, self.augment_pos, self.augment_noise])
+                                                  [self.arugment_brightness,
+                                                   # self.augment_pos,
+                                                   self.augment_noise,])
 
         if self.get_with_indices:
             return batch_images, batch_labels, indices
         return batch_images, batch_labels
 
 
-def showImageLabels(img_float_5, labels):
+def showImageLabels(img_float_5, labels, coord_labels):
     img = (img_float_5[:, :, 0:3] * 255).astype(np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    if labels[4] > 0.5:
-        cv2.circle(img, (denormalizeCoords(labels[0], 320), (denormalizeCoords(labels[1], 240))), 3, (255, 0, 0),
-                   -1)
-        cv2.circle(img, (denormalizeCoords(labels[2], 320), (denormalizeCoords(labels[3], 240))), 3, (0, 255, 0),
-                   -1)
+    if coord_labels:
+        if labels[4] > 0.5:
+            cv2.circle(img, (denormalizeCoords(labels[0], 320), (denormalizeCoords(labels[1], 240))), 3, (255, 0, 0),
+                       -1)
+            cv2.circle(img, (denormalizeCoords(labels[2], 320), (denormalizeCoords(labels[3], 240))), 3, (0, 255, 0),
+                       -1)
+        else:
+            cv2.circle(img, (img.shape[1] // 2, img.shape[0] // 2), 30, (255, 255, 0), 1)
     else:
-        cv2.circle(img, (img.shape[1] // 2, img.shape[0] // 2), 30, (255, 255, 0), 1)
+        color1 = np.stack([labels[:,:,0]*255, labels[:,:,0]*0, labels[:,:,0]*0], axis=2).astype(np.uint8)
+        color2 = np.stack([labels[:, :, 1] * 0, labels[:, :, 1] * 255, labels[:, :, 1] * 0], axis=2).astype(np.uint8)
+        img = np.maximum(img, color1)
+        img = np.maximum(img, color2)
 
     plt.imshow(img)
     plt.show()
 
 def test_dataset():
-    # for testing
-    all_images, all_labels = loadAllData()
-    dataset = DoorDataGenerator(all_images, all_labels, train=True)
+    coord_labels = False
+
+    all_images, all_labels = loadAllData(coord_labels=coord_labels)
+    dataset = DoorDataGenerator(all_images, all_labels, train=True, coord_labels=coord_labels)
 
     batch_images, batch_labels = dataset[0]
 
     for i in range(10):
-        showImageLabels(batch_images[i], batch_labels[i])
+        showImageLabels(batch_images[i], batch_labels[i], coord_labels)
+
 
 if __name__ == "__main__":
     test_dataset()

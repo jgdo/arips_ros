@@ -36,9 +36,9 @@ static int denormalizeCoords(float n, int size) {
 
 
 DoorHandleDetector::DoorHandleDetector()
-    : ModelPath {"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/scripts/exported_model/model.pb"}
+    : ModelPath {"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/pytorch/models/heatmap.onnx"}
 {
-    mDetectionNet = cv::dnn::readNetFromTensorflow(ModelPath);
+    mDetectionNet = cv::dnn::readNetFromONNX(ModelPath);
     createMeshgrid(mGridXX, mGridYY, {320, 240});
 }
 
@@ -47,24 +47,29 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
     image.convertTo(floatImage, CV_32F);
     floatImage /= 255.0F;
 
-    cv::Mat dnnInput({5, 240, 320}, CV_32F);
+    cv::Mat dnnInput({3, 240, 320}, CV_32F);
 
     for (int y = 0; y < 240; y++) {
         for (int x = 0; x < 320; x++) {
             dnnInput.at<float>(0, y, x) = floatImage.at<cv::Vec3f>(y, x)[0];
             dnnInput.at<float>(1, y, x) = floatImage.at<cv::Vec3f>(y, x)[1];
             dnnInput.at<float>(2, y, x) = floatImage.at<cv::Vec3f>(y, x)[2];
-            dnnInput.at<float>(3, y, x) = mGridXX.at<float>(y, x);
-            dnnInput.at<float>(4, y, x) = mGridYY.at<float>(y, x);
+            //dnnInput.at<float>(3, y, x) = mGridXX.at<float>(y, x);
+            //dnnInput.at<float>(4, y, x) = mGridYY.at<float>(y, x);
         }
     }
 
-    dnnInput = dnnInput.reshape(0, {1, 5, 240, 320});
+    dnnInput = dnnInput.reshape(0, {1, 3, 240, 320});
 
     mDetectionNet.setInput(dnnInput);
     const cv::Mat labels = mDetectionNet.forward();
 
-    ROS_INFO_STREAM("Labels output: " << labels);
+    ROS_INFO_STREAM("Labels size: " << labels.size);
+
+    return std::nullopt;
+
+
+    // ROS_INFO_STREAM("Labels output: " << labels);
 
     const bool handleDetected = labels.at<float>(4) > 0;
 

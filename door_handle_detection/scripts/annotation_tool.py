@@ -10,7 +10,7 @@ import random
 
 class Annotator:
     def __init__(self):
-        self.data_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/'
+        self.data_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/mini/with_handle/'
         self.win = "Frame"
 
         self.jpgs = glob.glob(self.data_folder + "*.jpg")

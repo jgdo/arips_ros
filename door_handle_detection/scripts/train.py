@@ -10,6 +10,7 @@ from tensorflow.keras.utils import get_custom_objects
 from annot_utils import *
 import dataset
 from dataset import loadAllData, denormalizeCoords
+import heatmap_model
 
 all_images, all_labels = loadAllData()
 train_gen = dataset.DoorDataGenerator(all_images, all_labels, train=True)
@@ -17,6 +18,7 @@ test_gen = dataset.DoorDataGenerator(all_images, all_labels, train=False, shuffl
 
 model_path = "mymodel"
 
+"""
 # my_activation = layers.LeakyReLU
 my_activation = layers.ReLU
 
@@ -53,7 +55,6 @@ model.add(layers.Flatten())
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(5, activation=None))
 
-model.summary()
 
 def my_loss_function(y_true, y_pred):
     squared_difference = tf.square(y_true[:, 0:4] - y_pred[:, 0:4])
@@ -64,10 +65,16 @@ def my_loss_function(y_true, y_pred):
     #print("loss: ", loss)
     return loss
 
-get_custom_objects().update({"my_loss_function": my_loss_function})
 
-model.compile(optimizer=optimizers.Adam(learning_rate=0.0003),
-              loss=my_loss_function)
+get_custom_objects().update({"my_loss_function": my_loss_function})
+"""
+
+model = heatmap_model.DoorHandleHeatmapModel()
+model.build((1, 240, 320, 3))
+model.summary()
+
+model.compile(optimizer=optimizers.Adam(learning_rate=0.0005),
+              loss='mse')
 
 
 if 0:
@@ -76,7 +83,7 @@ if 0:
 if 1:
     try:
         my_callbacks = [
-            tf.keras.callbacks.EarlyStopping(patience=10),
+            tf.keras.callbacks.EarlyStopping(patience=20),
         ]
 
         history = model.fit(train_gen, epochs=200,
@@ -86,14 +93,14 @@ if 1:
         plt.plot(history.history['val_loss'], label='val_loss')
         plt.xlabel('Epoch')
         plt.ylabel('Accuracy')
-        plt.ylim([0.0, 1])
+        # plt.ylim([0.0, 1])
         plt.legend(loc='lower right')
         plt.show()
 
     except KeyboardInterrupt:
         pass
 
-    model.save(model_path)
+    # model.save(model_path, ca)
 
 
 def predictImage(path):
@@ -122,7 +129,7 @@ def predictImage(path):
 
 # predictImage('/home/jgdo/frame0000.jpg')
 
-
+"""
 
 test_gen.get_with_indices = True
 best_images = np.ndarray((0, 240, 320, 5), dtype=np.float32)
@@ -143,6 +150,7 @@ assert len(best_losses) == len(best_indices)
 best_indices.sort(key=lambda idx: best_losses[idx])
 best_indices.reverse()
 
+
 for best_index in range(20):
     idx = best_indices[best_index]
     labels = model.predict(best_images[idx:idx + 1])[0]
@@ -159,20 +167,12 @@ for best_index in range(20):
     plt.imshow(img)
     plt.show()
 
-if 0:
+"""
+
+if 1:
     test_batch_images, test_batch_labels = test_gen[0]
 
     for test_index in range(len(test_batch_images)):
         labels = model.predict(test_batch_images[test_index:test_index+1])[0]
-        img = test_batch_images[test_index, :, :, 0:3].copy()
 
-        img = (img[:,:,::-1] * 255).astype(np.uint8)
-
-        if labels[4] > 0.5:
-            cv2.circle(img, (denormalizeCoords(labels[0], 320), (denormalizeCoords(labels[1], 240))), 3, (255, 0, 0), -1)
-            cv2.circle(img, (denormalizeCoords(labels[2], 320), (denormalizeCoords(labels[3], 240))), 3, (0, 255, 0), -1)
-        else:
-            cv2.circle(img, (img.shape[1]//2, img.shape[0]//2), 30, (255, 255, 0), 1)
-
-        plt.imshow(img)
-        plt.show()
+        dataset.showImageLabels(test_batch_images[test_index], labels, False)
