@@ -49,16 +49,18 @@ public:
         const auto doorHandle = mDetector.detect(image);
         DoorHandleDetector::annotateDetected(image, doorHandle);
 
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(image_msg->header, "bgr8", image).toImageMsg();
+        mImagePub.publish(msg);
+
         if (doorHandle) {
-            /*
             mCamModel.fromCameraInfo(info_msg);
 
-            const auto rayCam = mCamModel.projectPixelTo3dRay({160, 120});
+            const auto rayCam = mCamModel.projectPixelTo3dRay({(double)doorHandle->handleEnd.x, (double)doorHandle->handleEnd.y});
 
             geometry_msgs::TransformStamped transformMsg;
             try {
                 transformMsg = mTfBuffer.lookupTransform(AripsBaseFrame, image_msg->header.frame_id,
-                                                         image_msg->header.stamp);
+                                                         /*image_msg->header.stamp*/ ros::Time(0));
             } catch (const tf2::TransformException &ex) {
                 ROS_WARN_STREAM("Door handle detector TF error: " << ex.what());
                 return;
@@ -75,7 +77,6 @@ public:
                 return;
             }
 
-
             // how much to scale ray such that it will have z == doorHandleHeight
             const float toDoorScale = (doorHandleHeight - camBase.z()) / rayBase.z();
 
@@ -87,12 +88,8 @@ public:
 
             tf2::toMsg(handleBase, handlePose.pose.position);
             handlePose.pose.orientation.w = 1.0F; // TODO: correct orientation
-
-             */
+            mHandlePub.publish(handlePose);
         }
-
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(image_msg->header, "bgr8", image).toImageMsg();
-        mImagePub.publish(msg);
     }
 
 private:

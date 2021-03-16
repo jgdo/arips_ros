@@ -16,6 +16,10 @@ learning_rate = 0.0005
 
 model = HeatmapModel().cuda()
 
+num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print("Number of trainable parameters: {}".format(num_params))
+
+
 # Loss and optimizer
 criterion = nn.MSELoss().cuda()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

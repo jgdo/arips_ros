@@ -1,18 +1,25 @@
 <launch>
+<arg name="joy" default="false"/>
+
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
-
+      
+  <!-- kinect frames -->
+  <include file="$(find arips_launch)/launch/includes/frames.launch" />  
+  
+  <group if="$(arg joy)">
+    <include file="$(find arips_launch)/launch/joy_teleop.launch" />
+  </group>
+  
   <!-- kinect -->
   <include file="$(find arips_launch)/launch/kinect.launch" />
   
   <!-- arm -->
   <include file="$(find arips_launch)/launch/arm.launch" />
   
-  <!-- kinect frames -->
-  <include file="$(find arips_launch)/launch/includes/frames.launch" />
-
-
-  <!-- moveit -->
+ 
+  <!-- moveit
   <include file="$(find arips_moveit_generated)/launch/real.launch" />
+   -->
 </launch>
 

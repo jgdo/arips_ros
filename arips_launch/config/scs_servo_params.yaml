@@ -87,15 +87,16 @@ servo_5:
 # ccw_dead: 1
 # cw_dead: 1
 
+# kinect
 servo_6:
     id: 7
     
-    angles: [-8.0994495513, -5.47641145731, -1.26939108632, 3.55672051169, 8.51864342836, 12.9334228955, 16.8919510144, 20.8559510093 ]
-    raws: [310, 330, 350, 370, 390, 410, 430, 450 ]
+    angles: [-90, 0 ]
+    raws: [490, 760 ]
 
     
     angle_offset: 0
-    angle_factor: -1
+    angle_factor: 1
     
     ccw_dead: 1
     cw_dead: 1

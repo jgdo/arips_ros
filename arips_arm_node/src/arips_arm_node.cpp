@@ -56,6 +56,7 @@ public:
 
         mPosPub = nh.advertise<std_msgs::Float32>("pos_deg", 3);
         mPosSub = nh.subscribe("setpoint_deg", 1, &RosSCSServo::onSetposReceived, this);
+        mRawPosSub = nh.subscribe("setpoint_raw", 1, &RosSCSServo::onSetposRawReceived, this);
     }
 
     float updateState() {
@@ -67,11 +68,13 @@ public:
         return pos;
     }
 
-    void setPos_deg(float pos) {
-        mSetPos = pos;
+    void setPos_deg(float degree) {
+        setPos_raw(degreeToRaw(degree));
+    }
 
+    void setPos_raw(float raw) {
         try {
-            mServo->WritePos(mID, degreeToRaw(mSetPos), 500);
+            mServo->WritePos(mID, raw, 500);
         } catch(std::exception const& e) {
             ROS_ERROR_STREAM(e.what());
         }
@@ -89,17 +92,18 @@ private:
     std::vector<float> mAngleDegTable; // must contain at least 2 entries
     std::vector<int> mRawTable; // same size as mRawTable
 
-    ros::Subscriber mPosSub;
+    ros::Subscriber mPosSub, mRawPosSub;
     ros::Publisher mPosPub;
 
     float mAngleOffset_deg = 0.0F;
     float mAngleFactor = 1.0F;
 
-    float mSetPos = 0.0F;
-
-
     void onSetposReceived(const std_msgs::Float32& msg) {
         setPos_deg(msg.data);
+    }
+
+    void onSetposRawReceived(const std_msgs::Float32& msg) {
+        setPos_raw(msg.data);
     }
 
     template <class Tin, class Tout>

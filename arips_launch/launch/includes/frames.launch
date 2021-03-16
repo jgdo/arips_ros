@@ -2,7 +2,7 @@
   <node pkg="tf" type="static_transform_publisher" name="arips_base_link_broadcaster" args="0.163 -0.006 0.055 -0.028 0 0.0 /arips_base /arm_base_link 20" />
   
   <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_base_to_link"
-    args="-0.09834986 -0.04265322  0.74170686 0.05932504849564464, 0.7451718982089848, 0.0648381526370992  arips_base kinect_base" />
+    args="-0.09834986 -0.04265322  0.74170686 0 0 0  arips_base kinect_base" />
     
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_marker_robot"
     args="0.03417981 -0.01480645 0.21539154 0.004160923029937038 0.0006275551021822737 0.0017468013386928336 arips_base corrected_robot_marker" />  

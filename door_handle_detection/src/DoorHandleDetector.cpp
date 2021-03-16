@@ -64,8 +64,6 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
     mDetectionNet.setInput(dnnInput);
     const cv::Mat labels = mDetectionNet.forward();
 
-    ROS_INFO_STREAM("Labels size: " << labels.size);
-
     std::vector<cv::Mat> outputs;
     cv::dnn::imagesFromBlob(labels, outputs);
 

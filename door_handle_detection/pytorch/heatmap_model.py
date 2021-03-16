@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 
 class HeatmapModel(nn.Module):
-    def __init__(self, input_channels = 3, output_channels = 2, intermediate_channels=[16, 32, 64, 128]):
+    def __init__(self, input_channels = 3, output_channels = 2, intermediate_channels=[8, 16, 24, 32]):
         super(HeatmapModel, self).__init__()
 
         self.use_upsample = False

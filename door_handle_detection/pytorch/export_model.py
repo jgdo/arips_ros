@@ -37,6 +37,9 @@ def get_pytorch_onnx_model(model, onnx_model_name, input_shape):
 
 if __name__ == "__main__":
     model = HeatmapModel()
+    num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print("Number of trained parameters: {}".format(num_params))
+
     checkpoint = torch.load('models/my.pt')
     model.load_state_dict(checkpoint['model'])
     model.eval()
