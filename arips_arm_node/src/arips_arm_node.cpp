@@ -62,17 +62,22 @@ public:
     float updateState() {
         auto raw = mServo->ReadPos(mID);
         float pos = rawToDegree(raw);
+        mLastPose = pos;
         std_msgs::Float32 msg;
         msg.data = pos;
         mPosPub.publish(msg);
         return pos;
     }
 
-    void setPos_deg(float degree) {
-        setPos_raw(degreeToRaw(degree));
+    float getLastPose() const {
+        return mLastPose;
     }
 
-    void setPos_raw(float raw) {
+    void setPos_deg(float degree) {
+        setPos_raw(std::round(degreeToRaw(degree)));
+    }
+
+    void setPos_raw(int raw) {
         try {
             mServo->WritePos(mID, raw, 500);
         } catch(std::exception const& e) {
@@ -95,6 +100,8 @@ private:
     ros::Subscriber mPosSub, mRawPosSub;
     ros::Publisher mPosPub;
 
+    float mLastPose = 0;
+
     float mAngleOffset_deg = 0.0F;
     float mAngleFactor = 1.0F;
 
@@ -102,7 +109,7 @@ private:
         setPos_deg(msg.data);
     }
 
-    void onSetposRawReceived(const std_msgs::Float32& msg) {
+    void onSetposRawReceived(const std_msgs::Int32& msg) {
         setPos_raw(msg.data);
     }
 
@@ -269,6 +276,14 @@ private:
             ROS_WARN_STREAM(err.what());
         }
 
+        for(size_t i = NUM_JOINTS+1; i < mServos.size(); i++) {
+            try {
+                mServos.at(i).updateState();
+            } catch (const std::runtime_error& err) {
+                ROS_WARN_STREAM(err.what());
+            }
+        }
+
         mJointStatePub.publish(mJointState);
 
         try {
@@ -291,12 +306,11 @@ private:
                     
                     ROS_DEBUG_STREAM("Using corrected kinect pose");
                 }
-            }
-            catch (tf::TransformException ex){
+            } catch (tf::TransformException ex) {
             }
 
             if(!useCorrected) {
-                float kinectAngle_deg = mServos.at(NUM_JOINTS+1).updateState();
+                float kinectAngle_deg = mServos.at(NUM_JOINTS+1).getLastPose();
 
                 // publish kinect tf
                 float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;

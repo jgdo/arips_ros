@@ -124,7 +124,7 @@ class DoorDataGenerator(Dataset):
 
     def arugment_brightness(self, img, label):
         brightness_center = random.uniform(0.0, 1.0)
-        brightness_factor = random.uniform(0.8, 1.3)
+        brightness_factor = random.uniform(0.5, 1.3)
 
         img -= brightness_center
         img *= brightness_factor

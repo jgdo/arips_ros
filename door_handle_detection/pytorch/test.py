@@ -7,7 +7,7 @@ import numpy as np
 from heatmap_model import HeatmapModel
 from dataset import loadAllData, DoorDataGenerator, showImageLabels
 
-batch_size = 20
+batch_size = 30
 
 model = HeatmapModel().cuda()
 checkpoint = torch.load('models/my.pt')
@@ -18,7 +18,7 @@ model.eval()
 criterion = nn.MSELoss().cuda()
 
 all_images, all_labels = loadAllData()
-test_dataset = DoorDataGenerator(all_images, all_labels, train=True, shuffle=False)
+test_dataset = DoorDataGenerator(all_images, all_labels, train=False, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 for i, (images, labels) in enumerate(tqdm(test_loader)):

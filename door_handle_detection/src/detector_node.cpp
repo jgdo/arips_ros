@@ -36,6 +36,8 @@ public:
             return;
         }
 
+        mCamModel.fromCameraInfo(info_msg);
+
         cv::Mat image;
         try {
             cv_bridge::CvImagePtr input_bridge = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
@@ -52,44 +54,61 @@ public:
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(image_msg->header, "bgr8", image).toImageMsg();
         mImagePub.publish(msg);
 
-        if (doorHandle) {
-            mCamModel.fromCameraInfo(info_msg);
-
-            const auto rayCam = mCamModel.projectPixelTo3dRay({(double)doorHandle->handleEnd.x, (double)doorHandle->handleEnd.y});
-
-            geometry_msgs::TransformStamped transformMsg;
-            try {
-                transformMsg = mTfBuffer.lookupTransform(AripsBaseFrame, image_msg->header.frame_id,
-                                                         /*image_msg->header.stamp*/ ros::Time(0));
-            } catch (const tf2::TransformException &ex) {
-                ROS_WARN_STREAM("Door handle detector TF error: " << ex.what());
-                return;
-            }
-
-            tf2::Stamped<tf2::Transform> transform;
-            tf2::fromMsg(transformMsg, transform);
-
-            const auto rayBase = transform.getBasis() * tf2::Vector3(rayCam.x, rayCam.y, rayCam.z);
-            const auto camBase = transform.getOrigin();
-
-            if (rayBase.z() < 0.3F) {
-                ROS_WARN("Camera seem not to point up, could not compute door handle pose.");
-                return;
-            }
-
-            // how much to scale ray such that it will have z == doorHandleHeight
-            const float toDoorScale = (doorHandleHeight - camBase.z()) / rayBase.z();
-
-            const auto handleBase = camBase + rayBase * toDoorScale;
-
-            geometry_msgs::PoseStamped handlePose;
-            handlePose.header.frame_id = AripsBaseFrame;
-            handlePose.header.stamp = image_msg->header.stamp;
-
-            tf2::toMsg(handleBase, handlePose.pose.position);
-            handlePose.pose.orientation.w = 1.0F; // TODO: correct orientation
-            mHandlePub.publish(handlePose);
+        if (!doorHandle) {
+            return;
         }
+
+        const auto handleStartPoint = calc3dPoseFromPoint(doorHandle->handleStart.x, doorHandle->handleStart.y, image_msg->header.frame_id);
+        const auto handleEndPoint = calc3dPoseFromPoint(doorHandle->handleEnd.x, doorHandle->handleEnd.y, image_msg->header.frame_id);
+
+        if(!handleStartPoint || !handleEndPoint) {
+            return;
+        }
+
+        const auto handleDirection = *handleEndPoint - *handleStartPoint;
+        const float handleAngle = std::atan2(-handleDirection.x(), handleDirection.y()); // angle rotated by -90 deg
+
+        const tf2::Quaternion quat(tf2::Vector3(0,0,1), handleAngle);
+
+        geometry_msgs::PoseStamped handlePose;
+        handlePose.header.frame_id = AripsBaseFrame;
+        handlePose.header.stamp = image_msg->header.stamp;
+
+        tf2::toMsg(*handleEndPoint, handlePose.pose.position);
+        tf2::convert(quat, handlePose.pose.orientation);
+        handlePose.pose.orientation.w = 1.0F; // TODO: correct orientation
+        mHandlePub.publish(handlePose);
+    }
+
+    std::optional<tf2::Vector3> calc3dPoseFromPoint(int x, int y, const std::string& image_frame_id) {
+        const auto rayCam = mCamModel.projectPixelTo3dRay({(double)x, (double)y});
+
+        geometry_msgs::TransformStamped transformMsg;
+
+        try {
+            transformMsg = mTfBuffer.lookupTransform(AripsBaseFrame, image_frame_id,
+                    /*image_msg->header.stamp*/ ros::Time(0));
+         } catch (const tf2::TransformException &ex) {
+            ROS_WARN_STREAM("Door handle detector TF error: " << ex.what());
+            return {};
+        }
+
+        tf2::Stamped<tf2::Transform> transform;
+        tf2::fromMsg(transformMsg, transform);
+
+        const auto rayBase = transform.getBasis() * tf2::Vector3(rayCam.x, rayCam.y, rayCam.z);
+        const auto camBase = transform.getOrigin();
+
+        if (rayBase.z() < 0.3F) {
+            ROS_WARN("Camera seem not to point up, could not compute door handle pose.");
+            return {};
+        }
+
+        // how much to scale ray such that it will have z == doorHandleHeight
+        const float toDoorScale = (doorHandleHeight - camBase.z()) / rayBase.z();
+
+        const auto point3d = camBase + rayBase * toDoorScale;
+        return point3d;
     }
 
 private:

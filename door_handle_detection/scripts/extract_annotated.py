@@ -4,7 +4,7 @@ import shutil
 
 from annot_utils import *
 
-all_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/all/'
+all_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/door_handle_with_gipper/'
 handle_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/'
 no_folder = '/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/'
 
