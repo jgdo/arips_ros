@@ -155,6 +155,6 @@ void Navigation::timerCallback(const ros::TimerEvent& e) {
 }
 
 void Navigation::onClickedPoint(const geometry_msgs::PointStamped &point) {
-    mOpenDoor.init(point);
+    mOpenDoor.init();
     mDrivingState = &mOpenDoor;
 }

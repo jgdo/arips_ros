@@ -7,49 +7,26 @@
 #include "DrivingState.h"
 
 #include <ros/ros.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/PoseArray.h>
-#include <geometry_msgs/PointStamped.h>
-#include <arips_navigation/local_planner/HPNav.h>
+
+#include <memory>
 
 class OpenDoor: public DrivingStateProto
 {
 public:
-    OpenDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, HPNav& nav);
+    OpenDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub);
+    ~OpenDoor() override;
 
-    void init(const geometry_msgs::PointStamped& approxDoorPose);
+    void init();
 
     bool isActive() override;
 
     void runCycle() override;
 
 private:
-    enum class State {
-        Idle,
-        WaitingDoorPose,
-        RotatingStart,
-        DrivingDoor,
-        RotatingFinal,
-    } mState = State::Idle;
+    struct Pimpl;
+    std::unique_ptr<Pimpl> pimpl;
 
-    void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose);
-    void onDoorHandleVisualReceived(const geometry_msgs::PoseArray& pose);
-
-    geometry_msgs::PoseStamped mDoorPose;
-    geometry_msgs::PoseArray mLastVisualHandlePoses;
-
-    ros::Publisher mEnablePub, mApproxDoorPub;
-    ros::Subscriber mDoorHandleSub, mDoorHandleVisualSub;
-
-    HPNav& mNav;
-
-    void rotateAtStart();
-
-    void driveToDoor();
-
-    void rotateFinal();
-
-    void setState(State newState);
+    friend class Pimpl;
 };
 
 

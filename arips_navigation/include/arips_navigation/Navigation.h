@@ -32,7 +32,7 @@ private:
     TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
     HPNav mHPNav {&m_tfBuffer, mCmdVelPub};
-    OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub, mHPNav};
+    OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub};
      
     ros::Subscriber psub_nav, hp_sub, clicked_sub;
 

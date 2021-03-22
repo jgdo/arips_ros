@@ -81,6 +81,7 @@
   <depend>toponav_ros</depend>
   <depend>base_local_planner</depend>
   <depend>yaml-cpp</depend>
+  <depend>angles</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
