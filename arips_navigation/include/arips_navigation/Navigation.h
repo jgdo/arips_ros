@@ -28,6 +28,7 @@ private:
     DrivingState* mDrivingState = nullptr;
 
     ros::Publisher mCmdVelPub;
+    ros::Publisher mActivePub;
     
     TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };

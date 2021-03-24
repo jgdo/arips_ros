@@ -13,6 +13,7 @@
 #include <arips_navigation/StepEdgeModule.h>
 #include <toponav_ros/utils/CostsProfileModuleContainer.h>
 #include <arips_navigation/TopoExecuter.h>
+#include <std_msgs/Bool.h>
 
 #include <memory>
 
@@ -62,6 +63,7 @@ Navigation::Navigation() {
     clicked_sub = nh.subscribe("/clicked_point", 1, &Navigation::onClickedPoint, this);
 
     mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
+    mActivePub = nh.advertise<std_msgs::Bool>("/arips_navigation_active", 1, false);
     
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
 }
@@ -142,6 +144,10 @@ void Navigation::poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg) {
 }
 
 void Navigation::timerCallback(const ros::TimerEvent& e) {
+    std_msgs::Bool active;
+    active.data = !!mDrivingState;
+    mActivePub.publish(active);
+
     if(!mDrivingState) {
         return;
     }

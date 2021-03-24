@@ -11,5 +11,6 @@
 	<!-- arm -->
 	<include file="$(find arips_launch)/launch/arm.launch" />
 	
+	
 	<include file="$(find arips_launch)/launch/localization.launch" />
 </launch>

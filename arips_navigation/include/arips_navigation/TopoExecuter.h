@@ -66,7 +66,7 @@ private:
     std::unique_ptr<toponav_core::TopoPath> mCurrentPlan;
     std::vector<toponav_core::TopoPath::PathSegment::Ptr>::iterator mCurrentPlanIter; /// only valid if mCurrentPlan valid
 
-    ros::Publisher mCmdVelPub;
+    ros::Publisher& mCmdVelPub;
 
     void visitRegionMovement(toponav_core::TopoPath::RegionMovement const* movement) override;
     void visitTransition(toponav_core::TopoPath::Transition const* transition) override;

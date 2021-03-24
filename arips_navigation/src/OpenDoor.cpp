@@ -22,6 +22,7 @@ struct OpenDoor::Pimpl {
         RotatingFinal,
         PullHandle,
         DriveOpen,
+        DriveAway,
     } mState = State::Idle;
 
     explicit Pimpl(OpenDoor& parent)
@@ -87,6 +88,10 @@ struct OpenDoor::Pimpl {
             case State::DriveOpen:
                 driveOpen();
                 break;
+
+            case State::DriveAway:
+                driveAway();
+                break;
         }
     }
 
@@ -95,7 +100,6 @@ struct OpenDoor::Pimpl {
         servo.data = val;
         mServoPub.publish(servo);
     }
-
 
     void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose) {
         const float distFromDoorOffset = 0.165F;
@@ -232,6 +236,29 @@ struct OpenDoor::Pimpl {
             cmd_vel.angular.z = 0.3;
         } else {
             setServo(0);
+            lastTime = ros::Time(0);
+            setState(State::DriveAway);
+        }
+
+        mParent.mCmdVelPub.publish(cmd_vel);
+    }
+
+    void driveAway() {
+        static ros::Time lastTime(0);
+
+        if(lastTime.isZero()) {
+            lastTime = ros::Time::now();
+        }
+
+        geometry_msgs::Twist cmd_vel;
+
+        const auto duration = ros::Time::now() - lastTime;
+        if(duration.toSec() < 3.5) {
+
+        } else if (duration.toSec() < 5.0) {
+            cmd_vel.linear.x = 0.1;
+            cmd_vel.angular.z = -0.4;
+        } else {
             lastTime = ros::Time(0);
             setState(State::Idle);
         }
