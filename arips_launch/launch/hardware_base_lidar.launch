@@ -1,5 +1,7 @@
 <launch>
 	<arg name="joy" default="false"/>
+	
+	<arg name="scan_matcher" default="true"/>
 
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
@@ -11,7 +13,9 @@
   <include file="$(find arips_launch)/launch/lidar.launch" />
   
   <!--- laser odometry -->
-  <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
+  <group if="$(arg scan_matcher)">
+    <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
+  </group>
   
   <!-- kinect frames -->
   <include file="$(find arips_launch)/launch/includes/frames.launch" />  
