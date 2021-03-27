@@ -1,7 +1,7 @@
 <launch>
     <arg name="joy" default="true"/>
 	
-	<include file="$(find arips_launch)/launch/hardware_base_lidar.launch" >
+	<include file="$(find arips_launch)/launch/hardware_base_lidar_map.launch" >
 		<arg name="joy" value="$(arg joy)"/>
 	</include>
 
@@ -10,7 +10,4 @@
 
 	<!-- arm -->
 	<include file="$(find arips_launch)/launch/arm.launch" />
-	
-	
-	<include file="$(find arips_launch)/launch/localization.launch" />
 </launch>

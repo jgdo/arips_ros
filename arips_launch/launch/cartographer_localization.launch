@@ -1,0 +1,11 @@
+<launch>
+    <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
+          -configuration_directory
+              $(find arips_launch)/configuration_files
+          -configuration_basename arips_lidar_2d_localization.lua
+          -load_state_filename $(find arips_launch)../maps/lu.pbstream " output="screen">
+    </node>
+    
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.025" />
+    
+</launch>

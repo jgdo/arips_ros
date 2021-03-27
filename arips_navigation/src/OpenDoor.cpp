@@ -104,7 +104,7 @@ struct OpenDoor::Pimpl {
     void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose) {
         const float distFromDoorOffset = 0.165F;
         const float yOffset = 0.04;
-
+        
         try {
             tf2::Stamped<tf2::Transform> poseTransform;
             tf2::fromMsg(pose, poseTransform);

@@ -8,7 +8,7 @@
 
   <node pkg="tf" type="static_transform_publisher" name="map_pub" args="0 0 0 0 0 0 map flat_layer_map1_frame 30"/>
 
-  <arg name="map_file1" default="$(find arips_navigation)/maps/appartement_lu.yaml"/>
+  <arg name="map_file1" default="$(find arips_navigation)/maps/single_room.yaml"/>
   <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >
     <param name="frame_id" type="str" value="flat_layer_map1_frame" />
     <remap from="map" to="flat_layer_map1"/>
@@ -18,7 +18,7 @@
   <node pkg="arips_navigation" type="arips_navigation_node" respawn="false" name="arips_navigation_node" output="screen" clear_params="true">
     <rosparam file="$(find arips_navigation)/config/lu/costmap.yaml" command="load" />
     <rosparam file="$(find arips_navigation)/config/config.yaml" command="load" />
-    <rosparam param="topo_planner/topo_map_file" subst_value="True">$(find arips_navigation)/config/lu/topomap.yaml</rosparam>
+    <rosparam param="topo_planner/topo_map_file" subst_value="True">$(find arips_navigation)/config/lu/topomap_single_room.yaml</rosparam>
   </node>
   
 </launch>

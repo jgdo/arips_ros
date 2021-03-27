@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find arips_launch)/launch/hardware.launch" />
+    <include file="$(find arips_navigation)/launch/lu_real.launch" />
+    <node name="door_handle_detection" pkg="door_handle_detection" type="door_handle_detection_node" output="screen" />
+</launch>

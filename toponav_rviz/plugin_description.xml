@@ -1,0 +1,10 @@
+<library path="lib/libtoponav_rviz">
+  <class name="toponav_rviz/SendPose"
+         type="toponav_rviz::SendPoseTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool to send a pose. Basically same as send goal.
+    </description>
+  </class>
+</library>
+
