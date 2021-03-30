@@ -4,6 +4,7 @@
 
 #include "arips_navigation/OpenDoor.h"
 
+#include <optional>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Twist.h>
@@ -101,10 +102,23 @@ struct OpenDoor::Pimpl {
         mServoPub.publish(servo);
     }
 
+    std::optional<geometry_msgs::Pose> getApproachPoseFromBase() const {
+        try {
+        geometry_msgs::PoseStamped currentPose =
+                mParent.mTfBuffer.transform(mDoorApproachPose, "arips_base", ros::Time::now(),
+                                            "odom", ros::Duration(0.1));
+
+            return currentPose.pose;
+        } catch (const tf2::TransformException &ex) {
+            ROS_WARN_STREAM("getApproachPoseFromBase() error: " << ex.what());
+            return {};
+        }
+    }
+
     void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose) {
         const float distFromDoorOffset = 0.165F;
         const float yOffset = 0.04;
-        
+
         try {
             tf2::Stamped<tf2::Transform> poseTransform;
             tf2::fromMsg(pose, poseTransform);
@@ -170,19 +184,23 @@ struct OpenDoor::Pimpl {
 
     void driveToDoor() {
         geometry_msgs::Twist cmd_vel;
-        const auto handleStart = mDoorApproachPose.pose.position;
 
-        const float angleDiff = std::atan2(handleStart.y, -handleStart.x);
-        const float floatAngleThres = angles::from_degrees(20);
+        const auto approachPose = getApproachPoseFromBase();
+        if(approachPose) {
+            const auto handleStart = approachPose->position;
 
-        ROS_INFO_STREAM("angleDiff: " << angleDiff);
+            const float angleDiff = std::atan2(handleStart.y, -handleStart.x);
+            const float floatAngleThres = angles::from_degrees(20);
 
-        if(angleDiff > floatAngleThres) {
-            cmd_vel.angular.z = -0.2;
-        } else if(angleDiff < -floatAngleThres) {
-            cmd_vel.angular.z = 0.2;
-        } else if(!mVelPlanner.computeVelocity(handleStart.x, handleStart.y, cmd_vel)) {
-            setState(State::RotatingFinal);
+            ROS_INFO_STREAM("angleDiff: " << angleDiff);
+
+            if (angleDiff > floatAngleThres) {
+                cmd_vel.angular.z = -0.2;
+            } else if (angleDiff < -floatAngleThres) {
+                cmd_vel.angular.z = 0.2;
+            } else if (!mVelPlanner.computeVelocity(handleStart.x, handleStart.y, cmd_vel)) {
+                setState(State::RotatingFinal);
+            }
         }
 
         mParent.mCmdVelPub.publish(cmd_vel);
@@ -198,24 +216,26 @@ struct OpenDoor::Pimpl {
 
     void rotateFinal() {
         geometry_msgs::Twist cmd_vel;
-        const auto handleStart = mDoorApproachPose.pose.position;
 
-        tf2::Quaternion handleQuat;
-        tf2::fromMsg(mDoorApproachPose.pose.orientation, handleQuat);
-        const auto handleDirVec = tf2::quatRotate(handleQuat, tf2::Vector3(1,0,0));
-        const float handleAngle = std::atan2(handleDirVec.y(), handleDirVec.x());
+        const auto approachPose = getApproachPoseFromBase();
+        if(approachPose) {
+            tf2::Quaternion handleQuat;
+            tf2::fromMsg(approachPose->orientation, handleQuat);
+            const auto handleDirVec = tf2::quatRotate(handleQuat, tf2::Vector3(1, 0, 0));
+            const float handleAngle = std::atan2(handleDirVec.y(), handleDirVec.x());
 
-        const float angleDiff = angles::normalize_angle(handleAngle);
-        const float angleThres = angles::from_degrees(5);
+            const float angleDiff = angles::normalize_angle(handleAngle);
+            const float angleThres = angles::from_degrees(5);
 
-        ROS_INFO_STREAM("angleDiff: " << angleDiff);
+            ROS_INFO_STREAM("angleDiff: " << angleDiff);
 
-        if(angleDiff > angleThres) {
-            cmd_vel.angular.z = 0.2;
-        } else if(angleDiff < -angleThres) {
-            cmd_vel.angular.z = -0.2;
-        } else {
-            setState(State::PullHandle);
+            if (angleDiff > angleThres) {
+                cmd_vel.angular.z = 0.2;
+            } else if (angleDiff < -angleThres) {
+                cmd_vel.angular.z = -0.2;
+            } else {
+                setState(State::PullHandle);
+            }
         }
 
         mParent.mCmdVelPub.publish(cmd_vel);
