@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(arips_scene_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -141,7 +141,11 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp src/ground_segmentation.h src/door_handle_segmentation.cpp src/door_handle_segmentation.h)
+add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp
+        src/ground_segmentation.h src/door_handle_segmentation.cpp src/door_handle_segmentation.h
+        src/plane_segmentation.h src/plane_segmentation.cpp
+        src/depth_module.h src/door_detector.h src/door_detector.cpp
+        src/depth_to_cloud.cpp src/depth_to_cloud.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

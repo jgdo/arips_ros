@@ -1,5 +1,16 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
+#include <tf2_ros/transform_listener.h>
+
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <image_transport/image_transport.h>
+#include <image_geometry/pinhole_camera_model.h>
+
+#include "depth_to_cloud.h"
+#include "door_detector.h"
+
+#if 0
 // PCL specific includes
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -15,8 +26,6 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <pcl/filters/extract_indices.h>
 #include <object_recognition_msgs/TableArray.h>
-#include <tf/tf.h>
-#include <tf/transform_listener.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
 #include <interactive_markers/interactive_marker_server.h>
@@ -34,6 +43,11 @@
 #include <dynamic_reconfigure/server.h>
 #include <arips_scene_detection/SceneDetectionConfig.h>
 
+#endif
+
+#include "door_detector.h"
+
+#if 0
 
 using namespace visualization_msgs;
 
@@ -286,25 +300,87 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
 #endif
 }
 
-int
-main (int argc, char** argv)
-{
-  // Initialize ROS
-  ros::init (argc, argv, "arips_scene_detection");
-  ros::NodeHandle nh;
+#endif
 
+class DepthPipeline {
+public:
+    DepthPipeline(tf2_ros::Buffer& tf):
+        mTfBuffer(tf),
+        mDoorDetector{tf}
+    {
+        mDepthSub = mImageTransport.subscribe("/kinect/depth_registered/image_raw", 2, &DepthPipeline::onDepthReceived, this);
+        mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>("/kinect/depth_registered/camera_info", 1, &DepthPipeline::onCameraInfoReceived, this);
+        mMarkerPub = mNode.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
 
+        mDoorDetector.enable(true);
+    }
+
+private:
+    void onDepthReceived(const sensor_msgs::ImageConstPtr& depth_msg) {
+        if(!mCameraModel.initialized()) {
+            return;
+        }
+
+        cv_bridge::CvImagePtr cv_ptr;
+        try
+        {
+            cv_ptr = cv_bridge::toCvCopy(depth_msg);
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("onDepthReceived(): cv_bridge exception: %s", e.what());
+            return;
+        }
+
+        auto cloud = depthToCloud(cv_ptr->image, depth_msg->header, mCameraModel, 8);
+        if(!cloud) {
+            return;
+        }
+
+        visualization_msgs::MarkerArray markers;
+        mDoorDetector.processPointcloud(cloud, markers);
+        mMarkerPub.publish(markers);
+    }
+
+    void onCameraInfoReceived(const sensor_msgs::CameraInfoConstPtr& info_msg) {
+        mCameraModel.fromCameraInfo(info_msg);
+    }
+
+    tf2_ros::Buffer& mTfBuffer;
+    ros::NodeHandle mNode;
+
+    image_geometry::PinholeCameraModel mCameraModel;
+
+    image_transport::ImageTransport mImageTransport {mNode};
+    // image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
+    image_transport::Subscriber mDepthSub;
+    ros::Subscriber mCameraInfoSub;
+
+    ros::Publisher mMarkerPub;
+
+    DoorDetector mDoorDetector;
+};
+
+int main(int argc, char **argv) {
+    // Initialize ROS
+    ros::init(argc, argv, "arips_scene_detection");
+    ros::NodeHandle nh;
+
+    tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
 
-    door_seg.reset(new DoorHandleSegmentation(tfBuffer, "map"));
 
-    listener = std::make_shared<tf::TransformListener>();
+    DoorDetector doorDetector {tfBuffer};
 
-  // Create a ROS publisher for the output point cloud
-  pub = nh.advertise<pcl_msgs::ModelCoefficients> ("coefficients", 1);
-    pub_cloud = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud", 1);
-    pub_cloud_neg = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud_neg", 1);
-  // TODO marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+
+    //door_seg.reset(new DoorHandleSegmentation(tfBuffer, "map"));
+
+
+    // Create a ROS publisher for the output point cloud
+    //pub = nh.advertise<pcl_msgs::ModelCoefficients> ("coefficients", 1);
+    //  pub_cloud = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud", 1);
+    //  pub_cloud_neg = nh.advertise<sensor_msgs::PointCloud2> ("plane_cloud_neg", 1);
+    // TODO marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
     // TODO scene_pub = nh.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
 
@@ -319,7 +395,7 @@ main (int argc, char** argv)
     // Create a ROS subscriber for the input point cloud
     // ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/kinect/depth_registered/points", 1, cloud_cb);
 
-
+#if 0
     ros::Subscriber sub_info_ = nh.subscribe<sensor_msgs::CameraInfo>("/kinect/depth_registered/camera_info", 1, info_cb);
 
     ros::Subscriber clicked_sub = nh.subscribe("approx_door_handle_pos", 1, clicked_cb);
@@ -336,7 +412,9 @@ main (int argc, char** argv)
     dynamic_reconfigure::Server<arips_scene_detection::SceneDetectionConfig>::CallbackType f = boost::bind(dr_callback, _1, _2);;
     server.setCallback(f);
 
-  // Spin
-  ros::spin ();
+#endif
+    DepthPipeline depthPipeline {tfBuffer};
+    // Spin
+    ros::spin();
 }
 
