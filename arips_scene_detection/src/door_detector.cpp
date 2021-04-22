@@ -26,6 +26,8 @@ void DoorDetector::processPointcloud(const pcl::PointCloud<pcl::PointXYZ>::Const
                                      visualization_msgs::MarkerArray &markerArray) {
     const float distanceTolerance = 0.1;
     const float angleTolerance = angles::from_degrees(10);
+    const float doorRadius = 0.8;
+    const int minDoorPoints = 150;
 
     std_msgs::Header inputHeader;
     pcl_conversions::fromPCL(input->header, inputHeader);
@@ -52,14 +54,40 @@ void DoorDetector::processPointcloud(const pcl::PointCloud<pcl::PointXYZ>::Const
         return;
     }
 
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr remainingCloud = input;
+    auto projectOnDoorPivotPlane = [&pivotTransform](const tf2::Vector3 pt) {
+        const tf2::Vector3 pivotToPt = pt - pivotTransform.getOrigin();
+
+        // project point on  pivot x/y plane
+        const tf2::Vector3 onPivotPlane = pivotTransform.getOrigin()
+                                      + pivotTransform.getBasis().getColumn(0) *
+                                        pivotTransform.getBasis().getColumn(0).dot(pivotToPt)
+                                      + pivotTransform.getBasis().getColumn(1) *
+                                        pivotTransform.getBasis().getColumn(1).dot(pivotToPt);
+
+        return onPivotPlane;
+    };
+
+    // filter for points inside a cylinder around door pivot axis
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudFiltered { new pcl::PointCloud<pcl::PointXYZ>() };
+    cloudFiltered->reserve(input->size());
+    for(const auto pt: *input) {
+        if(projectOnDoorPivotPlane({pt.x, pt.y, pt.z}).distance2(pivotTransform.getOrigin()) <= doorRadius*doorRadius) {
+            cloudFiltered->push_back(pt);
+        }
+    }
+
+    pcl::PointCloud<pcl::PointXYZ>::ConstPtr remainingCloud = cloudFiltered;
 
     for(int i = 0; i < 3; i++) {
         auto planeResult = segmentPlane(remainingCloud);
         remainingCloud = planeResult.nonCloud;
 
         if (planeResult.direction.isZero()) {
-            continue;
+            break;
+        }
+
+        if(planeResult.cloud->size() < minDoorPoints) {
+            break;
         }
 
         // check if plane is within angle tolerance
@@ -76,15 +104,7 @@ void DoorDetector::processPointcloud(const pcl::PointCloud<pcl::PointXYZ>::Const
         }
 
         // compute plane pose
-        const tf2::Vector3 planeCenter = planeResult.direction * planeResult.distance;
-        const tf2::Vector3 pivotToCenter = planeCenter - pivotTransform.getOrigin();
-
-        // project point on  pivot x/y plane
-        const tf2::Vector3 doorBase = pivotTransform.getOrigin()
-                                      + pivotTransform.getBasis().getColumn(0) *
-                                        pivotTransform.getBasis().getColumn(0).dot(pivotToCenter)
-                                      + pivotTransform.getBasis().getColumn(1) *
-                                        pivotTransform.getBasis().getColumn(1).dot(pivotToCenter);
+        const tf2::Vector3 doorBase = projectOnDoorPivotPlane(planeResult.direction * planeResult.distance);
 
         // compute door rotation basis such that plane hessian is x-axis and pivot z is approximately door z
         const tf2::Vector3 doorDirX = planeResult.direction;

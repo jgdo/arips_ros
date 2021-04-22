@@ -13,6 +13,7 @@
 #include <nav_core/base_local_planner.h>
 
 #include <arips_navigation/DrivingState.h>
+#include <toponav_ros/TopoPlannerROS.h>
 
 
 /**
@@ -20,8 +21,11 @@
  */
 class TopoExecuter: public DrivingState, private toponav_core::TopoPath::PathVisitor  {
 public:
+
     TopoExecuter(tf2_ros::Buffer& tfBuffer, costmap_2d::Costmap2DROS& costmap, 
-        ros::Publisher& cmdVelPub);
+        ros::Publisher& cmdVelPub, toponav_ros::TopoPlannerROS& topoPlanner);
+
+    void activate(const geometry_msgs::PoseStamped &goalMsg);
 
     /**
      * Set new plan for execution. Assumes that current state is idle.
@@ -74,6 +78,9 @@ private:
     std::unique_ptr<SegmentExecuter> mSegmentExec;
 
     std::unique_ptr<nav_core::BaseLocalPlanner> mLocalPlanner;
+
+    toponav_ros::TopoPlannerROS& mTopoPlanner;
+    tf2_ros::Buffer &mTfBuffer;
 };
 
 

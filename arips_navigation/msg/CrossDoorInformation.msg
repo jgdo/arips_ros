@@ -1,0 +1,2 @@
+geometry_msgs/PoseStamped approachPose
+geometry_msgs/PoseStamped pivotPose

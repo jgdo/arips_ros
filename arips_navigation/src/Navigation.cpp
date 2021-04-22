@@ -61,28 +61,12 @@ Navigation::Navigation() {
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
     hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
     clicked_sub = nh.subscribe("/clicked_point", 1, &Navigation::onClickedPoint, this);
+    door_info_sub = nh.subscribe("/cross_door_info", 1, &Navigation::onDoorInfoReceived, this);
 
     mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
     mActivePub = nh.advertise<std_msgs::Bool>("/arips_navigation_active", 1, false);
     
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
-}
-
-// from https://github.com/strawlab/navigation/blob/master/move_base/src/move_base.cpp
-static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
-    //first we need to check if the quaternion has nan's or infs
-    if(!std::isfinite(tf_q.x()) || !std::isfinite(tf_q.y()) || !std::isfinite(tf_q.z()) || !std::isfinite(tf_q.w())){
-        ROS_ERROR("Quaternion has nans or infs... discarding pose");
-        return false;
-    }
-
-    //next, we need to check if the length of the quaternion is close to zero
-    if(tf_q.length2() < 1e-6){
-        ROS_ERROR("Quaternion has length close to zero... discarding pose");
-        return false;
-    }
-
-    return true;
 }
 
 auto static createQuaternionFromYaw(double yaw)
@@ -93,49 +77,8 @@ auto static createQuaternionFromYaw(double yaw)
 }
 
 void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg) {
-    tf2::Stamped<tf2::Transform> pose;
-    tf2::fromMsg(msg, pose);
-
-    if(!isQuaternionValid(pose.getRotation()))
-        return;
-
-    try {
-        geometry_msgs::TransformStamped startTransform;
-        startTransform = m_tfBuffer.lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
-        geometry_msgs::PoseStamped startPose;
-        startPose.header = startTransform.header;
-        startPose.pose.position.x = startTransform.transform.translation.x;
-        startPose.pose.position.y = startTransform.transform.translation.y;
-        startPose.pose.position.z = startTransform.transform.translation.z;
-        startPose.pose.orientation = startTransform.transform.rotation;
-
-        GlobalPosition start = m_TopoPlanner.getContext().poseService->findGlobalPose(startPose,
-                                                                                      *m_TopoPlanner.getContext().topoMap).first;
-        ROS_INFO_STREAM("found start node for robot pose: "
-                                << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
-
-        GlobalPosition goal = m_TopoPlanner.getContext().poseService->findGlobalPose(pose,
-                                                                                     *m_TopoPlanner.getContext().topoMap).first;
-        ROS_INFO_STREAM(
-                "found goal node for pose: " << (goal.node ? goal.node->getName() : std::string("<NOT FOUND>")));
-
-        if (start.node && goal.node) {
-            try {
-                TopoPath lastPlan;
-                if (m_TopoPlanner.getContext().pathPlanner->plan(m_TopoPlanner.getContext().topoMap.get(), start, goal,
-                                                                 &lastPlan, nullptr)) {
-                    m_TopoPlanner.getPathViz().visualizePath(lastPlan);
-                    m_TopoExec.setNewPlan(lastPlan);
-                    mDrivingState = &m_TopoExec;
-                }
-            } catch (const std::exception &e) {
-                ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
-            }
-        }
-
-    } catch(const tf2::TransformException& ex) {
-        ROS_WARN("poseCallbackNavGoal(): %s",ex.what());
-    }
+    m_TopoExec.activate(msg);
+    mDrivingState = &m_TopoExec;
 }
 
 void Navigation::poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg) {
@@ -163,4 +106,9 @@ void Navigation::timerCallback(const ros::TimerEvent& e) {
 void Navigation::onClickedPoint(const geometry_msgs::PointStamped &point) {
     mOpenDoor.init();
     mDrivingState = &mOpenDoor;
+}
+
+void Navigation::onDoorInfoReceived(const arips_navigation::CrossDoorInformation& doorInfo) {
+    mCrossDoor.activate(doorInfo);
+    mDrivingState = &mCrossDoor;
 }

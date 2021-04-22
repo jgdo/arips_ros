@@ -13,6 +13,7 @@
 #include <arips_navigation/AutoDocker.h>
 #include <arips_navigation/local_planner/HPNav.h>
 #include <arips_navigation/OpenDoor.h>
+#include <arips_navigation/CrossDoor.h>
 
 class Navigation {
 public:
@@ -30,18 +31,20 @@ private:
     ros::Publisher mCmdVelPub;
     ros::Publisher mActivePub;
     
-    TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub};
+    TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub, m_TopoPlanner};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
     HPNav mHPNav {&m_tfBuffer, mCmdVelPub};
     OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub};
+    CrossDoor mCrossDoor {m_tfBuffer, mCmdVelPub, m_TopoExec, mOpenDoor};
      
-    ros::Subscriber psub_nav, hp_sub, clicked_sub;
+    ros::Subscriber psub_nav, hp_sub, clicked_sub, door_info_sub;
 
     ros::Timer mControlTimer;
 
     void poseCallbackNavGoal(const geometry_msgs::PoseStamped &msg);
     void poseCallbackHpGoal(const geometry_msgs::PoseStamped &msg);
     void onClickedPoint(const geometry_msgs::PointStamped& point);
+    void onDoorInfoReceived(const arips_navigation::CrossDoorInformation& doorInfo);
 
     void timerCallback(const ros::TimerEvent& e);
 };

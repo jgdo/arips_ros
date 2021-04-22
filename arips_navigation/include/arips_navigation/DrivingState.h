@@ -29,6 +29,30 @@ public:
     {}
 
 protected:
+    ros::NodeHandle mNodeHandle;
     tf2_ros::Buffer& mTfBuffer;
     ros::Publisher& mCmdVelPub;
+
+    virtual void init() {} // overrideable ctor substitute to avoid writing params for actual ctor
 };
+
+/*
+template<class Parent, class Pimpl>
+class DrivingStatePimpl: public DrivingState {
+public:
+    DrivingStatePimpl(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub)
+    : pimpl {tf, cmdVelPub}
+    {}
+
+    bool isActive() override {
+        return Parent::pimpl->isActive();
+    }
+
+    void runCycle() override {
+        return Parent::pimpl->runCycle();
+    }
+
+protected:
+
+};
+*/

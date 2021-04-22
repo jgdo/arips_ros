@@ -218,7 +218,7 @@ void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const &msg) {
 		
 		// add an offset in z direction such that step stands on the ground
     tf2::Stamped<tf2::Transform> newPose;
-		tf2::fromMsg(msg, newPose);
+    tf2::fromMsg(msg, newPose);
     // newPose.getOrigin() += newPose.getBasis()*tf2::Vector3(0,0,scale.z()/2);
 		
 		tf2::Stamped<tf2::Vector3> start(newPose(tf2::Vector3(0, -0.5, 0.0)), newPose.stamp_, newPose.frame_id_);
@@ -474,9 +474,6 @@ void StepEdgeModule::processMapStepCB(const visualization_msgs::InteractiveMarke
     return;
 
   const auto transform = _context.tfBuffer->lookupTransform(stepInfo->start.frame_id_, feedback->header.frame_id, ros::Time(0));
-
-  // const tf2::Transform transform;
-  // tf2::fromMsg(transformMsg, transform);
 
     geometry_msgs::Pose poseTransformedMsg;
     tf2::doTransform(feedback->pose, poseTransformedMsg, transform);
