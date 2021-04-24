@@ -1,0 +1,40 @@
+parser_data:
+  node_parser:
+    module_flat:
+      default_costs:
+        distance_factor: 1
+        energy_factor: 1
+        time_factor: 1
+      maps:
+        map1:
+          planner: NavfnCostsPlanner
+  edge_parser:
+    module_step:
+      default_costs_down:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_up:
+        distance: 1
+        energy: 2.5
+        time: 15
+      default_costs_cross_over:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_cross_gravel:
+        distance: 1
+        energy: 1
+        time: 10
+      step:
+        []
+nodes:
+  - name: appartement
+    type: flat
+    node_data:
+      x: 240
+      y: 240
+      map: map1
+      height: 0
+edges:
+  []

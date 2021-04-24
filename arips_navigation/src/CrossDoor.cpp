@@ -148,7 +148,7 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
 
     void approachHook() {
         if (stateInit()) {
-            setKinectAngleDeg(-115);
+            setKinectAngleDeg(-110);
         }
 
         if (mTopoExec.isActive()) {

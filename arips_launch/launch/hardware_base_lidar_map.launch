@@ -1,5 +1,7 @@
 <launch>
     <arg name="joy" default="True" />
+    <arg name="scan_matcher" default="False" />
+    
 	<include file="$(find arips_launch)/launch/hardware_base_lidar.launch" pass_all_args="true" />  
-	<include file="$(find arips_launch)/launch/localization.launch" />
+	<include file="$(find arips_launch)/launch/localization_cartographer.launch" />
 </launch>

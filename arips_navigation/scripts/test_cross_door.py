@@ -28,15 +28,15 @@ def talker():
     doorInfo = CrossDoorInformation()
     doorInfo.approachPose.header.frame_id = "map"
     doorInfo.approachPose.header.stamp = rospy.Time.now()
-    doorInfo.approachPose.pose.position.x = 0.30492
-    doorInfo.approachPose.pose.position.y = -1.308
-    doorInfo.approachPose.pose.orientation.z = -0.698194951660605
-    doorInfo.approachPose.pose.orientation.w = 0.7159076822298008
+    doorInfo.approachPose.pose.position.x = 0.52828
+    doorInfo.approachPose.pose.position.y = -1.5546
+    doorInfo.approachPose.pose.orientation.z = -0.7140744141386661
+    doorInfo.approachPose.pose.orientation.w = 0.7000698044284732
 
     doorInfo.pivotPose.header.frame_id = "map"
     doorInfo.pivotPose.header.stamp = rospy.Time.now()
-    doorInfo.pivotPose.pose.position.x = -0.30547
-    doorInfo.pivotPose.pose.position.y = -1.5728
+    doorInfo.pivotPose.pose.position.x = 0.02843692898
+    doorInfo.pivotPose.pose.position.y = -1.9193294
     doorInfo.pivotPose.pose.orientation.w = 1
 
     door_info_pub.publish(doorInfo)

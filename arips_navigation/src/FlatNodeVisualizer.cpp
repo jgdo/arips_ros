@@ -14,7 +14,7 @@ FlatNodeVisualizer::FlatNodeVisualizer(PlanningContext& context, std::string con
   _context(context), own_node_type_(nodeType) 
 {
   ros::NodeHandle nh;
-  m_nodeMarkerPub = nh.advertise<visualization_msgs::Marker>("node_segment_markers", 10);
+  m_nodeMarkerPub = nh.advertise<visualization_msgs::Marker>("node_segment_markers", 10, true);
 }
 
 void FlatNodeVisualizer::initializeVisualization(MapEditor *editor) {
