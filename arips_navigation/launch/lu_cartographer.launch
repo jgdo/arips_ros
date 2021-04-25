@@ -14,6 +14,12 @@
     <remap from="map" to="flat_layer_map1"/>
     <remap from="map_metadata" to="flat_layer_map1_metadata"/>
   </node>
+  
+  <node name="map_server_fake" pkg="map_server" type="map_server" args="$(find arips_navigation)/maps/lu_cart_fake.yaml" >
+    <param name="frame_id" type="str" value="flat_layer_map1_frame" />
+    <remap from="map" to="flat_layer_map1_fake"/>
+    <remap from="map_metadata" to="flat_layer_map1_fake_metadata"/>
+  </node>
    
   <node pkg="arips_navigation" type="arips_navigation_node" respawn="false" name="arips_navigation_node" output="screen" clear_params="true">
     <rosparam file="$(find arips_navigation)/config/lu/costmap.yaml" command="load" />

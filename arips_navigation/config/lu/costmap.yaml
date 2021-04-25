@@ -1,14 +1,37 @@
 costmaps:
   map1:
-    map_topic: /flat_layer_map1
+    publish_frequency: 1.0
+    #rolling_window: true
+    #width: 600
+    #height: 600
     global_frame: map
     robot_base_frame: arips_base
     robot_radius: 0.2
-    inflation_radius: 0.3
-    static_map: true
-    map_type: costmap
-    observation_sources: {}
     transform_tolerance: 1.0
+    inflation_radius: 0.3
+    plugins:
+        # - {name: slam_map,       type: "costmap_2d::StaticLayer"}
+        - {name: door_overlay,   type: "costmap_2d::StaticLayer"}
+        - {name: obstacles,   type: "costmap_2d::VoxelLayer"}
+        - {name: inflaton,       type: "costmap_2d::InflationLayer"}
+    door_overlay:
+        map_topic: /flat_layer_map1_fake
+        use_maximum: true
+    obstacles:
+        observation_sources: scan
+        scan: {data_type: LaserScan, clearing: true, marking: true, topic: /scan}
+        map: /map
+    
+    #slam_map:
+    #    map_topic: /flat_layer_map1_fake
+    #    lethal_cost_threshold: 50
+    #    # track_unknown_space: false
+    #    #unknown_cost_value: 100
+    #    #use_maximum: true
+    inflaton:
+        inflation_radius: 0.3
+        
+    
 
 local_costmap:
   map_topic: /flat_layer_map1
