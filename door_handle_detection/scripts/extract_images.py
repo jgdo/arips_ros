@@ -9,7 +9,7 @@ out_folder = "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/door
 every = 3
 
 count = 0
-bag = rosbag.Bag('/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/bags/2021-03-19-08-25-19.bag')
+bag = rosbag.Bag('/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/bags/2021-04-29-19-27-32.bag')
 for index, (topic, msg, t) in enumerate(bag.read_messages(topics=['/kinect/rgb/image_color/compressed'])):
     name = "frame_{}_{}.jpg".format(msg.header.stamp.secs, msg.header.stamp.nsecs)
 

@@ -15,7 +15,7 @@ costmaps:
         - {name: obstacles,   type: "costmap_2d::VoxelLayer"}
         - {name: inflaton,       type: "costmap_2d::InflationLayer"}
     door_overlay:
-        map_topic: /flat_layer_map1_fake
+        map_topic: /flat_layer_map1_overlay
         use_maximum: true
     obstacles:
         observation_sources: scan

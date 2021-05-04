@@ -8,7 +8,7 @@
 TEST(DoorHandleDetector, detect) {
     DoorHandleDetector detector;
 
-    cv::Mat image = cv::imread("/home/jgdo/frame0000.jpg");
+    cv::Mat image = cv::imread("/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/frame_1619717262_996409107.jpg");
     const auto doorHandle = detector.detect(image);
     DoorHandleDetector::annotateDetected(image, doorHandle);
 

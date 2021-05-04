@@ -1,97 +1,96 @@
+#include <arips_navigation/CostsPlanners.h>
 #include <arips_navigation/utils/ApproachLineArea.h>
 #include <arips_navigation/utils/FixedPosition.h>
-#include <arips_navigation/CostsPlanners.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-toponav_ros::NavfnCostsPlanner::NavfnCostsPlanner(std::shared_ptr<costmap_2d::Costmap2DROS> const &costmap,
-                                               std::shared_ptr<navfn::NavfnROS> const &planner, std::string const &name)
-    :
-    _costmap(costmap), _planner(planner), mapName_(name){
-}
+toponav_ros::NavfnCostsPlanner::NavfnCostsPlanner(
+    std::shared_ptr<costmap_2d::Costmap2DROS> const& costmap,
+    std::shared_ptr<navfn::NavfnROS> const& planner, std::string const& name,
+    tf2_ros::Buffer& tfBuffer)
+    : _costmap(costmap), _planner(planner), mapName_(name), mTfBuffer{tfBuffer} {}
 
-
-bool toponav_ros::NavfnCostsPlanner::makePlan(const geometry_msgs::PoseStamped &start, ApproachExit3DPtr const &goal,
-                                           std::vector<geometry_msgs::PoseStamped> &final_plan, double *costs,
-                                           tf2::Stamped<tf2::Transform> *actualApproachPose) {
-  std::string frame = _costmap->getGlobalFrameID();
-  if(start.header.frame_id != frame) {
-    ROS_ERROR_STREAM("Start passed to GridMapCostsPlanner must be in frame " << frame << ", but is instead in frame " << start.header.frame_id);
-    return false;
-  }
-
-  std::vector<geometry_msgs::PoseStamped> initial_plan;
-
-  bool ok = false;
-
-  if(ApproachLineAreaConstPtr approachLine = std::dynamic_pointer_cast<const ApproachLineArea>(goal)) {
-      ROS_WARN_STREAM("NavfnCostsPlanner only suppoert planning to center of ApproachLineArea.");
-      geometry_msgs::PoseStamped goalMsg;
-      tf2::toMsg(approachLine->getCenter(), goalMsg);
-
-      if(goalMsg.header.frame_id != frame) {
-          ROS_ERROR_STREAM("Goal passed to GridMapCostsPlanner must be in frame " << frame << ", but is instead in frame " << goalMsg.header.frame_id);
-          return false;
-      }
-
-      ok = _planner->makePlan(start, goalMsg, initial_plan);
-  } else if(FixedPositionConstPtr fixedPose = std::dynamic_pointer_cast<const FixedPosition>(goal)) {
-    geometry_msgs::PoseStamped goalMsg;
-    tf2::toMsg(fixedPose->getCenter(), goalMsg);
-
-    if(goalMsg.header.frame_id != frame) {
-      ROS_ERROR_STREAM("Goal passed to GridMapCostsPlanner must be in frame " << frame << ", but is instead in frame " << goalMsg.header.frame_id);
-      return false;
+bool toponav_ros::NavfnCostsPlanner::makePlan(const geometry_msgs::PoseStamped& start,
+                                              ApproachExit3DPtr const& goal,
+                                              std::vector<geometry_msgs::PoseStamped>& final_plan,
+                                              double* costs,
+                                              tf2::Stamped<tf2::Transform>* actualApproachPose) {
+    std::string frame = _costmap->getGlobalFrameID();
+    if (start.header.frame_id != frame) {
+        ROS_ERROR_STREAM("Start passed to GridMapCostsPlanner must be in frame "
+                         << frame << ", but is instead in frame " << start.header.frame_id);
+        return false;
     }
 
-    ok = _planner->makePlan(start, goalMsg, initial_plan);
-  } else {
-    ROS_ERROR_STREAM("GridMapCostsPlanner cannot handle goal type '" << typeid(*goal).name() << "'");
-    return false;
-  }
+    std::vector<geometry_msgs::PoseStamped> initial_plan;
 
-  if(ok) {
-      float costs_f = 0;
-      final_plan = initial_plan;
-    // TODO smoothPath(initial_plan, start, &final_plan);
+    bool ok = false;
 
-    double robot_width = 0.3; // TODO real value
+    if (ApproachLineAreaConstPtr approachLine =
+            std::dynamic_pointer_cast<const ApproachLineArea>(goal)) {
+        ROS_WARN_STREAM("NavfnCostsPlanner only suppoert planning to center of ApproachLineArea.");
+        geometry_msgs::PoseStamped goalMsg;
+        tf2::toMsg(approachLine->getCenter(), goalMsg);
 
+        if (goalMsg.header.frame_id != frame) {
+            ROS_ERROR_STREAM("Goal passed to GridMapCostsPlanner must be in frame "
+                             << frame << ", but is instead in frame " << goalMsg.header.frame_id);
+            return false;
+        }
 
-    tf2::Stamped<tf2::Transform> lastPose, currentPos;
-    lastPose.frame_id_ = std::string();
-    tf2::fromMsg(start, lastPose);
+        ok = _planner->makePlan(start, goalMsg, initial_plan);
+    } else if (FixedPositionConstPtr fixedPose =
+                   std::dynamic_pointer_cast<const FixedPosition>(goal)) {
+        geometry_msgs::PoseStamped goalMsg;
+        tf2::toMsg(fixedPose->getCenter(), goalMsg);
 
-    for(auto& pose: final_plan) {
-      pose.header.stamp = ros::Time::now();
-      pose.header.frame_id = frame;
-
-      // add rotation to costs
-      tf2::fromMsg(pose, currentPos);
-      tf2::Vector3 d = currentPos.getOrigin() - lastPose.getOrigin();
-      costs_f += std::abs(lastPose.getRotation().angleShortestPath(currentPos.getRotation())) * robot_width / ((d.length() + robot_width) / robot_width) * 2;
-      costs_f += d.length();
-      lastPose = currentPos;
+        const auto goalMsgMap = mTfBuffer.transform(goalMsg, frame);
+        ok = _planner->makePlan(start, goalMsgMap, initial_plan);
+    } else {
+        ROS_ERROR_STREAM("GridMapCostsPlanner cannot handle goal type '" << typeid(*goal).name()
+                                                                         << "'");
+        return false;
     }
 
-    std::cout << " " << costs_f << std::endl;
-    if(costs)
-      *costs = costs_f;
+    if (ok) {
+        float costs_f = 0;
+        final_plan = initial_plan;
+        // TODO smoothPath(initial_plan, start, &final_plan);
 
-    if(actualApproachPose)
-      *actualApproachPose = lastPose;
-  }
+        double robot_width = 0.3; // TODO real value
 
-  return ok;
+        tf2::Stamped<tf2::Transform> lastPose, currentPos;
+        lastPose.frame_id_ = std::string();
+        tf2::fromMsg(start, lastPose);
+
+        for (auto& pose : final_plan) {
+            pose.header.stamp = ros::Time::now();
+            pose.header.frame_id = frame;
+
+            // add rotation to costs
+            tf2::fromMsg(pose, currentPos);
+            tf2::Vector3 d = currentPos.getOrigin() - lastPose.getOrigin();
+            costs_f +=
+                std::abs(lastPose.getRotation().angleShortestPath(currentPos.getRotation())) *
+                robot_width / ((d.length() + robot_width) / robot_width) * 2;
+            costs_f += d.length();
+            lastPose = currentPos;
+        }
+
+        std::cout << " " << costs_f << std::endl;
+        if (costs)
+            *costs = costs_f;
+
+        if (actualApproachPose)
+            *actualApproachPose = lastPose;
+    }
+
+    return ok;
 }
 
-costmap_2d::Costmap2DROS const& toponav_ros::NavfnCostsPlanner::getMap() {
-  return *_costmap;
-}
+costmap_2d::Costmap2DROS const& toponav_ros::NavfnCostsPlanner::getMap() { return *_costmap; }
 
-std::string toponav_ros::NavfnCostsPlanner::getMapName() const {
-  return mapName_;
-}
+std::string toponav_ros::NavfnCostsPlanner::getMapName() const { return mapName_; }
 
 #if 0
 /**

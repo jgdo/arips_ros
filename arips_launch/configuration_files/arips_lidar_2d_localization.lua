@@ -29,7 +29,7 @@ options = {
 }
 MAP_BUILDER.use_trajectory_builder_2d = true
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
-  max_submaps_to_keep = 2,
+  max_submaps_to_keep = 4,
 }
 
 TRAJECTORY_BUILDER_2D.min_range = 0.25

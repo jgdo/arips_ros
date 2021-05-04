@@ -3,12 +3,12 @@
 #include <arips_navigation/CrossDoorInformation.h>
 
 #include "DrivingState.h"
-#include "TopoExecuter.h"
+#include "DriveTo.h"
 #include "OpenDoor.h"
 
 class CrossDoor: public DrivingState {
 public:
-    CrossDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, TopoExecuter& topoExec, OpenDoor& openDoor);
+    CrossDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, DriveTo& driveTo, OpenDoor& openDoor);
 
     void activate(arips_navigation::CrossDoorInformation const& doorInfo);
 

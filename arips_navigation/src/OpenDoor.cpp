@@ -34,6 +34,7 @@ struct OpenDoor::Pimpl {
     ros::Subscriber mDoorHandleSub, mServoSub;
 
     OpenDoor &mParent;
+    costmap_2d::Costmap2DROS &mCostmap;
 
     VelocityPlanner mVelPlanner{0.01, 0.03};
 
@@ -42,9 +43,11 @@ struct OpenDoor::Pimpl {
     float mLastServoPos = 0;
 
     arips_navigation::OpenDoorConfig mConfig;
-    dynamic_reconfigure::Server<arips_navigation::OpenDoorConfig> mConfigServer {ros::NodeHandle {"~/OpenDoor"}};
+    dynamic_reconfigure::Server<arips_navigation::OpenDoorConfig> mConfigServer{
+        ros::NodeHandle{"~/OpenDoor"}};
 
-    explicit Pimpl(OpenDoor &parent) : mParent(parent) {
+    explicit Pimpl(OpenDoor &parent, costmap_2d::Costmap2DROS &costmap)
+        : mParent(parent), mCostmap{costmap} {
         ros::NodeHandle nh;
         mEnablePub = nh.advertise<std_msgs::Bool>("enable_door_handle", 1, true);
         mApproachPosePub = nh.advertise<geometry_msgs::PoseStamped>("door_approach_pose", 1, true);
@@ -250,6 +253,19 @@ struct OpenDoor::Pimpl {
     }
 
     void driveOpen() {
+        geometry_msgs::PoseStamped localPoseMsg;
+        mCostmap.getRobotPose(localPoseMsg);
+        tf2::Stamped<tf2::Transform> localPose;
+        tf2::fromMsg(localPoseMsg, localPose);
+
+        const auto robotFront = localPose * tf2::Vector3{mConfig.drive_open_wall_dist, 0, 0};
+        const auto *costmap = mCostmap.getCostmap();
+        unsigned int mx, my;
+
+        int costs = costmap->worldToMap(robotFront.x(), robotFront.y(), mx, my)
+                        ? costmap->getCost(mx, my)
+                        : costmap_2d::LETHAL_OBSTACLE;
+
         static ros::Time lastTime(0);
 
         if (lastTime.isZero()) {
@@ -259,7 +275,7 @@ struct OpenDoor::Pimpl {
         geometry_msgs::Twist cmd_vel;
 
         const auto duration = ros::Time::now() - lastTime;
-        if (duration.toSec() < 3) {
+        if (costs < costmap_2d::INSCRIBED_INFLATED_OBSTACLE && duration.toSec() < 5) {
             cmd_vel.linear.x = 0.2;
             cmd_vel.angular.z = 0.3;
         } else {
@@ -284,7 +300,7 @@ struct OpenDoor::Pimpl {
         if (duration.toSec() < 3.5) {
 
         } else if (duration.toSec() < 5.0) {
-            cmd_vel.linear.x = 0.1;
+            cmd_vel.linear.x = 0.0;
             cmd_vel.angular.z = -0.4;
         } else {
             lastTime = ros::Time(0);
@@ -307,8 +323,9 @@ struct OpenDoor::Pimpl {
     }
 };
 
-OpenDoor::OpenDoor(tf2_ros::Buffer &tf, ros::Publisher &cmdVelPub)
-    : DrivingStateProto(tf, cmdVelPub), pimpl(std::make_unique<Pimpl>(*this)) {}
+OpenDoor::OpenDoor(tf2_ros::Buffer &tf, ros::Publisher &cmdVelPub,
+                   costmap_2d::Costmap2DROS &costmap)
+    : DrivingStateProto(tf, cmdVelPub), pimpl(std::make_unique<Pimpl>(*this, costmap)) {}
 
 OpenDoor::~OpenDoor() = default;
 

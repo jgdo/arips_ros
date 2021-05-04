@@ -108,10 +108,10 @@ class DoorDataGenerator(Dataset):
             self.labels = all_labels[split_index:-1]
 
         self.shuffle = shuffle
-
         self.get_with_indices = False
-
         self.on_epoch_end()
+
+        print("Loaded {} {} images".format(len(self.images), "train" if train else "test"))
 
     def __len__(self):
         return len(self.images)

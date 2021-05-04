@@ -27,7 +27,16 @@ parser_data:
         energy: 1
         time: 10
       step:
-        []
+        - name: Step_0
+          start:
+            x: 0.05020323395729065
+            y: -1.93680477142334
+            z: -2.384185791015625e-07
+          end:
+            x: 0.9439178705215454
+            y: -1.941192269325256
+            z: -9.5367431640625e-07
+          frame_id: map
 nodes:
   - name: appartement
     type: flat
@@ -36,5 +45,89 @@ nodes:
       y: 240
       map: map1
       height: 0
+  - name: map1_node_1
+    type: flat
+    node_data:
+      x: 225
+      y: 225
+      map: map1
+      height: 0
+  - name: map1_node_2
+    type: flat
+    node_data:
+      x: 129
+      y: 129
+      map: map1
+      height: 0
+  - name: map1_node_3
+    type: flat
+    node_data:
+      x: 370
+      y: 370
+      map: map1
+      height: 0
+  - name: map1_node_4
+    type: flat
+    node_data:
+      x: 311
+      y: 311
+      map: map1
+      height: 0
+  - name: map1_node_5
+    type: flat
+    node_data:
+      x: 203
+      y: 203
+      map: map1
+      height: 0
 edges:
-  []
+  - name: step_0_appartement_appartement
+    type: step
+    source: appartement
+    target: map1_node_1
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 0.451425719745665
+          y: -1.688771473461559
+          z: -2.384185791015625e-07
+        end:
+          x: 0.5451499965587465
+          y: -1.689231592442554
+          z: -9.5367431640625e-07
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7088403288650947
+          w: -0.7053689730732593
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: up
+  - name: step_1_appartement_appartement
+    type: step
+    source: map1_node_1
+    target: appartement
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 0.4489711079200895
+          y: -2.188765448306042
+          z: -2.384185791015625e-07
+        end:
+          x: 0.542695384733171
+          y: -2.189225567287037
+          z: -9.5367431640625e-07
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7053689730732593
+          w: 0.7088403288650947
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: up

@@ -14,6 +14,7 @@
 #include <arips_navigation/local_planner/HPNav.h>
 #include <arips_navigation/OpenDoor.h>
 #include <arips_navigation/CrossDoor.h>
+#include <arips_navigation/DriveTo.h>
 
 class Navigation {
 public:
@@ -34,8 +35,9 @@ private:
     TopoExecuter m_TopoExec {m_tfBuffer, m_LocalCostmap, mCmdVelPub, m_TopoPlanner};
     AutoDocker mAutoDocker{ m_LocalCostmap, mCmdVelPub };
     HPNav mHPNav {&m_tfBuffer, mCmdVelPub};
-    OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub};
-    CrossDoor mCrossDoor {m_tfBuffer, mCmdVelPub, m_TopoExec, mOpenDoor};
+    OpenDoor mOpenDoor {m_tfBuffer, mCmdVelPub, m_LocalCostmap };
+    std::unique_ptr<DriveTo> mDriveTo;
+    std::unique_ptr<CrossDoor> mCrossDoor;
      
     ros::Subscriber psub_nav, hp_sub, clicked_sub, door_info_sub;
 

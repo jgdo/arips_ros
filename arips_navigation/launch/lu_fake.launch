@@ -8,6 +8,9 @@
 
   <node pkg="tf" type="static_transform_publisher" name="map_pub" args="0 0 0 0 0 0 map flat_layer_map1_frame 30"/>
 
+  <node pkg="tf" type="static_transform_publisher" name="map_pub_odom" args="0 0 0 0 0 0 map odom 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map_pub_odom_base" args="0 0 0 0 0 0 odom arips_base 30"/>
+
   <arg name="map_file1" default="$(find arips_navigation)/maps/lu_cart.yaml"/>
   <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >
     <param name="frame_id" type="str" value="flat_layer_map1_frame" />

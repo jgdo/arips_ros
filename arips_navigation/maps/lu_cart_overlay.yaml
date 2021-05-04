@@ -1,4 +1,4 @@
-image: lu_cart_fake.pgm
+image: lu_cart_overlay.pgm
 resolution: 0.025000
 origin: [-5.716981, -7.706958, 0.000000]
 negate: 0
