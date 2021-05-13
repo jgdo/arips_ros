@@ -26,8 +26,7 @@ class FlatNodeVisualizer : public NodeVisualizationInterface, public MapEditorMo
                                         boost::any const &pathData) override;
 
   protected:
-    void segmentLayerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
-                              std::string mapName);
+    void segmentLayerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
     void addNodeFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   private:

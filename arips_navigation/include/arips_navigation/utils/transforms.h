@@ -52,3 +52,10 @@ std::optional<TMsg> tryTransform(tf2_ros::Buffer &tf, const TMsg &msg,
         return {};
     }
 }
+
+template<class T, class Msg>
+inline T fromMsg(const Msg& msg) {
+    T data;
+    tf2::fromMsg(msg, data);
+    return data;
+}

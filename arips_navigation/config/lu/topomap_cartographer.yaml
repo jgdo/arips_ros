@@ -5,9 +5,6 @@ parser_data:
         distance_factor: 1
         energy_factor: 1
         time_factor: 1
-      maps:
-        map1:
-          planner: NavfnCostsPlanner
   edge_parser:
     module_step:
       default_costs_down:
@@ -43,43 +40,31 @@ nodes:
     node_data:
       x: 240
       y: 240
-      map: map1
-      height: 0
   - name: map1_node_1
     type: flat
     node_data:
       x: 225
       y: 225
-      map: map1
-      height: 0
   - name: map1_node_2
     type: flat
     node_data:
       x: 129
       y: 129
-      map: map1
-      height: 0
   - name: map1_node_3
     type: flat
     node_data:
       x: 370
       y: 370
-      map: map1
-      height: 0
   - name: map1_node_4
     type: flat
     node_data:
       x: 311
       y: 311
-      map: map1
-      height: 0
   - name: map1_node_5
     type: flat
     node_data:
       x: 203
       y: 203
-      map: map1
-      height: 0
 edges:
   - name: step_0_appartement_appartement
     type: step

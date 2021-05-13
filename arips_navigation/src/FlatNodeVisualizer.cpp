@@ -12,31 +12,27 @@ namespace toponav_ros {
 
 using namespace toponav_core;
 
-FlatNodeVisualizer::FlatNodeVisualizer(PlanningContext &context, std::string const &nodeType)
+FlatNodeVisualizer::FlatNodeVisualizer(PlanningContext& context, std::string const& nodeType)
     : _context(context), own_node_type_(nodeType) {
     ros::NodeHandle nh;
     m_nodeMarkerPub = nh.advertise<visualization_msgs::Marker>("node_segment_markers", 10, true);
 }
 
-void FlatNodeVisualizer::initializeVisualization(MapEditor *editor) {
+void FlatNodeVisualizer::initializeVisualization(MapEditor* editor) {
     NodeVisualizationInterface::initializeVisualization(editor);
 
-    auto segmentHandle = mapEditor->getMenuHandler().insert(mapEditor->getOtherMenuHandle(),
-                                                            "Auto-segment flat layer");
+    auto segmentHandle = mapEditor->getMenuHandler().insert(
+        mapEditor->getOtherMenuHandle(), "Auto-segment flat layer",
+        boost::bind(&FlatNodeVisualizer::segmentLayerFeedback, this, _1));
+
     mapEditor->getMenuHandler().insert(mapEditor->getOtherMenuHandle(),
                                        "Add flat node at position...",
                                        boost::bind(&FlatNodeVisualizer::addNodeFeedback, this, _1));
-
-    for (auto &entry : FlatGroundModule::getMapData(mapEditor->getMap())) {
-        mapEditor->getMenuHandler().insert(
-            segmentHandle, entry.first,
-            boost::bind(&FlatNodeVisualizer::segmentLayerFeedback, this, _1, entry.first));
-    }
 }
 
-void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path *pathPtr, std::string regionType,
-                                                boost::any const &pathData) {
-    const std::vector<geometry_msgs::PoseStamped> *plan =
+void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path* pathPtr, std::string regionType,
+                                                boost::any const& pathData) {
+    const std::vector<geometry_msgs::PoseStamped>* plan =
         boost::any_cast<std::vector<geometry_msgs::PoseStamped>>(&pathData);
     pathPtr->poses.insert(pathPtr->poses.end(), plan->begin(), plan->end());
 
@@ -69,13 +65,13 @@ void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path *pathPtr, std::st
     //	}
 }
 
-void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node *node) {
+void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node* node) {
     if (m_nodeMarkerPub.getNumSubscribers() == 0)
         return;
 
     // Visualize flat costmap segments with different colors
 
-    const FlatGroundModule::NodeData &data = FlatGroundModule::getNodeData(node);
+    const auto& data = FlatGroundModule::getMapData(node->getParentMap());
     const float res = data.planner->getMap().getCostmap()->getResolution();
 
     visualization_msgs::Marker nodeMarkers;
@@ -92,12 +88,12 @@ void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node *node) {
         {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {0, 255, 255},
     };
 
-    std::map<const TopoMap::Node *, Color> nodeColors;
+    std::map<const TopoMap::Node*, Color> nodeColors;
 
     const double x_off = data.planner->getMap().getCostmap()->getOriginX();
     const double y_off = data.planner->getMap().getCostmap()->getOriginY();
 
-    const FlatGroundModule::NodeMatrix &mat = (*data.nodeMatrix);
+    const FlatGroundModule::NodeMatrix& mat = data.nodeMatrix;
     for (int x = 0; x < mat.rows(); x++) { // rows = x coordinate, see regionGrow() impl
         for (int y = 0; y < mat.cols(); y++) {
             auto n = mat(x, y);
@@ -137,12 +133,12 @@ void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node *node) {
 }
 
 void FlatNodeVisualizer::segmentLayerFeedback(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback, std::string mapName) {
-    FlatGroundModule::segmentAllNodes(mapEditor->getMap(), mapName, own_node_type_,
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback) {
+    FlatGroundModule::segmentAllNodes(mapEditor->getMap(), own_node_type_,
                                       50); // FIXME hardcoded number
 }
 void FlatNodeVisualizer::addNodeFeedback(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback) {
 
     mapEditor->activateEditorModule(this);
 
@@ -152,7 +148,7 @@ void FlatNodeVisualizer::activate() {}
 
 void FlatNodeVisualizer::deactivate() {}
 
-void FlatNodeVisualizer::poseCallback(const geometry_msgs::PoseStamped &msg) {
+void FlatNodeVisualizer::poseCallback(const geometry_msgs::PoseStamped& msg) {
     tf2::Stamped<tf2::Transform> pose;
     tf2::fromMsg(msg, pose);
 
@@ -166,68 +162,59 @@ void FlatNodeVisualizer::poseCallback(const geometry_msgs::PoseStamped &msg) {
 
     auto map = mapEditor->getMap();
 
-    for (auto &mapEntry : NodeModuleHelperBase<FlatGroundModule>::getMapData(map)) {
-        const auto &costmap_ros = mapEntry.second.planner->getMap();
+    auto& mapData = NodeModuleHelperBase<FlatGroundModule>::getMapData(map);
+    const auto& costmap_ros = mapData.planner->getMap();
 
-        tf2::Stamped<tf2::Transform> localPose;
-        try {
-            localPose = _context.tfBuffer->transform(pose, costmap_ros.getGlobalFrameID());
-        } catch (const tf2::TransformException &ex) {
-            ROS_WARN("FlatNodeVisualizer::poseCallback(): %s", ex.what());
-            continue;
+    tf2::Stamped<tf2::Transform> localPose;
+    try {
+        localPose = _context.tfBuffer->transform(pose, costmap_ros.getGlobalFrameID());
+    } catch (const tf2::TransformException& ex) {
+        ROS_WARN("FlatNodeVisualizer::poseCallback(): %s", ex.what());
+        return;
+    }
+
+    auto& mat = mapData.nodeMatrix;
+
+    unsigned int mx, my;
+
+    // returns false if outside costmap bounds
+    if (costmap_ros.getCostmap()->worldToMap(localPose.getOrigin().x(), localPose.getOrigin().y(),
+                                             mx, my)) {
+        ROS_INFO_STREAM("Checking flat pose at xy: " << mx << ", " << my);
+        TopoMap::Node const* realNode = mat(mx, my);
+        if (realNode) {
+            ROS_ERROR_STREAM("There is already a flat node at given pose, cannnot create new node");
+            mapEditor->deactivateEditorModule(this);
+            return;
         }
 
-        auto &mat = *mapEntry.second.nodeMatrix;
+        // find free node name
+        std::string name;
+        size_t nodeCount = map->getNumNodes();
+        do {
+            name = own_node_type_ + "_node_" + std::to_string(nodeCount++);
+        } while (map->getNode(name));
 
-        if (std::abs(localPose.getOrigin().z()) <
-            0.5) { // FIXME: better check if this is the costmap
-            unsigned int mx, my;
+        TopoMap::Node* node = map->addNode(name, own_node_type_);
 
-            // returns false if outside costmap bounds
-            if (costmap_ros.getCostmap()->worldToMap(localPose.getOrigin().x(),
-                                                     localPose.getOrigin().y(), mx, my)) {
-                ROS_INFO_STREAM("Checking flat pose at xy: " << mx << ", " << my);
-                TopoMap::Node const *realNode = mat(mx, my);
-                if (realNode) {
-                    ROS_ERROR_STREAM(
-                        "There is already a flat node at given pose, cannnot create new node");
-                    mapEditor->deactivateEditorModule(this);
-                    return;
-                }
+        BaseTraits<FlatGroundModule>::NodeMatrix local_mat =
+            BaseTraits<FlatGroundModule>::NodeMatrix::Constant(mat.rows(), mat.cols(), nullptr);
 
-                // find free node name
-                std::string name;
-                size_t nodeCount = map->getNumNodes();
-                do {
-                    name = mapEntry.first + "_node_" + std::to_string(nodeCount++);
-                } while (map->getNode(name));
+        size_t numCells =
+            FlatGroundModule::regionGrow(node, costmap_ros.getCostmap(), mx, my, &local_mat);
 
-                TopoMap::Node *node = map->addNode(name, own_node_type_);
+        if (minNumCells == 0 || numCells >= minNumCells) {
+            FlatGroundModule::combineNodeMatrix(mat, local_mat); // merge both matrices
 
-                BaseTraits<FlatGroundModule>::NodeMatrix local_mat =
-                    BaseTraits<FlatGroundModule>::NodeMatrix::Constant(mat.rows(), mat.cols(),
-                                                                       nullptr);
+            FlatGroundModule::initNodeData(node, mx, mx);
+        } else { // area has to few cells, ignore
+            map->removeNode(node);
+            mapEditor->deactivateEditorModule(this);
 
-                size_t numCells = FlatGroundModule::regionGrow(node, costmap_ros.getCostmap(), mx,
-                                                               my, &local_mat);
-
-                if (minNumCells == 0 || numCells >= minNumCells) {
-                    FlatGroundModule::combineNodeMatrix(mat, local_mat); // merge both matrices
-
-                    FlatGroundModule::initNodeData(node, mapEntry.second.planner,
-                                                   mapEntry.second.nodeMatrix,
-                                                   mapEntry.second.tfBuffer, mx, mx, mapEntry.first,
-                                                   0); // default height is 0
-                } else {                               // area has to few cells, ignore
-                    map->removeNode(node);
-                    mapEditor->deactivateEditorModule(this);
-
-                    ROS_WARN_STREAM(
-                        "Could not create new flat node at give pose, since regionGrow found only "
-                        << numCells << " cells");
-                    return;
-                }
-            }
+            ROS_WARN_STREAM(
+                "Could not create new flat node at give pose, since regionGrow found only "
+                << numCells << " cells");
+            return;
         }
     }
 

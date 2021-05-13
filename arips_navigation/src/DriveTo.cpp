@@ -36,31 +36,14 @@ std::vector<geometry_msgs::PoseStamped> DriveTo::planTo(const tf2::Stamped<tf2::
         return path;
     }
 
+    auto* planner = FlatGroundModule::getMapData(mTopoMap.get()).planner;
+
     tf2::Stamped<tf2::Transform> poseOnFloor;
-    TopoMap::Node const* realNode = nullptr;
 
-    FlatGroundModule::CostsPlanner* planner = nullptr;
-
-    for (auto& mapEntry : FlatGroundModule::getMapData(mTopoMap.get())) {
-        const auto& globalCostmap = mapEntry.second.planner->getMap();
-
-        try {
-            poseOnFloor = mTfBuffer.transform(goal, globalCostmap.getGlobalFrameID());
-        } catch (const tf2::TransformException& ex) {
-            ROS_WARN("DriveTo::driveTo(): %s", ex.what());
-            continue;
-        }
-
-        // FIXME: better check if this is the costmap
-        if (std::abs(poseOnFloor.getOrigin().z()) < 0.5) {
-            // Found planner for this floor
-            planner = mapEntry.second.planner.get();
-            break;
-        }
-    }
-
-    if (!planner) {
-        ROS_ERROR("Could not find planner for goal pose");
+    try {
+        poseOnFloor = mTfBuffer.transform(goal, planner->getMap().getGlobalFrameID());
+    } catch (const tf2::TransformException& ex) {
+        ROS_WARN("DriveTo::driveTo(): %s", ex.what());
         return path;
     }
 
@@ -71,8 +54,12 @@ std::vector<geometry_msgs::PoseStamped> DriveTo::planTo(const tf2::Stamped<tf2::
     }
 
     if (!planner->makePlan(start, toponav_ros::FixedPosition::create(goal), path) || path.empty()) {
-        ROS_ERROR("Could not plan path to goal");
-        path.clear();
+        ROS_WARN("Could not plan path to goal, clearing global costmap...");
+        planner->getMap().resetLayers();
+        if (!planner->makePlan(start, toponav_ros::FixedPosition::create(goal), path) || path.empty()) {
+            ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
+            path.clear();
+        }
     }
 
     return path;

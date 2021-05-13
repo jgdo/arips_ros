@@ -136,7 +136,7 @@ include_directories(
 )
 
 FILE(GLOB_RECURSE NAV_SRCS src/*.cpp)
-list(REMOVE_ITEM NAV_SRCS src/arips_navigation_node.cpp)
+list(REMOVE_ITEM NAV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/arips_navigation_node.cpp)
 FILE(GLOB_RECURSE NAV_INCS include/arips_navigation/*.h)
 
 ## Declare a C++ library
@@ -172,6 +172,14 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+    PUBLIC
+        ${catkin_LIBRARIES}
+        yaml-cpp
+)
+
+add_executable(odometry_forecast_node tools/odomety_forecast_node.cpp ${NAV_SRCS} ${NAV_INCS})
+add_dependencies(odometry_forecast_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(odometry_forecast_node
     PUBLIC
         ${catkin_LIBRARIES}
         yaml-cpp

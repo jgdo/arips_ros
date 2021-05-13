@@ -4,18 +4,18 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-toponav_ros::NavfnCostsPlanner::NavfnCostsPlanner(
-    std::shared_ptr<costmap_2d::Costmap2DROS> const& costmap,
-    std::shared_ptr<navfn::NavfnROS> const& planner, std::string const& name,
+toponav_ros::AripsFlatPlanner::AripsFlatPlanner(
+    costmap_2d::Costmap2DROS& costmap,
+    navfn::NavfnROS& planner,
     tf2_ros::Buffer& tfBuffer)
-    : _costmap(costmap), _planner(planner), mapName_(name), mTfBuffer{tfBuffer} {}
+    : _costmap(costmap), _planner(planner), mTfBuffer{tfBuffer} {}
 
-bool toponav_ros::NavfnCostsPlanner::makePlan(const geometry_msgs::PoseStamped& start,
+bool toponav_ros::AripsFlatPlanner::makePlan(const geometry_msgs::PoseStamped& start,
                                               ApproachExit3DPtr const& goal,
                                               std::vector<geometry_msgs::PoseStamped>& final_plan,
                                               double* costs,
                                               tf2::Stamped<tf2::Transform>* actualApproachPose) {
-    std::string frame = _costmap->getGlobalFrameID();
+    std::string frame = _costmap.getGlobalFrameID();
     if (start.header.frame_id != frame) {
         ROS_ERROR_STREAM("Start passed to GridMapCostsPlanner must be in frame "
                          << frame << ", but is instead in frame " << start.header.frame_id);
@@ -38,14 +38,14 @@ bool toponav_ros::NavfnCostsPlanner::makePlan(const geometry_msgs::PoseStamped& 
             return false;
         }
 
-        ok = _planner->makePlan(start, goalMsg, initial_plan);
+        ok = _planner.makePlan(start, goalMsg, initial_plan);
     } else if (FixedPositionConstPtr fixedPose =
                    std::dynamic_pointer_cast<const FixedPosition>(goal)) {
         geometry_msgs::PoseStamped goalMsg;
         tf2::toMsg(fixedPose->getCenter(), goalMsg);
 
         const auto goalMsgMap = mTfBuffer.transform(goalMsg, frame);
-        ok = _planner->makePlan(start, goalMsgMap, initial_plan);
+        ok = _planner.makePlan(start, goalMsgMap, initial_plan);
     } else {
         ROS_ERROR_STREAM("GridMapCostsPlanner cannot handle goal type '" << typeid(*goal).name()
                                                                          << "'");
@@ -88,9 +88,7 @@ bool toponav_ros::NavfnCostsPlanner::makePlan(const geometry_msgs::PoseStamped& 
     return ok;
 }
 
-costmap_2d::Costmap2DROS const& toponav_ros::NavfnCostsPlanner::getMap() { return *_costmap; }
-
-std::string toponav_ros::NavfnCostsPlanner::getMapName() const { return mapName_; }
+costmap_2d::Costmap2DROS & toponav_ros::AripsFlatPlanner::getMap() { return _costmap; }
 
 #if 0
 /**

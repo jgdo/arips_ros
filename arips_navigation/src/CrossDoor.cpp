@@ -11,7 +11,7 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
     constexpr static auto fixedFrame = "map";
     constexpr static auto robotFrame = "arips_base";
     const double closedDoorAngleThres = angles::from_degrees(30);
-    const double fullyOpenDoorAngleThres = angles::from_degrees(90);
+    const double fullyOpenDoorAngleThres = angles::from_degrees(80);
 
     Pimpl(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, DriveTo& driveTo, OpenDoor& openDoor)
         : DrivingStateProto(tf, cmdVelPub), mDriveTo{driveTo}, mOpenDoor{openDoor} {}
@@ -22,9 +22,10 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
         mDoorInfo = doorInfo;
         mDoorPoseSub.receivedOnce = false;
         mDoorPivotPub.publish(doorInfo.pivotPose);
-        setState(State::CheckDoor);
 
-        setKinectAngleDeg(0);
+        initialRobotPose = *tryLookupTransform(mTfBuffer, fixedFrame, robotFrame);
+
+        setState(State::CheckDoor);
     }
 
     void setKinectAngleDeg(float angle_deg) const {
@@ -45,9 +46,8 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
             checkDoor();
             break;
 
-        case State::Approach:
-            ROS_INFO_STREAM("State::Approach not implemented");
-            setState(State::Idle);
+        case State::ApproachCross:
+            approachCross();
             break;
 
         case State::ApproachHook:
@@ -66,6 +66,10 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
             clearAfterPush();
             break;
 
+        case State::ReturnInitial:
+            returnInitial();
+            break;
+
         default:
             ROS_INFO_STREAM("State # " << (int)mState << "  not implemented");
             setState(State::Idle);
@@ -74,10 +78,18 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
     }
 
     void checkDoor() {
-        static const auto doorApproachDistFromPivot = 0.7;
+        static const auto doorApproachDistFromPivot = 0.72;
         static const auto doorApproachDistFromHandle = 0.3;
         static const auto doorPushDistFromPivot = 0.6;
         static const auto doorPushApproachDistFromDoor = -0.27;
+
+        if (stateInit()) {
+            setKinectAngleDeg(0);
+
+            // TODO find better method
+            mDoorInfo.pivotPose.header.stamp = ros::Time::now();
+            mDoorInfo.approachPose.header.stamp = ros::Time::now();
+        }
 
         if (!mDoorPoseSub.receivedOnce) {
             ROS_INFO_STREAM("Door pose not received yet");
@@ -125,7 +137,7 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
             setState(State::ApproachHook);
         } else if (doorOpenAngle > fullyOpenDoorAngleThres) {
             // consider door as fully opened => just do approach pose
-            setState(State::Approach);
+            setState(State::ApproachCross);
         } else {
             // consider door as half open => push door fully open
             // compute direction of door to open
@@ -154,6 +166,19 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
         }
     }
 
+    void approachCross() {
+        if (stateInit()) {
+            mDriveTo.driveTo(fromMsg<tf2::Stamped<tf2::Transform>>(mDoorInfo.approachPose));
+        }
+
+        if (mDriveTo.isActive()) {
+            mDriveTo.runCycle();
+        } else {
+            mOpenDoor.init();
+            setState(State::Idle);
+        }
+    }
+
     void approachHook() {
         if (stateInit()) {
             setKinectAngleDeg(-110);
@@ -171,7 +196,10 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
         if (mOpenDoor.isActive()) {
             mOpenDoor.runCycle();
         } else {
-            setState(State::Idle);
+            if (!mDriveTo.driveTo(initialRobotPose)) {
+                return;
+            }
+            setState(State::ReturnInitial);
         }
     }
 
@@ -220,11 +248,18 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
             cmd_vel.linear.x = 0.1;
             cmd_vel.angular.z = 0.5;
         } else {
-            lastTime = ros::Time(0);
-            setState(State::Idle);
+            setState(State::ApproachCross);
         }
 
         mCmdVelPub.publish(cmd_vel);
+    }
+
+    void returnInitial() {
+        if (mDriveTo.isActive()) {
+            mDriveTo.runCycle();
+        } else {
+            setState(State::CheckDoor);
+        }
     }
 
     DriveTo& mDriveTo;
@@ -237,12 +272,14 @@ struct CrossDoor::Pimpl : public DrivingStateProto {
         OpenDoorHook,
         OpenDoorPush,
         ClearAfterPush,
-        Approach
+        ApproachCross, // Approach for finally crossing the door
+        ReturnInitial,
     } mState = State::Idle;
 
     int mStateCount = 0; // count of cycles in current state
 
     arips_navigation::CrossDoorInformation mDoorInfo;
+    tf2::Stamped<tf2::Transform> initialRobotPose;
     VariableSubscriber<geometry_msgs::PoseStamped> mDoorPoseSub{"detected_door_pose", 1};
     ros::Publisher mDoorPivotPub{
         mNodeHandle.advertise<geometry_msgs::PoseStamped>("door_pivot_pose", 1)};

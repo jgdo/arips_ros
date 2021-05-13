@@ -304,6 +304,8 @@ struct OpenDoor::Pimpl {
             cmd_vel.angular.z = -0.4;
         } else {
             lastTime = ros::Time(0);
+
+            mCostmap.resetLayers();
             setState(State::Idle);
         }
 

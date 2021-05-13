@@ -14,7 +14,7 @@ if "Door detected,\nbut not completely open" then
     --> [true] "Open door with hook"
     --> approach_front
   else
-    --> [false] "Open door by pushing" << NotImplemented >>
+    --> [false] "Open door by pushing" 
     --> "Goto approach pose" as approach
   endif
 else

@@ -8,6 +8,7 @@
     <param name="encoder_sensitivity2" value="0.00872639" />
     <param name="publish_odom_transformation" value="false" />
     <param name="velocity_timeout" value="0.5" />    
+    <param name="odometry_frequency" value="40" />
   </node>
 
   <node name="battery_controller" pkg="arips_battery_controller" type="battery_controller" output="screen" respawn="true" respawn_delay="0.1">

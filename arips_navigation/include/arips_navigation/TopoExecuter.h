@@ -10,9 +10,10 @@
 #include <toponav_core/TopoPath.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <nav_core/base_local_planner.h>
+
 
 #include <arips_navigation/DrivingState.h>
+#include <arips_navigation/DriveTo.h>
 #include <toponav_ros/TopoPlannerROS.h>
 
 
@@ -22,7 +23,7 @@
 class TopoExecuter: public DrivingState, private toponav_core::TopoPath::PathVisitor  {
 public:
 
-    TopoExecuter(tf2_ros::Buffer& tfBuffer, costmap_2d::Costmap2DROS& costmap, 
+    TopoExecuter(tf2_ros::Buffer& tfBuffer, DriveTo& driveTo,
         ros::Publisher& cmdVelPub, toponav_ros::TopoPlannerROS& topoPlanner);
 
     void activate(const geometry_msgs::PoseStamped &goalMsg);
@@ -67,6 +68,9 @@ private:
 
         bool runCycle(TopoExecuter* ) override;
     };
+
+    DriveTo& mDriveTo;
+
     std::unique_ptr<toponav_core::TopoPath> mCurrentPlan;
     std::vector<toponav_core::TopoPath::PathSegment::Ptr>::iterator mCurrentPlanIter; /// only valid if mCurrentPlan valid
 
@@ -76,8 +80,6 @@ private:
     void visitTransition(toponav_core::TopoPath::Transition const* transition) override;
 
     std::unique_ptr<SegmentExecuter> mSegmentExec;
-
-    std::unique_ptr<nav_core::BaseLocalPlanner> mLocalPlanner;
 
     toponav_ros::TopoPlannerROS& mTopoPlanner;
     tf2_ros::Buffer &mTfBuffer;

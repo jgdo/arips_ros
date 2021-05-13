@@ -46,8 +46,8 @@ Navigation::Navigation() {
         nodeContainer->addMapPoseModule("flat", flatPlanner);
         nodeContainer->addVisualizationModule(
             "flat", std::make_shared<FlatNodeVisualizer>(m_TopoPlanner.getContext(), "flat"));
-        nodeContainer->addStorageModule("flat",
-                                        std::make_shared<FlatParser>(m_TopoPlanner.getContext()));
+        nodeContainer->addStorageModule(
+            "flat", std::make_shared<FlatParser>(m_TopoPlanner.getContext(), &mAripsPlanner));
     }
 
     factory->addModule<NodeStorageInterface>(nodeContainer);
@@ -63,6 +63,8 @@ Navigation::Navigation() {
 
     mDriveTo = std::make_unique<DriveTo>(m_tfBuffer, mCmdVelPub, m_TopoPlanner.getContext().topoMap,
                                          m_LocalCostmap);
+    m_TopoExec = std::make_unique<TopoExecuter>(m_tfBuffer, *mDriveTo, mCmdVelPub, m_TopoPlanner);
+
     mCrossDoor = std::make_unique<CrossDoor>(m_tfBuffer, mCmdVelPub, *mDriveTo, mOpenDoor);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
@@ -83,8 +85,8 @@ auto static createQuaternionFromYaw(double yaw) {
 }
 
 void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped& msg) {
-    m_TopoExec.activate(msg);
-    mDrivingState = &m_TopoExec;
+    m_TopoExec->activate(msg);
+    mDrivingState = m_TopoExec.get();
 }
 
 void Navigation::poseCallbackHpGoal(const geometry_msgs::PoseStamped& msg) {

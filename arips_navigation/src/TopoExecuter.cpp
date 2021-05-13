@@ -15,14 +15,15 @@ using namespace toponav_core;
 
 // from https://github.com/strawlab/navigation/blob/master/move_base/src/move_base.cpp
 static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
-    //first we need to check if the quaternion has nan's or infs
-    if(!std::isfinite(tf_q.x()) || !std::isfinite(tf_q.y()) || !std::isfinite(tf_q.z()) || !std::isfinite(tf_q.w())){
+    // first we need to check if the quaternion has nan's or infs
+    if (!std::isfinite(tf_q.x()) || !std::isfinite(tf_q.y()) || !std::isfinite(tf_q.z()) ||
+        !std::isfinite(tf_q.w())) {
         ROS_ERROR("Quaternion has nans or infs... discarding pose");
         return false;
     }
 
-    //next, we need to check if the length of the quaternion is close to zero
-    if(tf_q.length2() < 1e-6){
+    // next, we need to check if the length of the quaternion is close to zero
+    if (tf_q.length2() < 1e-6) {
         ROS_ERROR("Quaternion has length close to zero... discarding pose");
         return false;
     }
@@ -30,29 +31,22 @@ static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
     return true;
 }
 
-
-TopoExecuter::TopoExecuter(tf2_ros::Buffer &tfBuffer, costmap_2d::Costmap2DROS &costmap,
-                           ros::Publisher &cmdVelPub, toponav_ros::TopoPlannerROS &topoPlanner) : mCmdVelPub(cmdVelPub),
-                                                                                                  mTopoPlanner(
-                                                                                                          topoPlanner),
-                                                                                                  mTfBuffer{tfBuffer}{
-    ros::NodeHandle nh;
-    //mLocalPlanner = std::make_unique<base_local_planner::TrajectoryPlannerROS>();
-    //mLocalPlanner->initialize("TrajectoryPlannerROS", &tfBuffer, &costmap);
-    mLocalPlanner = std::make_unique<arips_local_planner::AripsPlannerROS>();
-    mLocalPlanner->initialize("AripsPlannerROS", &tfBuffer, &costmap);
+TopoExecuter::TopoExecuter(tf2_ros::Buffer& tfBuffer, DriveTo& driveTo, ros::Publisher& cmdVelPub,
+                           toponav_ros::TopoPlannerROS& topoPlanner)
+    : mDriveTo{driveTo}, mCmdVelPub(cmdVelPub), mTopoPlanner(topoPlanner), mTfBuffer{tfBuffer} {
 }
 
-void TopoExecuter::activate(const geometry_msgs::PoseStamped &goalMsg) {
+void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
     tf2::Stamped<tf2::Transform> pose;
     tf2::fromMsg(goalMsg, pose);
 
-    if(!isQuaternionValid(pose.getRotation()))
+    if (!isQuaternionValid(pose.getRotation()))
         return;
 
     try {
         geometry_msgs::TransformStamped startTransform;
-        startTransform = mTfBuffer.lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
+        startTransform =
+            mTfBuffer.lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
         geometry_msgs::PoseStamped startPose;
         startPose.header = startTransform.header;
         startPose.pose.position.x = startTransform.transform.translation.x;
@@ -60,48 +54,50 @@ void TopoExecuter::activate(const geometry_msgs::PoseStamped &goalMsg) {
         startPose.pose.position.z = startTransform.transform.translation.z;
         startPose.pose.orientation = startTransform.transform.rotation;
 
-        GlobalPosition start = mTopoPlanner.getContext().poseService->findGlobalPose(startPose,
-                                                                                      *mTopoPlanner.getContext().topoMap).first;
+        GlobalPosition start =
+            mTopoPlanner.getContext()
+                .poseService->findGlobalPose(startPose, *mTopoPlanner.getContext().topoMap)
+                .first;
         ROS_INFO_STREAM("found start node for robot pose: "
-                                << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
+                        << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
 
-        GlobalPosition goal = mTopoPlanner.getContext().poseService->findGlobalPose(pose,
-                                                                                     *mTopoPlanner.getContext().topoMap).first;
-        ROS_INFO_STREAM(
-                "found goal node for pose: " << (goal.node ? goal.node->getName() : std::string("<NOT FOUND>")));
+        GlobalPosition goal =
+            mTopoPlanner.getContext()
+                .poseService->findGlobalPose(pose, *mTopoPlanner.getContext().topoMap)
+                .first;
+        ROS_INFO_STREAM("found goal node for pose: " << (goal.node ? goal.node->getName()
+                                                                   : std::string("<NOT FOUND>")));
 
         if (start.node && goal.node) {
             try {
                 TopoPath lastPlan;
-                if (mTopoPlanner.getContext().pathPlanner->plan(mTopoPlanner.getContext().topoMap.get(), start, goal,
-                                                                 &lastPlan, nullptr)) {
+                if (mTopoPlanner.getContext().pathPlanner->plan(
+                        mTopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr)) {
                     mTopoPlanner.getPathViz().visualizePath(lastPlan);
                     setNewPlan(lastPlan);
                     return;
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
             }
         }
 
-    } catch(const tf2::TransformException& ex) {
-        ROS_WARN("poseCallbackNavGoal(): %s",ex.what());
+    } catch (const tf2::TransformException& ex) {
+        ROS_WARN("poseCallbackNavGoal(): %s", ex.what());
     }
 
     // on success the function already returned
     mCurrentPlan.reset();
 }
 
-void TopoExecuter::setNewPlan(const toponav_core::TopoPath &plan) {
+void TopoExecuter::setNewPlan(const toponav_core::TopoPath& plan) {
     // TODO make sure that stopped
     mCurrentPlan = std::make_unique<toponav_core::TopoPath>(plan);
     mCurrentPlanIter = mCurrentPlan->pathElements.begin();
     (*mCurrentPlanIter)->visitPlanVisitor(this);
 }
 
-void TopoExecuter::safeStop() {
-    emergencyStop();
-}
+void TopoExecuter::safeStop() { emergencyStop(); }
 
 void TopoExecuter::emergencyStop() {
     // TODO just send stop for now
@@ -132,37 +128,28 @@ void TopoExecuter::runCycle() {
     }
 }
 
-bool TopoExecuter::isActive() {
-    return !!mCurrentPlan;
-}
+bool TopoExecuter::isActive() { return !!mCurrentPlan; }
 
-void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement *mov) {
+void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement* mov) {
     assert(mov->start.node->getRegionType() == "flat");
 
     const auto pathPtr = boost::any_cast<std::vector<geometry_msgs::PoseStamped>>(&mov->pathData);
-    mLocalPlanner->setPlan(*pathPtr);
+    mDriveTo.followPath(*pathPtr);
     mSegmentExec = std::make_unique<MovementExecuter>(pathPtr);
 }
 
-void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition *transition) {
+void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* transition) {
     assert(transition->topoEdge->getTransitionType() == "step");
 
     mSegmentExec = std::make_unique<TransitionExecuter>();
 }
 
-bool TopoExecuter::MovementExecuter::runCycle(TopoExecuter *parent) {
-    geometry_msgs::Twist cmd_vel;
-
-    const bool finished = parent->mLocalPlanner->isGoalReached();
-
-    if (!finished) {
-        parent->mLocalPlanner->computeVelocityCommands(cmd_vel);
-    }
-    parent->mCmdVelPub.publish(cmd_vel);
-    return finished;
+bool TopoExecuter::MovementExecuter::runCycle(TopoExecuter* parent) {
+    parent->mDriveTo.runCycle();
+    return !parent->isActive();
 }
 
-bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter *parent) {
+bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
     const ros::Time currentTime = ros::Time::now();
     const double sec = (currentTime - m_StartTime).toSec();
     const bool finished = sec > 2.0;
