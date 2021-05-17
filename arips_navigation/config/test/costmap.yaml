@@ -1,0 +1,13 @@
+global_costmap:
+  publish_frequency: 1.0
+  global_frame: map
+  robot_base_frame: base_link
+  robot_radius: 0.2
+  transform_tolerance: 1.0
+  plugins:
+      - {name: static,   type: "costmap_2d::StaticLayer"}
+      - {name: inflaton,       type: "costmap_2d::InflationLayer"}
+  static:
+      map_topic: /map
+  inflaton:
+      inflation_radius: 0.3

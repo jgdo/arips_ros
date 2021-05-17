@@ -106,6 +106,7 @@ generate_messages(
  generate_dynamic_reconfigure_options(
    cfg/AripsPlanner.cfg
    cfg/OpenDoor.cfg
+   cfg/FlatNavigation.cfg
 )
 
 ###################################
@@ -180,6 +181,14 @@ target_link_libraries(${PROJECT_NAME}_node
 add_executable(odometry_forecast_node tools/odomety_forecast_node.cpp ${NAV_SRCS} ${NAV_INCS})
 add_dependencies(odometry_forecast_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(odometry_forecast_node
+    PUBLIC
+        ${catkin_LIBRARIES}
+        yaml-cpp
+)
+
+add_executable(demo_global_planning tools/demo_global_planning.cpp ${NAV_SRCS} ${NAV_INCS})
+add_dependencies(demo_global_planning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_global_planning
     PUBLIC
         ${catkin_LIBRARIES}
         yaml-cpp

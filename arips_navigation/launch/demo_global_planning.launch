@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="map_pub" args="0 0 0 0 0 0 map base_link 30"/>
+
+  <arg name="map_file1" default="$(find arips_navigation)/maps/lu_cart.yaml"/>
+  <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >
+    <param name="frame_id" type="str" value="map" />
+    <remap from="map" to="map"/>
+    <remap from="map_metadata" to="flat_layer_map1_metadata"/>
+  </node>
+
+  <node pkg="arips_navigation" type="demo_global_planning" respawn="false" name="demo_global_planning" output="screen" clear_params="true">
+    <rosparam file="$(find arips_navigation)/config/test/costmap.yaml" command="load" />
+  </node>
+  
+</launch>

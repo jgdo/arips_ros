@@ -36,6 +36,7 @@
 *********************************************************************/
 #pragma once
 
+
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
@@ -55,6 +56,7 @@
 #include <base_local_planner/odometry_helper_ros.h>
 
 #include <arips_navigation/local_planner/arips_planner.h>
+#include <arips_navigation/odometry/OdometryBuffer.h>
 
 namespace arips_local_planner {
   /**
@@ -98,7 +100,7 @@ namespace arips_local_planner {
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
        * @return True if a valid trajectory was found, false otherwise
        */
-      bool aripsComputeVelocityCommands(geometry_msgs::PoseStamped& global_pose, geometry_msgs::Twist& cmd_vel);
+      bool aripsComputeVelocityCommands(const geometry_msgs::PoseStamped& global_pose, geometry_msgs::Twist& cmd_vel);
 
       /**
        * @brief  Set the plan that the controller is following
@@ -153,6 +155,8 @@ namespace arips_local_planner {
 
       base_local_planner::OdometryHelperRos odom_helper_;
       std::string odom_topic_;
+
+      OdometryBuffer odomBuffer_ {false};
   };
 };
 

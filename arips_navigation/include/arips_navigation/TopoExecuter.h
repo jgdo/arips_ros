@@ -55,7 +55,7 @@ private:
     };
 
     struct MovementExecuter: public SegmentExecuter {
-        MovementExecuter(const std::vector<geometry_msgs::PoseStamped>* path):
+        explicit MovementExecuter(const std::vector<geometry_msgs::PoseStamped>* path):
                 mPath(path) {}
 
         bool runCycle(TopoExecuter* ) override;

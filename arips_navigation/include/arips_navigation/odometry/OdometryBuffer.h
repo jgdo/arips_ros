@@ -4,6 +4,7 @@
 
 #include <ros/ros.h>
 
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 
@@ -14,9 +15,11 @@ public:
         geometry_msgs::Twist cmdVel;
     };
 
-    OdometryBuffer();
+    explicit OdometryBuffer(bool alwaysPublish = true);
 
     void saveBuffer(const std::string& filename);
+
+    std::optional<geometry_msgs::PoseStamped> forecastRobotPose();
 
 private:
     std::list<Entry> mBuffer;
@@ -29,7 +32,6 @@ private:
     ros::Subscriber mOdomSub;
     ros::Subscriber mCmdVelSub;
     ros::Timer mPublishTimer;
-
 
     void onOdom(const nav_msgs::Odometry& msg);
     void onCmdVel(const geometry_msgs::Twist& msg);

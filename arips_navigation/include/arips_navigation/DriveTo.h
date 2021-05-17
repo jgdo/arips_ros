@@ -7,6 +7,9 @@
 #include <nav_core/base_local_planner.h>
 #include <toponav_core/TopoMap.h>
 
+#include <arips_navigation/FlatNavigationConfig.h>
+#include <dynamic_reconfigure/server.h>
+
 class DriveTo : public DrivingStateProto {
 public:
     DriveTo(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, toponav_core::TopoMapPtr topoMap,
@@ -29,9 +32,9 @@ public:
 
     /**
      * Drive according to path. Will become active if path not empty
-     * @param path
+     * @return true if planning was successful and driving can start, otherwise false
      */
-    void followPath(std::vector<geometry_msgs::PoseStamped> const& path);
+    bool followPath(std::vector<geometry_msgs::PoseStamped> const& path);
 
     bool isActive() override;
     void runCycle() override;
@@ -43,4 +46,14 @@ private:
     costmap_2d::Costmap2DROS& mLocalCostmap;
 
     std::vector<geometry_msgs::PoseStamped> mCurrentPath;
+
+    arips_navigation::FlatNavigationConfig mConfig;
+    dynamic_reconfigure::Server<arips_navigation::FlatNavigationConfig> mConfigServer{
+        ros::NodeHandle{"~/FlatNavigation"}};
+
+    ros::Time mLastControllerSuccessfulTime {0};
+
+    void onDynamicReconfigure(arips_navigation::FlatNavigationConfig &config, uint32_t level);
+
+    void doRecovery();
 };

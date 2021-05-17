@@ -7,14 +7,17 @@
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-OdometryBuffer::OdometryBuffer() {
+OdometryBuffer::OdometryBuffer(bool alwaysPublish) {
     ros::NodeHandle nh;
 
     mForecastCmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel_forecast", 10);
     mMarkerPub = nh.advertise<visualization_msgs::Marker>("driven_path", 10);
     mCmdVelSub = nh.subscribe("cmd_vel", 10, &OdometryBuffer::onCmdVel, this);
     mOdomSub = nh.subscribe("odom", 10, &OdometryBuffer::onOdom, this);
-    mPublishTimer = nh.createTimer(ros::Rate{100.0}, &OdometryBuffer::onTimer, this);
+
+    if(alwaysPublish) {
+        mPublishTimer = nh.createTimer(ros::Rate{100.0}, &OdometryBuffer::onTimer, this);
+    }
 }
 
 void OdometryBuffer::onOdom(const nav_msgs::Odometry& msg) {
@@ -50,6 +53,7 @@ static double getYawFromQuaternion(const geometry_msgs::Quaternion& msg) {
     return yaw;
 }
 
+
 static auto createQuaternionMsgFromYaw(double yaw)
 {
     tf2::Quaternion q;
@@ -57,9 +61,9 @@ static auto createQuaternionMsgFromYaw(double yaw)
     return tf2::toMsg(q);
 }
 
-void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
+std::optional<geometry_msgs::PoseStamped> OdometryBuffer::forecastRobotPose() {
     if (mBuffer.size() < 2) {
-        return;
+        return {};
     }
 
     const auto now = ros::Time::now();
@@ -79,7 +83,7 @@ void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
     }
 
     if (!entry) {
-        return;
+        return {};
     }
 
     const double alpha = (time - lastiter->odom.header.stamp).toSec() /
@@ -146,21 +150,28 @@ void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
         th += delta_th;
     }
 
-    publishPoint(x,y, 1,0,0);
+    geometry_msgs::PoseStamped result;
+    result.header.stamp = now;
+    result.header.frame_id = lastOdom.header.frame_id;
+    result.pose.position.x = x;
+    result.pose.position.y = y;
+    result.pose.orientation = createQuaternionMsgFromYaw(th);
+
+    return result;
+}
+
+void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
+    const auto pose = forecastRobotPose();
+    if(pose) {
+        publishPoint(pose->pose.position.x, pose->pose.position.y, 1, 0, 0);
+    }
 
     /*
     nav_msgs::Odometry odom;
-    odom.header.stamp = now;
+    odom.header = pose->header;
     odom.header.frame_id = lastOdom.header.frame_id;
+    odom.pose = *pose;
 
-    const geometry_msgs::Quaternion odom_quat = createQuaternionMsgFromYaw(th);
-    //set the position
-    odom.pose.pose.position.x = x;
-    odom.pose.pose.position.y = y;
-    odom.pose.pose.position.z = 0.0;
-    odom.pose.pose.orientation = odom_quat;
-
-    //set the velocity
     odom.child_frame_id = lastOdom.child_frame_id;
     odom.twist.twist.linear.x = lastiter->cmdVel.linear.x;
     odom.twist.twist.linear.y = lastiter->cmdVel.linear.y;

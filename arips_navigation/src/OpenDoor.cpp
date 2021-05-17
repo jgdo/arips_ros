@@ -252,6 +252,8 @@ struct OpenDoor::Pimpl {
         mParent.mCmdVelPub.publish(cmd_vel);
     }
 
+    ros::Time mLastTime{0};
+
     void driveOpen() {
         geometry_msgs::PoseStamped localPoseMsg;
         mCostmap.getRobotPose(localPoseMsg);
@@ -266,21 +268,19 @@ struct OpenDoor::Pimpl {
                         ? costmap->getCost(mx, my)
                         : costmap_2d::LETHAL_OBSTACLE;
 
-        static ros::Time lastTime(0);
-
-        if (lastTime.isZero()) {
-            lastTime = ros::Time::now();
+        if (mLastTime.isZero()) {
+            mLastTime = ros::Time::now();
         }
 
         geometry_msgs::Twist cmd_vel;
 
-        const auto duration = ros::Time::now() - lastTime;
+        const auto duration = ros::Time::now() - mLastTime;
         if (costs < costmap_2d::INSCRIBED_INFLATED_OBSTACLE && duration.toSec() < 5) {
             cmd_vel.linear.x = 0.2;
             cmd_vel.angular.z = 0.3;
         } else {
             setServo(0);
-            lastTime = ros::Time(0);
+            mLastTime = ros::Time(0);
             setState(State::DriveAway);
         }
 
@@ -288,22 +288,20 @@ struct OpenDoor::Pimpl {
     }
 
     void driveAway() {
-        static ros::Time lastTime(0);
-
-        if (lastTime.isZero()) {
-            lastTime = ros::Time::now();
+        if (mLastTime.isZero()) {
+            mLastTime = ros::Time::now();
         }
 
         geometry_msgs::Twist cmd_vel;
 
-        const auto duration = ros::Time::now() - lastTime;
+        const auto duration = ros::Time::now() - mLastTime;
         if (duration.toSec() < 3.5) {
 
         } else if (duration.toSec() < 5.0) {
             cmd_vel.linear.x = 0.0;
             cmd_vel.angular.z = -0.4;
         } else {
-            lastTime = ros::Time(0);
+            mLastTime = ros::Time(0);
 
             mCostmap.resetLayers();
             setState(State::Idle);

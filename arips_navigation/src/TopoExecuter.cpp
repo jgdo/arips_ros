@@ -146,7 +146,7 @@ void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* tra
 
 bool TopoExecuter::MovementExecuter::runCycle(TopoExecuter* parent) {
     parent->mDriveTo.runCycle();
-    return !parent->isActive();
+    return !parent->mDriveTo.isActive();
 }
 
 bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {

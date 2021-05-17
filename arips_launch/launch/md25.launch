@@ -6,7 +6,7 @@
     <param name="odom_frame" value="odom" />
     <param name="encoder_sensitivity1" value="0.00872639" />
     <param name="encoder_sensitivity2" value="0.00872639" />
-    <param name="publish_odom_transformation" value="false" />
+    <param name="publish_odom_transformation" value="true" />
     <param name="velocity_timeout" value="0.5" />    
     <param name="odometry_frequency" value="40" />
   </node>
