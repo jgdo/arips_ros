@@ -11,3 +11,8 @@ global_costmap:
       map_topic: /map
   inflaton:
       inflation_radius: 0.3
+
+global_planner:
+  visualize_potential: true
+  use_quadratic: false
+  use_grid_path: true

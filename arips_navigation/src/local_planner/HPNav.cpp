@@ -66,7 +66,7 @@ void HPNav::runCycle() {
     const float distTolerance = 0.01;
 
     const float goalDistance = sqrt(x*x +y*y);
-    std::cout << "goalDistance: " << goalDistance << std::endl;
+    std::cout << "getGoalDistance: " << goalDistance << std::endl;
 
     if(goalDistance < distTolerance) {
         mGoalReached = true;

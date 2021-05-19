@@ -3,7 +3,6 @@
 <launch>
 
 <node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
-  <node pkg="tf" type="static_transform_publisher" name="map_pub" args="0 0 0 0 0 0 map base_link 30"/>
 
   <arg name="map_file1" default="$(find arips_navigation)/maps/lu_cart.yaml"/>
   <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >

@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   base_local_planner
   angles
   geometry_msgs
+        global_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -186,7 +187,12 @@ target_link_libraries(odometry_forecast_node
         yaml-cpp
 )
 
-add_executable(demo_global_planning tools/demo_global_planning.cpp ${NAV_SRCS} ${NAV_INCS})
+add_executable(demo_global_planning tools/demo_global_planning.cpp
+        tools/simulator/Simulator.cpp
+        tools/simulator/Simulator.h
+        ${NAV_SRCS}
+        ${NAV_INCS}
+)
 add_dependencies(demo_global_planning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(demo_global_planning
     PUBLIC

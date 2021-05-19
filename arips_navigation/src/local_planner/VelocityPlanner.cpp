@@ -42,7 +42,7 @@ bool VelocityPlanner::computeVelocity(float x, float y, geometry_msgs::Twist &cm
     cmd_vel = geometry_msgs::Twist();
 
     const float goalDistance = sqrt(x*x +y*y);
-    std::cout << "goalDistance: " << goalDistance << std::endl;
+    std::cout << "getGoalDistance: " << goalDistance << std::endl;
 
     if(std::abs(x) < mGoalToleranceX && std::abs(y) < mGoalToleranceY) {
         return false;

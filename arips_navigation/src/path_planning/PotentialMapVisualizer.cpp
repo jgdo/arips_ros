@@ -39,7 +39,7 @@ void PotentialMapVisualizer::visualizeMap(const PotentialMap& map) {
     for (unsigned int cx = 0; cx < x_size; cx++) {
         for (unsigned int cy = 0; cy < y_size; cy++) {
             costmap_p_->mapToWorld(cx, cy, x_coord, y_coord);
-            const double goalDist = map.goalDistance(cx, cy);
+            const double goalDist = map.getGoalDistance(cx, cy);
             if (goalDist >= 0) {
                 iter_x[0] = x_coord;
                 iter_x[1] = y_coord;

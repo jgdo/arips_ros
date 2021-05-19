@@ -79,6 +79,7 @@
 
   <depend>toponav_core</depend>
   <depend>toponav_ros</depend>
+  <depend>global_planner</depend>
   <depend>base_local_planner</depend>
   <depend>yaml-cpp</depend>
   <depend>angles</depend>

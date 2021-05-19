@@ -13,8 +13,9 @@ void PotentialMap::computeDijkstra(const CellIndex& goal) {
     // TODO check if goal index not in collision
 
     mMatrix = CellMatrix::Constant(costmap->getSizeInCellsX(), costmap->getSizeInCellsY(), Cell{});
-    mDistQueue.clear();
-    mLocationMap.clear();
+    // mDistQueue.swap({});
+    // mLocationMap.clear();
+    mDistQueue = DistQueue{};
 
     const auto endInit = std::chrono::steady_clock::now();
     const auto elapsedInitMs =
@@ -23,7 +24,7 @@ void PotentialMap::computeDijkstra(const CellIndex& goal) {
     ROS_INFO_STREAM("Global map dijkstra init took " << elapsedInitMs << " ms");
 
     auto& startCell = getCell(goal);
-    startCell = {0.0, true};
+    startCell = {0.0, false};
     insertCellIntoQueue(goal);
 
     computeTargetDistance(*costmap);
@@ -36,8 +37,8 @@ void PotentialMap::computeDijkstra(const CellIndex& goal) {
 }
 void PotentialMap::insertCellIntoQueue(const CellIndex& index) {
     auto& cell = getCell(index);
-    auto iter = mDistQueue.insert({cell.goalDist, {&cell, index}});
-    mLocationMap.insert({&cell, iter});
+    mDistQueue.push({&cell, index});
+    // mLocationMap.insert({&cell, iter});
 }
 
 void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
@@ -59,6 +60,10 @@ void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
 
     while (!mDistQueue.empty()) {
         auto current_cell = takeFirstFromQueue();
+
+        if (current_cell.cell->visited) {
+            continue;
+        }
 
         current_cell.cell->visited = true;
 
@@ -100,9 +105,8 @@ void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
     }
 }
 PotentialMap::CellEntry PotentialMap::takeFirstFromQueue() {
-    auto cellEntry = mDistQueue.begin()->second;
-    mDistQueue.erase(mDistQueue.begin());
-    mLocationMap.erase(cellEntry.cell);
+    auto cellEntry = mDistQueue.top();
+    mDistQueue.pop();
     return cellEntry;
 }
 
@@ -132,13 +136,39 @@ void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
         check_cell.goalDist = newGoalDist;
 
         // erase cell from queue
+        /*
         auto loc_iter = mLocationMap.find(&check_cell);
         if (loc_iter != mLocationMap.end()) {
             mDistQueue.erase(loc_iter->second);
             mLocationMap.erase(loc_iter);
-        }
+        } */
 
         // and re-queue it with updated dist
         insertCellIntoQueue(check_index);
     }
+}
+
+bool PotentialMap::findNeighborLowerCost(CellIndex& index) {
+    auto lowestGoalDist = getCell(index).goalDist;
+    auto lowestIndex = index;
+
+    for (int x = std::max(0, index.x() - 1); x < std::min(index.x() + 2, (int)mMatrix.cols());
+         x++) {
+        for (int y = std::max(0, index.y() - 1); y < std::min(index.y() + 2, (int)mMatrix.rows());
+             y++) {
+            if (x == index.x() && y == index.y()) {
+                continue;
+            }
+
+            const auto dist = getGoalDistance(x, y);
+            if (dist >= 0 && dist < lowestGoalDist) {
+                lowestGoalDist = dist;
+                lowestIndex = {x, y};
+            }
+        }
+    }
+
+    const bool hasNext = (lowestIndex != index);
+    index = lowestIndex;
+    return hasNext;
 }
