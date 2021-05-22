@@ -42,8 +42,8 @@ void PotentialMap::insertCellIntoQueue(const CellIndex& index) {
 }
 
 void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
-    const auto last_col = mMatrix.cols() - 1;
-    const auto last_row = mMatrix.rows() - 1;
+    const auto lastX = mMatrix.rows() - 1;
+    const auto lastY = mMatrix.cols() - 1;
 
     /*
     using no = std::pair<CellIndex, double>; // neighbor offset
@@ -71,7 +71,7 @@ void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
             updatePathCell(current_cell, current_cell.index + CellIndex{-1, 0}, costmap, 1);
         }
 
-        if (current_cell.index.x() < last_col) {
+        if (current_cell.index.x() < lastX) {
             updatePathCell(current_cell, current_cell.index + CellIndex{+1, 0}, costmap, 1);
         }
 
@@ -79,7 +79,7 @@ void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
             updatePathCell(current_cell, current_cell.index + CellIndex{0, -1}, costmap, 1);
         }
 
-        if (current_cell.index.y() < last_row) {
+        if (current_cell.index.y() < lastY) {
             updatePathCell(current_cell, current_cell.index + CellIndex{0, +1}, costmap, 1);
         }
 
@@ -88,17 +88,17 @@ void PotentialMap::computeTargetDistance(const costmap_2d::Costmap2D& costmap) {
                            std::sqrt(2.0));
         }
 
-        if (current_cell.index.x() > 0 && current_cell.index.y() < last_row) {
+        if (current_cell.index.x() > 0 && current_cell.index.y() < lastY) {
             updatePathCell(current_cell, current_cell.index + CellIndex{-1, +1}, costmap,
                            std::sqrt(2.0));
         }
 
-        if (current_cell.index.x() < last_col && current_cell.index.y() > 0) {
+        if (current_cell.index.x() < lastX && current_cell.index.y() > 0) {
             updatePathCell(current_cell, current_cell.index + CellIndex{+1, -1}, costmap,
                            std::sqrt(2.0));
         }
 
-        if (current_cell.index.x() < last_col && current_cell.index.y() < last_row) {
+        if (current_cell.index.x() < lastX && current_cell.index.y() < lastY) {
             updatePathCell(current_cell, current_cell.index + CellIndex{+1, +1}, costmap,
                            std::sqrt(2.0));
         }
@@ -114,7 +114,7 @@ void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
                                   const CellIndex& check_index,
                                   const costmap_2d::Costmap2D& costmap, float dist) {
 
-    static constexpr double costmapFactor = 1 / 50.0; // TODO values
+    static constexpr double costmapFactor = 1 / 300.0; // TODO values
 
     auto& check_cell = getCell(check_index);
     if (check_cell.visited) {
@@ -131,7 +131,8 @@ void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
         return;
     }
 
-    const double newGoalDist = current_cell.cell->goalDist + dist + check_cost * costmapFactor;
+    const double newGoalDist =
+        current_cell.cell->goalDist + dist * (1.0 + check_cost * costmapFactor);
     if (check_cell.goalDist < 0 || newGoalDist < check_cell.goalDist) {
         check_cell.goalDist = newGoalDist;
 
@@ -148,21 +149,40 @@ void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
     }
 }
 
-bool PotentialMap::findNeighborLowerCost(CellIndex& index) {
-    auto lowestGoalDist = getCell(index).goalDist;
+bool PotentialMap::findNeighborLowerCost(CellIndex& index) const {
+    const auto ownGoalDist = getCell(index).goalDist;
+    auto lowestGoalDist = ownGoalDist;
     auto lowestIndex = index;
 
-    for (int x = std::max(0, index.x() - 1); x < std::min(index.x() + 2, (int)mMatrix.cols());
+    for (int x = std::max(0, index.x() - 1); x < std::min(index.x() + 2, (int)mMatrix.rows());
          x++) {
-        for (int y = std::max(0, index.y() - 1); y < std::min(index.y() + 2, (int)mMatrix.rows());
+        for (int y = std::max(0, index.y() - 1); y < std::min(index.y() + 2, (int)mMatrix.cols());
              y++) {
             if (x == index.x() && y == index.y()) {
                 continue;
             }
 
             const auto dist = getGoalDistance(x, y);
-            if (dist >= 0 && dist < lowestGoalDist) {
-                lowestGoalDist = dist;
+            if (dist < 0) {
+                continue;
+            }
+
+            // Ideal way would be to sample around current pose in a circle, but since the cells
+            // are quadratic, the distance difference in diagonal direction is higher than in
+            // perpendicular. Therefore for diagonal cells, instead of taking the actual goal cost
+            // of the neighboring cell we linearly interpolate the cost in the neighbor direction,
+            // but with length of 1 instead of the actual 1.41.
+            // Without this trick, the robot will prefer perpendicular movement along, sometimes
+            // causing the robot to drive too close to a wall in narrow spaces instead of sticking
+            // to the corridor middle.
+            auto distDiff = ownGoalDist - dist;
+            if (std::abs((int)x - (int)index.x()) + std::abs((int)y - (int)index.y()) == 2) {
+                distDiff /= std::sqrt(2); // "interpolate" cost difference from 1.41 => 1.0 length
+            }
+            const auto scaledDist = ownGoalDist - distDiff;
+
+            if (scaledDist < lowestGoalDist) {
+                lowestGoalDist = scaledDist;
                 lowestIndex = {x, y};
             }
         }
@@ -171,4 +191,62 @@ bool PotentialMap::findNeighborLowerCost(CellIndex& index) {
     const bool hasNext = (lowestIndex != index);
     index = lowestIndex;
     return hasNext;
+}
+
+std::optional<double> PotentialMap::getGradient(const CellIndex& index) const {
+    {
+        Eigen::Matrix<float, 5, 5> conv5;
+        conv5 << 5, 4, 0, -4, -5, 8, 10, 0, -10, -8, 10, 20, 0, -20, -10, 8, 10, 0, -10, -8, 5, 4,
+            0, -4, -5;
+
+        const auto grad = calcGradientWithMatrix(index, conv5);
+        if (grad) {
+            return grad;
+        }
+    }
+
+    {
+        Eigen::Matrix3f conv3;
+        conv3 << 47, 0, -47, 162, 0, -162, 47, 0, -47;
+
+        const auto grad = calcGradientWithMatrix(index, conv3);
+        if (grad) {
+            return grad;
+        }
+    }
+
+    return {};
+}
+
+template <class M>
+std::optional<double> PotentialMap::calcGradientWithMatrix(const CellIndex& index,
+                                                           const M& conv) const {
+    assert(conv.cols() == conv.rows());
+    const int halfConv = (conv.cols() / 2);
+    if (index.x() < halfConv || index.x() >= mMatrix.cols() - halfConv || index.y() < halfConv ||
+        index.y() >= mMatrix.rows() - halfConv) {
+        return {};
+    }
+
+    const int xoff = index.x() - (conv.rows() / 2);
+    const int yoff = index.y() - (conv.cols() / 2);
+
+    double dx, dy = 0;
+    for (int x = index.x() - halfConv; x <= index.x() + halfConv; x++) {
+        for (int y = index.y() - halfConv; y <= index.y() + halfConv; y++) {
+            const auto val = mMatrix(x, y).goalDist;
+            if (!mMatrix(x, y).visited || val < 0 || std::isnan(val) || std::isinf(val)) {
+                return {};
+            }
+
+            const auto cx = x - xoff;
+            const auto cy = y - yoff;
+
+            dx += val * conv(cy, cx);
+            dy += val * conv(cx, cy);
+        }
+    }
+
+    const auto grad = atan2(dy, dx);
+    return grad;
 }

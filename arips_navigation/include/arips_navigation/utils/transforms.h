@@ -59,3 +59,19 @@ inline T fromMsg(const Msg& msg) {
     tf2::fromMsg(msg, data);
     return data;
 }
+
+inline auto createQuaternionMsgFromYaw(double yaw)
+{
+    tf2::Quaternion q;
+    q.setRPY(0, 0, yaw);
+    return tf2::toMsg(q);
+}
+
+
+inline double getYawFromQuaternion(const geometry_msgs::Quaternion& msg) {
+    tf2::Quaternion q(msg.x, msg.y, msg.z, msg.w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    return yaw;
+}

@@ -1,6 +1,8 @@
 #include "Simulator.h"
 
 #include <arips_navigation/utils/DriveDirectionIndicator.h>
+#include <arips_navigation/utils/transforms.h>
+
 #include <geometry_msgs/Twist.h>
 #include <interactive_markers/interactive_marker_server.h>
 #include <nav_msgs/Odometry.h>
@@ -8,20 +10,6 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
-
-static double getYawFromQuaternion(const geometry_msgs::Quaternion& msg) {
-    tf2::Quaternion q(msg.x, msg.y, msg.z, msg.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    return yaw;
-}
-
-static auto createQuaternionMsgFromYaw(double yaw) {
-    tf2::Quaternion q;
-    q.setRPY(0, 0, yaw);
-    return tf2::toMsg(q);
-}
 
 struct Simulator::Pimpl {
     const ros::Rate mControlRate{50.0};
@@ -76,7 +64,7 @@ struct Simulator::Pimpl {
             box_marker.color.r = 0.584;
             box_marker.color.g = 0.365;
             box_marker.color.b = 0.0;
-            box_marker.color.a = 1.0;
+            box_marker.color.a = 0.5;
             box_marker.pose.orientation.w = 1;
             box_control.markers.push_back(box_marker);
         }

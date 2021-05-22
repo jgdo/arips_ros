@@ -37,7 +37,9 @@ public:
 
     [[nodiscard]] double getGoalDistance(int x, int y) const { return mMatrix(x, y).goalDist; }
 
-    [[nodiscard]] bool findNeighborLowerCost(CellIndex& index);
+    [[nodiscard]] bool findNeighborLowerCost(CellIndex& index) const;
+
+    std::optional<double> getGradient(const CellIndex& index) const;
 
 private:
     costmap_2d::Costmap2DROS& mCostmapRos;
@@ -55,6 +57,7 @@ private:
     //    matrix
     /// if too slow
 
+    inline const Cell& getCell(const CellIndex& index) const { return mMatrix(index.x(), index.y()); }
     inline Cell& getCell(const CellIndex& index) { return mMatrix(index.x(), index.y()); }
 
     inline CellEntry getCellEntry(const CellIndex& index) {
@@ -73,4 +76,7 @@ private:
 
     void updatePathCell(const CellEntry& current_cell, const CellIndex& check_index,
                         const costmap_2d::Costmap2D& costmap, float dist);
+
+    template<class M>
+    std::optional<double> calcGradientWithMatrix(const CellIndex& index, const M& conv) const;
 };

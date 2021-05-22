@@ -4,7 +4,7 @@
 
 <node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
 
-  <arg name="map_file1" default="$(find arips_navigation)/maps/lu_cart.yaml"/>
+  <arg name="map_file1" default="$(find arips_navigation)/maps/lu.yaml"/>
   <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file1)" >
     <param name="frame_id" type="str" value="map" />
     <remap from="map" to="map"/>

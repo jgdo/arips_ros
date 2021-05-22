@@ -1,12 +1,18 @@
 #include <geometry_msgs/PoseStamped.h>
+#include <global_planner/planner_core.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
-
-#include <global_planner/planner_core.h>
+#include <visualization_msgs/Marker.h>
 
 #include <arips_navigation/path_planning/PotentialMap.h>
 #include <arips_navigation/path_planning/PotentialMapVisualizer.h>
+#include <visualization_msgs/MarkerArray.h>
+
+#include <arips_navigation/utils/transforms.h>
+#include <geometry_msgs/Twist.h>
+
+#include <angles/angles.h>
 
 #include "simulator/Simulator.h"
 
@@ -16,7 +22,9 @@ struct DemoNode {
         global_planner.initialize("global_planner", &costmap);
         sub = nh.subscribe("/topo_planner/nav_goal", 1, &DemoNode::poseCallback, this);
         pathPub = nh.advertise<nav_msgs::Path>("global_path", 1, true);
-
+        gradPub = nh.advertise<visualization_msgs::Marker>("gradient", 1);
+        potentialGradPub = nh.advertise<visualization_msgs::MarkerArray>("gradient_map", 1);
+        cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         loopTimer = nh.createTimer(ros::Rate(10), &DemoNode::doLoop, this);
     }
 
@@ -31,26 +39,21 @@ struct DemoNode {
         goalMsg = msg;
     }
 
+
+
     void doLoop(const ros::TimerEvent& ev) {
         if (goalMsg.header.frame_id.empty()) {
             return;
         }
 
-        unsigned int cx = 0, cy = 0;
-        if (!costmap.getCostmap()->worldToMap(goalMsg.pose.position.x, goalMsg.pose.position.y, cx, cy)) {
+        unsigned int goalCx = 0, goalCy = 0;
+        if (!costmap.getCostmap()->worldToMap(goalMsg.pose.position.x, goalMsg.pose.position.y, goalCx,
+                                              goalCy)) {
             ROS_WARN_STREAM("Recieved goal coordinates not inside costmap");
             return;
         }
 
         {
-            {
-                const auto begin = ros::WallTime::now();
-                potentialMap.computeDijkstra({cx, cy});
-                const auto end = ros::WallTime::now();
-                ROS_INFO_STREAM("My potential map potential took ms "
-                                    << (end - begin).toSec() * 1000);
-            }
-
             // publish path, ignore orientation for now
             geometry_msgs::PoseStamped robotPose;
             if (costmap.getRobotPose(robotPose)) {
@@ -59,8 +62,23 @@ struct DemoNode {
                 path.header.stamp = ros::Time::now();
                 path.header.frame_id = costmap.getGlobalFrameID();
                 path.poses.push_back(robotPose);
+                unsigned int cx, cy;
                 if (costmap.getCostmap()->worldToMap(robotPose.pose.position.x,
                                                      robotPose.pose.position.y, cx, cy)) {
+
+                    const auto initialRobotCost = costmap.getCostmap()->getCost(cx, cy);
+                    costmap.getCostmap()->setCost(cx, cy, costmap_2d::FREE_SPACE);
+
+                    {
+                        const auto begin = ros::WallTime::now();
+                        potentialMap.computeDijkstra({goalCx, goalCy});
+                        const auto end = ros::WallTime::now();
+                        ROS_INFO_STREAM("My potential map potential took ms "
+                                            << (end - begin).toSec() * 1000);
+                    }
+
+                    costmap.getCostmap()->setCost(cx, cy, initialRobotCost);
+
                     CellIndex index{cx, cy};
                     while (potentialMap.findNeighborLowerCost(index)) {
                         costmap.getCostmap()->mapToWorld(index.x(), index.y(),
@@ -71,6 +89,105 @@ struct DemoNode {
                     }
 
                     pathPub.publish(path);
+
+                    {
+
+                        auto optGrad = potentialMap.getGradient({cx, cy});
+
+                        visualization_msgs::Marker marker;
+                        marker.header.frame_id = costmap.getGlobalFrameID();
+                        marker.header.stamp = ros::Time();
+                        marker.ns = "my_namespace";
+                        marker.id = 0;
+                        marker.type = visualization_msgs::Marker::ARROW;
+                        marker.pose.position = startPose.pose.position;
+
+                        // get gradient from path if too close to obstacle
+                        if (!optGrad) {
+                            CellIndex index{cx, cy};
+                            if (potentialMap.findNeighborLowerCost(index)) {
+                                if (potentialMap.findNeighborLowerCost(index)) {
+                                    if (potentialMap.findNeighborLowerCost(index)) {
+                                        const auto dx = (int)index.x() - (int)cx;
+                                        const auto dy = (int)index.y() - (int)cy;
+                                        optGrad = atan2(dy, dx);
+                                    }
+                                }
+                            }
+                        }
+
+                        geometry_msgs::Twist cmdVel;
+                        if (optGrad) {
+                            ROS_INFO_STREAM("Gradient: " << *optGrad);
+
+                            const double maxCost = 50;
+                            const double velocityScale = (maxCost - std::min<double>(initialRobotCost, maxCost)) / maxCost * 0.4 + 0.2;
+
+                            ROS_INFO_STREAM("initialRobotCost: " << (int)initialRobotCost);
+
+                            marker.action = visualization_msgs::Marker::ADD;
+                            marker.pose.orientation = createQuaternionMsgFromYaw(*optGrad);
+
+                            const double yaw = getYawFromQuaternion(startPose.pose.orientation);
+                            const double yawDiff = *optGrad - yaw;
+                            cmdVel.linear.x = cos(yawDiff) * velocityScale;
+                            cmdVel.angular.z = sin(yawDiff) * 1.0;
+
+
+                        } else {
+                            marker.action = visualization_msgs::Marker::DELETEALL;
+                        }
+
+                        cmdVelPub.publish(cmdVel);
+
+                        marker.scale.x = 0.3;
+                        marker.scale.y = 0.05;
+                        marker.scale.z = 0.05;
+                        marker.color.a = 1.0; // Don't forget to set the alpha!
+                        marker.color.r = 0.0;
+                        marker.color.g = 1.0;
+                        marker.color.b = 0.0;
+                        gradPub.publish(marker);
+                    }
+
+                    visualization_msgs::MarkerArray markerArray;
+                    visualization_msgs::Marker marker;
+                    marker.header.frame_id = costmap.getGlobalFrameID();
+                    marker.header.stamp = ros::Time();
+                    marker.ns = "potential";
+                    marker.id = 0;
+                    marker.type = visualization_msgs::Marker::LINE_LIST;
+                    marker.action = visualization_msgs::Marker::ADD;
+                    marker.pose.orientation.w = 1;
+                    marker.scale.x = 0.003;
+                    marker.color.a = 1.0; // Don't forget to set the alpha!
+                    marker.color.r = 0.0;
+                    marker.color.g = 1.0;
+                    marker.color.b = 0.0;
+
+                    for (int x = cx - 30; x < cx + 30; x++) {
+                        for (int y = cy - 30; y < cy + 30; y++) {
+                            const auto optGrad = potentialMap.getGradient({x, y});
+                            if (!optGrad) {
+                                continue;
+                            }
+
+                            double wx, wy;
+                            costmap.getCostmap()->mapToWorld(x, y, wx, wy);
+                            geometry_msgs::Point p;
+                            p.x = wx;
+                            p.y = wy;
+                            marker.points.push_back(p);
+
+                            p.x += cos(*optGrad) * costmap.getCostmap()->getResolution();
+                            p.y += sin(*optGrad) * costmap.getCostmap()->getResolution();
+
+                            marker.points.push_back(p);
+                        }
+                    }
+
+                    markerArray.markers.push_back(marker);
+                    potentialGradPub.publish(markerArray);
                 } else {
                     ROS_WARN_STREAM("robot coordinates not inside costmap");
                 }
@@ -91,14 +208,16 @@ struct DemoNode {
         mapViz.visualizeMap(potentialMap);
     }
 
-
     tf2_ros::Buffer& tfBuffer;
     costmap_2d::Costmap2DROS costmap{"global_costmap", tfBuffer};
     PotentialMap potentialMap{costmap};
     PotentialMapVisualizer mapViz{"global_potential"};
     ros::Subscriber sub;
     ros::Publisher pathPub;
+    ros::Publisher gradPub;
+    ros::Publisher potentialGradPub;
     global_planner::GlobalPlanner global_planner;
+    ros::Publisher cmdVelPub;
 
     ros::Timer loopTimer;
 
@@ -111,7 +230,7 @@ int main(int argc, char** argv) {
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener{tfBuffer};
 
-    Simulator simulator {tfBuffer};
+    Simulator simulator{tfBuffer};
     DemoNode demo{tfBuffer};
 
     while (ros::ok()) {

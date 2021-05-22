@@ -10,7 +10,7 @@ global_costmap:
   static:
       map_topic: /map
   inflaton:
-      inflation_radius: 0.3
+      inflation_radius: 0.8
 
 global_planner:
   visualize_potential: true

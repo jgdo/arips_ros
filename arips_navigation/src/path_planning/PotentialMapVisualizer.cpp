@@ -19,11 +19,12 @@ void PotentialMapVisualizer::visualizeMap(const PotentialMap& map) {
 
     sensor_msgs::PointCloud2Modifier cloud_mod(cost_cloud);
     // clang-format off
-    cloud_mod.setPointCloud2Fields(4,
+    cloud_mod.setPointCloud2Fields(5,
                                    "x", 1, sensor_msgs::PointField::FLOAT32,
                                    "y", 1, sensor_msgs::PointField::FLOAT32,
                                    "z", 1, sensor_msgs::PointField::FLOAT32,
-                                   "goal_cost", 1, sensor_msgs::PointField::FLOAT32);
+                                   "goal_cost", 1, sensor_msgs::PointField::FLOAT32,
+                                   "costmap", 1, sensor_msgs::PointField::FLOAT32);
     // clang-format on
 
     const auto* costmap_p_ = map.getCostmapRos().getCostmap();
@@ -45,6 +46,7 @@ void PotentialMapVisualizer::visualizeMap(const PotentialMap& map) {
                 iter_x[1] = y_coord;
                 iter_x[2] = goalDist;
                 iter_x[3] = goalDist;
+                iter_x[4] = costmap_p_->getCost(cx, cy);
                 ++iter_x;
                 pointCount++;
             }
