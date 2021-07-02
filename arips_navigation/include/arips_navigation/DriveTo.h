@@ -12,8 +12,7 @@
 
 class DriveTo : public DrivingStateProto {
 public:
-    DriveTo(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, toponav_core::TopoMapPtr topoMap,
-            costmap_2d::Costmap2DROS& localCostmap);
+    DriveTo(NavigationContext& context, toponav_core::TopoMapPtr topoMap);
     ~DriveTo() override = default;
 
     /**
@@ -43,7 +42,6 @@ private:
     toponav_core::TopoMapPtr mTopoMap;
 
     std::unique_ptr<nav_core::BaseLocalPlanner> mLocalPlanner;
-    costmap_2d::Costmap2DROS& mLocalCostmap;
 
     std::vector<geometry_msgs::PoseStamped> mCurrentPath;
 

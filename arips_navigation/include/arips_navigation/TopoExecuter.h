@@ -20,11 +20,10 @@
 /**
  * Responsible for executing a planned topo path
  */
-class TopoExecuter: public DrivingState, private toponav_core::TopoPath::PathVisitor  {
+class TopoExecuter: public DrivingStateProto, private toponav_core::TopoPath::PathVisitor  {
 public:
 
-    TopoExecuter(tf2_ros::Buffer& tfBuffer, DriveTo& driveTo,
-        ros::Publisher& cmdVelPub, toponav_ros::TopoPlannerROS& topoPlanner);
+    TopoExecuter(NavigationContext& context, DriveTo& driveTo, toponav_ros::TopoPlannerROS& topoPlanner);
 
     void activate(const geometry_msgs::PoseStamped &goalMsg);
 
@@ -74,15 +73,12 @@ private:
     std::unique_ptr<toponav_core::TopoPath> mCurrentPlan;
     std::vector<toponav_core::TopoPath::PathSegment::Ptr>::iterator mCurrentPlanIter; /// only valid if mCurrentPlan valid
 
-    ros::Publisher& mCmdVelPub;
-
     void visitRegionMovement(toponav_core::TopoPath::RegionMovement const* movement) override;
     void visitTransition(toponav_core::TopoPath::Transition const* transition) override;
 
     std::unique_ptr<SegmentExecuter> mSegmentExec;
 
     toponav_ros::TopoPlannerROS& mTopoPlanner;
-    tf2_ros::Buffer &mTfBuffer;
 };
 
 

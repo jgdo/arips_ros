@@ -22,7 +22,7 @@ void tf2::doTransform(tf2::Stamped<tf2::Transform> const &in,
 } // namespace tf2
 
 std::optional<tf2::Stamped<tf2::Transform>>
-tryTransformPoseMsgToTransform(tf2_ros::Buffer &tf,
+tryTransformPoseMsgToTransform(const tf2_ros::Buffer &tf,
                                const geometry_msgs::PoseStamped &msg,
                                const std::string &targetFrame,
                                ros::Duration timeout) {

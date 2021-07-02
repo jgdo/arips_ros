@@ -1,16 +1,69 @@
 global_costmap:
   publish_frequency: 1.0
+  #rolling_window: true
+  #width: 600
+  #height: 600
   global_frame: map
-  robot_base_frame: base_link
+  robot_base_frame: arips_base
   robot_radius: 0.2
   transform_tolerance: 1.0
+  inflation_radius: 0.3
   plugins:
-      - {name: static,   type: "costmap_2d::StaticLayer"}
-      - {name: inflaton,       type: "costmap_2d::InflationLayer"}
-  static:
-      map_topic: /map
+    - {name: slam_map,       type: "costmap_2d::StaticLayer"}
+    # - {name: door_overlay,   type: "costmap_2d::StaticLayer"}
+    - {name: obstacles,   type: "costmap_2d::VoxelLayer"}
+    - {name: inflaton,       type: "costmap_2d::InflationLayer"}
+  door_overlay:
+    map_topic: /flat_layer_map1_overlay
+    use_maximum: true
+  obstacles:
+    observation_sources: scan
+    scan: {data_type: LaserScan, clearing: true, marking: true, topic: /scan}
+    map: /map
+
+  #slam_map:
+  #    map_topic: /flat_layer_map1_fake
+  #    lethal_cost_threshold: 50
+  #    # track_unknown_space: false
+  #    #unknown_cost_value: 100
+  #    #use_maximum: true
   inflaton:
-      inflation_radius: 0.8
+    inflation_radius: 0.3
+
+
+local_costmap:
+  map_topic: /map
+  global_frame: odom
+  robot_base_frame: arips_base
+  robot_radius: 0.2
+  inflation_radius: 0.5
+  map_type: costmap
+  observation_sources: scan
+
+  static_map: false
+  rolling_window: true
+  width: 1.5
+  height: 1.5
+  resolution: 0.015
+
+  update_frequency: 10.0
+  publish_frequency: 2.5
+  transform_tolerance: 1.0
+
+  cost_scaling_factor: 5.0
+
+  #robot_base_frame: base_link
+  #obstacle_range: 3.5
+  #raytrace_range: 5.0
+  #robot_radius: 0.22
+  #inflation_radius: 0.5
+  #max_obstacle_height: 1.0
+  #observation_sources: scan
+
+
+  scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}
+
+
 
 global_planner:
   visualize_potential: true

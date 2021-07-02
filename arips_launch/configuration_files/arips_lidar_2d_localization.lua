@@ -6,11 +6,11 @@ options = {
   trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
   tracking_frame = "arips_base",
-  published_frame = "odom",
+  published_frame = "arips_base",
   odom_frame = "odom",
-  provide_odom_frame = false,
+  provide_odom_frame = true,
   publish_frame_projected_to_2d = true,
-  use_odometry = true,
+  use_odometry = false,
   use_nav_sat = false,
   use_landmarks = false,
   num_laser_scans = 1,
@@ -29,7 +29,7 @@ options = {
 }
 MAP_BUILDER.use_trajectory_builder_2d = true
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
-  max_submaps_to_keep = 4,
+  max_submaps_to_keep = 2,
 }
 
 TRAJECTORY_BUILDER_2D.min_range = 0.25

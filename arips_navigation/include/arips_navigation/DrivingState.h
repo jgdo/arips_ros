@@ -1,7 +1,6 @@
 #pragma once
 
-#include <ros/ros.h>
-#include <tf2_ros/buffer.h>
+#include <arips_navigation/NavigationContext.h>
 
 /**
  * Represents the execution of something, e.g. navigation or docking.
@@ -9,7 +8,7 @@
 class DrivingState{
 public:
     inline virtual ~DrivingState() = default;
-    
+
     /**
      * @return true iff currently following a plan.
      */
@@ -21,19 +20,24 @@ public:
     virtual void runCycle() = 0;
 };
 
+/**
+ * Represents the execution of something, e.g. navigation or docking.
+ */
 class DrivingStateProto: public DrivingState {
 public:
-    DrivingStateProto(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub)
-        : mTfBuffer(tf)
-        , mCmdVelPub(cmdVelPub)
-    {}
+    explicit DrivingStateProto(NavigationContext& ctx) : mContext{ctx} {}
+
+    inline void publishCmdVel(const geometry_msgs::Twist& cmd_vel) {
+        mContext.publishCmdVel(cmd_vel);
+    }
+
+    [[nodiscard]] const tf2_ros::Buffer& tf() const { return mContext.tf; }
+    [[nodiscard]] costmap_2d::Costmap2DROS& globalCostmap() { return mContext.globalCostmap; }
+    [[nodiscard]] costmap_2d::Costmap2DROS& localCostmap() { return mContext.localCostmap; }
 
 protected:
+    NavigationContext& mContext;
     ros::NodeHandle mNodeHandle;
-    tf2_ros::Buffer& mTfBuffer;
-    ros::Publisher& mCmdVelPub;
-
-    virtual void init() {} // overrideable ctor substitute to avoid writing params for actual ctor
 };
 
 /*

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
+  <rosparam file="$(find arips_navigation)/config/test/costmap.yaml" command="load" ns="planning_context"/>
+</launch>

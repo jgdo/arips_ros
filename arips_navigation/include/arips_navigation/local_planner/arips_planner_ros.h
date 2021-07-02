@@ -156,7 +156,7 @@ namespace arips_local_planner {
       base_local_planner::OdometryHelperRos odom_helper_;
       std::string odom_topic_;
 
-      OdometryBuffer odomBuffer_ {false};
+      // OdometryBuffer odomBuffer_ {false};
   };
 };
 

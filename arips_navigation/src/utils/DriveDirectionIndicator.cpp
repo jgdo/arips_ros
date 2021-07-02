@@ -14,7 +14,7 @@ DriveDirectionIndicator::DriveDirectionIndicator(const std::string& name, double
 
 void DriveDirectionIndicator::indicate(geometry_msgs::Twist const& twist) {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "base_link";
+    marker.header.frame_id = "arips_base";
     marker.header.stamp = ros::Time::now();
     marker.ns = "velocity_marker";
     marker.id = 0;

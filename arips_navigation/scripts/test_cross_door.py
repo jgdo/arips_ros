@@ -35,8 +35,8 @@ def talker():
 
     doorInfo.pivotPose.header.frame_id = "map"
     doorInfo.pivotPose.header.stamp = rospy.Time.now()
-    doorInfo.pivotPose.pose.position.x = 0.02843692898
-    doorInfo.pivotPose.pose.position.y = -1.9193294
+    doorInfo.pivotPose.pose.position.x = -0.038
+    doorInfo.pivotPose.pose.position.y = -1.77
     doorInfo.pivotPose.pose.orientation.w = 1
 
     door_info_pub.publish(doorInfo)

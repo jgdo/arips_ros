@@ -31,9 +31,8 @@ static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
     return true;
 }
 
-TopoExecuter::TopoExecuter(tf2_ros::Buffer& tfBuffer, DriveTo& driveTo, ros::Publisher& cmdVelPub,
-                           toponav_ros::TopoPlannerROS& topoPlanner)
-    : mDriveTo{driveTo}, mCmdVelPub(cmdVelPub), mTopoPlanner(topoPlanner), mTfBuffer{tfBuffer} {
+TopoExecuter::TopoExecuter(NavigationContext& context, DriveTo& driveTo, toponav_ros::TopoPlannerROS& topoPlanner)
+    : DrivingStateProto{context}, mDriveTo{driveTo}, mTopoPlanner(topoPlanner) {
 }
 
 void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
@@ -46,7 +45,7 @@ void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
     try {
         geometry_msgs::TransformStamped startTransform;
         startTransform =
-            mTfBuffer.lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
+            tf().lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
         geometry_msgs::PoseStamped startPose;
         startPose.header = startTransform.header;
         startPose.pose.position.x = startTransform.transform.translation.x;
@@ -102,7 +101,7 @@ void TopoExecuter::safeStop() { emergencyStop(); }
 void TopoExecuter::emergencyStop() {
     // TODO just send stop for now
     geometry_msgs::Twist msg;
-    mCmdVelPub.publish(msg);
+    publishCmdVel(msg);
 
     mCurrentPlan.reset();
 }
@@ -158,6 +157,7 @@ bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
     if (!finished) {
         cmd_vel.linear.x = 0.4;
     }
-    parent->mCmdVelPub.publish(cmd_vel);
+
+    parent->publishCmdVel(cmd_vel);
     return finished;
 }

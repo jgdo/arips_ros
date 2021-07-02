@@ -59,20 +59,18 @@ Navigation::Navigation() {
     factory->addModule<MapPoseInterface>(nodeContainer);
     factory->addModule<CostsProfileInterface>(costsModules);
 
-    m_TopoPlanner.init("topo_planner", factory, &m_tfBuffer);
+    m_TopoPlanner.init("topo_planner", factory, &mContext.tf);
 
-    mDriveTo = std::make_unique<DriveTo>(m_tfBuffer, mCmdVelPub, m_TopoPlanner.getContext().topoMap,
-                                         m_LocalCostmap);
-    m_TopoExec = std::make_unique<TopoExecuter>(m_tfBuffer, *mDriveTo, mCmdVelPub, m_TopoPlanner);
+    mDriveTo = std::make_unique<DriveTo>(mContext, m_TopoPlanner.getContext().topoMap);
+    m_TopoExec = std::make_unique<TopoExecuter>(mContext, *mDriveTo, m_TopoPlanner);
 
-    mCrossDoor = std::make_unique<CrossDoor>(m_tfBuffer, mCmdVelPub, *mDriveTo, mOpenDoor);
+    mCrossDoor = std::make_unique<CrossDoor>(mContext, *mDriveTo, mOpenDoor);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
-    hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
+    // hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
     clicked_sub = nh.subscribe("/clicked_point", 1, &Navigation::onClickedPoint, this);
     door_info_sub = nh.subscribe("/cross_door_info", 1, &Navigation::onDoorInfoReceived, this);
 
-    mCmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
     mActivePub = nh.advertise<std_msgs::Bool>("/arips_navigation_active", 1, false);
 
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
@@ -89,14 +87,15 @@ void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped& msg) {
     mDrivingState = m_TopoExec.get();
 }
 
+/*
 void Navigation::poseCallbackHpGoal(const geometry_msgs::PoseStamped& msg) {
     mHPNav.setGoal(msg);
     mDrivingState = &mHPNav;
-}
+}*/
 
 void Navigation::timerCallback(const ros::TimerEvent& e) {
     std_msgs::Bool active;
-    active.data = !!mDrivingState;
+    active.data = (mDrivingState != nullptr);
     mActivePub.publish(active);
 
     if (!mDrivingState) {

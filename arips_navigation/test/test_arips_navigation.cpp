@@ -8,7 +8,7 @@
 
 struct VelocityPlannerTest: public ::testing::Test {
 
-    VelocityPlanner planner {0.03};
+    VelocityPlanner planner {0.03, 0.03};
     geometry_msgs::Twist cmd_vel;
 };
 

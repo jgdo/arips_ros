@@ -9,13 +9,12 @@
 using toponav_core::TopoMap;
 using toponav_ros::FlatGroundModule;
 
-DriveTo::DriveTo(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, toponav_core::TopoMapPtr topoMap,
-                 costmap_2d::Costmap2DROS& localCostmap)
-    : DrivingStateProto(tf, cmdVelPub), mTopoMap{std::move(topoMap)}, mLocalCostmap{localCostmap} {
+DriveTo::DriveTo(NavigationContext& context, toponav_core::TopoMapPtr topoMap)
+    : DrivingStateProto(context), mTopoMap{std::move(topoMap)} {
 
     ros::NodeHandle nh;
     mLocalPlanner = std::make_unique<arips_local_planner::AripsPlannerROS>();
-    mLocalPlanner->initialize("AripsPlannerROS", &mTfBuffer, &mLocalCostmap);
+    mLocalPlanner->initialize("AripsPlannerROS", &mContext.tf, &mContext.localCostmap);
 
     dynamic_reconfigure::Server<arips_navigation::FlatNavigationConfig>::CallbackType cb =
         boost::bind(&DriveTo::onDynamicReconfigure, this, _1, _2);
@@ -40,7 +39,7 @@ std::vector<geometry_msgs::PoseStamped> DriveTo::planTo(const tf2::Stamped<tf2::
     tf2::Stamped<tf2::Transform> poseOnFloor;
 
     try {
-        poseOnFloor = mTfBuffer.transform(goal, planner->getMap().getGlobalFrameID());
+        poseOnFloor = mContext.tf.transform(goal, planner->getMap().getGlobalFrameID());
     } catch (const tf2::TransformException& ex) {
         ROS_WARN("DriveTo::driveTo(): %s", ex.what());
         return path;
@@ -98,10 +97,10 @@ void DriveTo::runCycle() {
             mLastControllerSuccessfulTime = ros::Time::now();
         }
     }
-    mCmdVelPub.publish(cmd_vel);
+    mContext.publishCmdVel(cmd_vel);
 }
 void DriveTo::onDynamicReconfigure(arips_navigation::FlatNavigationConfig& config, uint32_t level) {
     mConfig = config;
 }
 
-void DriveTo::doRecovery() { mLocalCostmap.resetLayers(); }
+void DriveTo::doRecovery() { mContext.localCostmap.resetLayers(); }

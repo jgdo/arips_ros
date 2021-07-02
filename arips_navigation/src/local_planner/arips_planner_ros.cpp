@@ -269,8 +269,9 @@ bool AripsPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel) {
     ROS_DEBUG_NAMED("arips_local_planner", "Received a transformed plan with %zu points.",
                     transformed_plan.size());
 
-    const auto predictedPose = /* std::optional<geometry_msgs::PoseStamped>{}; */ odomBuffer_.forecastRobotPose();
-    const auto& localPoseToUse = predictedPose? *predictedPose : current_pose_;
+    //const auto predictedPose = /* std::optional<geometry_msgs::PoseStamped>{}; */ odomBuffer_.forecastRobotPose();
+    // const auto& localPoseToUse = predictedPose? *predictedPose : current_pose_;
+    const auto localPoseToUse = current_pose_;
 
     // update plan in arips_planner even if we just stop and rotate, to allow checkTrajectory
     dp_->updatePlanAndLocalCosts(localPoseToUse, transformed_plan);

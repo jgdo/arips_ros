@@ -6,15 +6,17 @@
 
 #include "DrivingState.h"
 
+#include <arips_navigation/DriveUntilCollision.h>
+
 #include <ros/ros.h>
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <memory>
 
-class OpenDoor: public DrivingStateProto
+class OpenDoor: public DrivingState
 {
 public:
-    OpenDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, costmap_2d::Costmap2DROS& costmap);
+    explicit OpenDoor(NavigationContext& context, DriveUntilCollision& driveUntilCollision);
     ~OpenDoor() override;
 
     void init();

@@ -27,7 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   base_local_planner
   angles
   geometry_msgs
-        global_planner
+  global_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -142,25 +142,25 @@ list(REMOVE_ITEM NAV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/arips_navigation_node.
 FILE(GLOB_RECURSE NAV_INCS include/arips_navigation/*.h)
 
 ## Declare a C++ library
-#add_library(${PROJECT_NAME}
-#   ${NAV_SRCS} ${NAV_INCS}
-#)
+add_library(${PROJECT_NAME}
+   ${NAV_SRCS} ${NAV_INCS}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-#add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#target_link_libraries(${PROJECT_NAME}
-#    PUBLIC
-#        ${catkin_LIBRARIES}
-#        yaml-cpp
-#)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        ${catkin_LIBRARIES}
+        yaml-cpp
+)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable(${PROJECT_NAME}_node src/arips_navigation_node.cpp ${NAV_SRCS} ${NAV_INCS})
+add_executable(${PROJECT_NAME}_node src/arips_navigation_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,36 +170,40 @@ add_executable(${PROJECT_NAME}_node src/arips_navigation_node.cpp ${NAV_SRCS} ${
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
     PUBLIC
-        ${catkin_LIBRARIES}
-        yaml-cpp
+        ${PROJECT_NAME}
 )
 
-add_executable(odometry_forecast_node tools/odomety_forecast_node.cpp ${NAV_SRCS} ${NAV_INCS})
-add_dependencies(odometry_forecast_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(odometry_forecast_node tools/odomety_forecast_node.cpp)
+add_dependencies(odometry_forecast_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(odometry_forecast_node
     PUBLIC
-        ${catkin_LIBRARIES}
-        yaml-cpp
+        ${PROJECT_NAME}
 )
 
 add_executable(demo_global_planning tools/demo_global_planning.cpp
         tools/simulator/Simulator.cpp
         tools/simulator/Simulator.h
-        ${NAV_SRCS}
-        ${NAV_INCS}
 )
-add_dependencies(demo_global_planning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(demo_global_planning ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(demo_global_planning
     PUBLIC
-        ${catkin_LIBRARIES}
-        yaml-cpp
+        ${PROJECT_NAME}
 )
 
+add_executable(simulator_node tools/simulator_node.cpp
+        tools/simulator/Simulator.cpp
+        tools/simulator/Simulator.h
+)
+add_dependencies(simulator_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(simulator_node
+    PUBLIC
+        ${PROJECT_NAME}
+)
 
 #############
 ## Install ##
@@ -248,18 +252,17 @@ target_link_libraries(demo_global_planning
 #############
 
 ## Add gtest based cpp test target and link libraries
-#catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_navigation.cpp)
-#if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME}
-#           ${catkin_LIBRARIES}
-#           yaml-cpp)
-#
-#   target_include_directories(${PROJECT_NAME}-test
-#       PRIVATE
-#           .
-#   )
-#
-#endif()
+catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_navigation.cpp)
+if(TARGET ${PROJECT_NAME}-test)
+   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME}
+           ${PROJECT_NAME}
+   )
+endif()
+
+catkin_add_gtest(${PROJECT_NAME}-demo-test test/demo_test_arips_navigation.cpp)
+target_link_libraries(${PROJECT_NAME}-demo-test ${PROJECT_NAME}
+        ${PROJECT_NAME}
+)
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

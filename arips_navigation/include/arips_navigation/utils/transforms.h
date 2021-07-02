@@ -23,11 +23,11 @@ tf.transform(msg, targetFrame, timeout);
  */
 
 std::optional<tf2::Stamped<tf2::Transform>>
-tryTransformPoseMsgToTransform(tf2_ros::Buffer &tf, const geometry_msgs::PoseStamped &msg,
+tryTransformPoseMsgToTransform(const tf2_ros::Buffer &tf, const geometry_msgs::PoseStamped &msg,
                                const std::string &targetFrame,
                                ros::Duration timeout = ros::Duration(0.0));
 
-inline std::optional<tf2::Stamped<tf2::Transform>> tryLookupTransform(tf2_ros::Buffer &tf,
+inline std::optional<tf2::Stamped<tf2::Transform>> tryLookupTransform(const tf2_ros::Buffer &tf,
                                                             const std::string &targetFrame,
                                                             const std::string &sourceFrame) {
     try {

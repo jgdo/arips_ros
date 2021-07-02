@@ -6,7 +6,9 @@
 
 #include <memory>
 
-#include <arips_navigation/AutoDocker.h>
+#include <arips_navigation/NavigationContext.h>
+
+// #include <arips_navigation/AutoDocker.h>
 #include <arips_navigation/CostsPlanners.h>
 #include <arips_navigation/CrossDoor.h>
 #include <arips_navigation/DriveTo.h>
@@ -14,34 +16,30 @@
 #include <arips_navigation/OpenDoor.h>
 #include <arips_navigation/TopoExecuter.h>
 #include <arips_navigation/local_planner/HPNav.h>
-#include <costmap_2d/costmap_2d_ros.h>
 #include <toponav_ros/TopoPlannerROS.h>
+#include <arips_navigation/DriveUntilCollision.h>
 
 class Navigation {
 public:
     Navigation();
 
 private:
-    tf2_ros::Buffer m_tfBuffer;
-    tf2_ros::TransformListener tfListener{m_tfBuffer};
+    NavigationContext mContext;
 
-    costmap_2d::Costmap2DROS m_GlobalCostmap{"global_costmap", m_tfBuffer};
-    costmap_2d::Costmap2DROS m_LocalCostmap{"local_costmap", m_tfBuffer};
-
-    navfn::NavfnROS mNavfnPlanner{"navfn_planner", &m_GlobalCostmap};
-    toponav_ros::AripsFlatPlanner mAripsPlanner{m_GlobalCostmap, mNavfnPlanner, m_tfBuffer};
+    navfn::NavfnROS mNavfnPlanner{"navfn_planner", &mContext.globalCostmap};
+    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext.globalCostmap, mNavfnPlanner, mContext.tf};
 
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 
     DrivingState* mDrivingState = nullptr;
 
-    ros::Publisher mCmdVelPub;
     ros::Publisher mActivePub;
 
     std::unique_ptr<TopoExecuter> m_TopoExec;
-    AutoDocker mAutoDocker{m_LocalCostmap, mCmdVelPub};
-    HPNav mHPNav{&m_tfBuffer, mCmdVelPub};
-    OpenDoor mOpenDoor{m_tfBuffer, mCmdVelPub, m_LocalCostmap};
+    // AutoDocker mAutoDocker{m_LocalCostmap, mCmdVelPub};
+    //  HPNav mHPNav{&m_tfBuffer, mCmdVelPub};
+    DriveUntilCollision mDriveUntilCollision {mContext};
+    OpenDoor mOpenDoor{mContext, mDriveUntilCollision};
     std::unique_ptr<DriveTo> mDriveTo;
     std::unique_ptr<CrossDoor> mCrossDoor;
 

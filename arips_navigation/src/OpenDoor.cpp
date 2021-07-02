@@ -1,8 +1,5 @@
-//
-// Created by jgdo on 2/28/21.
-//
-
 #include "arips_navigation/OpenDoor.h"
+#include <arips_navigation/StateExecutor.h>
 
 #include <angles/angles.h>
 #include <geometry_msgs/Twist.h>
@@ -16,38 +13,26 @@
 #include <arips_navigation/local_planner/VelocityPlanner.h>
 #include <dynamic_reconfigure/server.h>
 
-struct OpenDoor::Pimpl {
-    enum class State {
-        Idle,
-        WaitingDoorPose,
-        RotatingStart,
-        DrivingDoor,
-        RotatingFinal,
-        PullHandle,
-        DriveOpen,
-        DriveAway,
-    } mState = State::Idle;
-
+struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
     geometry_msgs::PoseStamped mDoorApproachPose;
 
     ros::Publisher mEnablePub, mApproachPosePub, mServoPub;
     ros::Subscriber mDoorHandleSub, mServoSub;
 
-    OpenDoor &mParent;
-    costmap_2d::Costmap2DROS &mCostmap;
-
     VelocityPlanner mVelPlanner{0.01, 0.03};
 
-    const float DoorAngleOffset = asin(0.25 / 0.7);
+    const float DoorAngleOffset = std::asin(0.25F / 0.7F);
 
     float mLastServoPos = 0;
+
+    DriveUntilCollision& mDriveUntilCollision;
 
     arips_navigation::OpenDoorConfig mConfig;
     dynamic_reconfigure::Server<arips_navigation::OpenDoorConfig> mConfigServer{
         ros::NodeHandle{"~/OpenDoor"}};
 
-    explicit Pimpl(OpenDoor &parent, costmap_2d::Costmap2DROS &costmap)
-        : mParent(parent), mCostmap{costmap} {
+    explicit Pimpl(NavigationContext& context, DriveUntilCollision& driveUntilCollision)
+        : StateExecutor(context), mDriveUntilCollision{driveUntilCollision} {
         ros::NodeHandle nh;
         mEnablePub = nh.advertise<std_msgs::Bool>("enable_door_handle", 1, true);
         mApproachPosePub = nh.advertise<geometry_msgs::PoseStamped>("door_approach_pose", 1, true);
@@ -57,11 +42,14 @@ struct OpenDoor::Pimpl {
         mServoSub = nh.subscribe("/servo_7/pos_deg", 1, &Pimpl::onServoPosReceived, this);
 
         dynamic_reconfigure::Server<arips_navigation::OpenDoorConfig>::CallbackType cb =
-            boost::bind(&Pimpl::onDynamicReconfigure, this, _1, _2);
+            [this](auto&& PH1, auto&& PH2) {
+                onDynamicReconfigure(std::forward<decltype(PH1)>(PH1),
+                                     std::forward<decltype(PH2)>(PH2));
+            };
         mConfigServer.setCallback(cb);
     }
 
-    void onDynamicReconfigure(arips_navigation::OpenDoorConfig &config, uint32_t level) {
+    void onDynamicReconfigure(arips_navigation::OpenDoorConfig& config, uint32_t level) {
         mConfig = config;
     }
 
@@ -72,44 +60,13 @@ struct OpenDoor::Pimpl {
 
         setServo(0);
 
-        setState(State::WaitingDoorPose);
+        setState(&Pimpl::waitingDoorPose);
 
         geometry_msgs::Twist cmd_vel;
-        mParent.mCmdVelPub.publish(cmd_vel);
+        publishCmdVel(cmd_vel);
     }
 
-    void runCycle() {
-        switch (mState) {
-        case State::Idle:
-        case State::WaitingDoorPose:
-            break;
-
-        case State::RotatingStart:
-            rotateAtStart();
-            break;
-
-        case State::DrivingDoor:
-            driveToDoor();
-            break;
-
-        case State::RotatingFinal:
-            rotateFinal();
-            break;
-
-        case State::PullHandle:
-            pullHandle();
-            break;
-
-        case State::DriveOpen:
-            driveOpen();
-            break;
-
-        case State::DriveAway:
-            driveAway();
-            break;
-        }
-    }
-
+    // NOLINTNEXTLINE
     void setServo(float val) {
         std_msgs::Float32 servo;
         servo.data = val;
@@ -118,17 +75,19 @@ struct OpenDoor::Pimpl {
 
     std::optional<geometry_msgs::Pose> getApproachPoseFromBase() const {
         try {
-            geometry_msgs::PoseStamped currentPose = mParent.mTfBuffer.transform(
+            geometry_msgs::PoseStamped currentPose = tf().transform(
                 mDoorApproachPose, "arips_base", ros::Time::now(), "odom", ros::Duration(0.1));
 
             return currentPose.pose;
-        } catch (const tf2::TransformException &ex) {
+        } catch (const tf2::TransformException& ex) {
             ROS_WARN_STREAM("getApproachPoseFromBase() error: " << ex.what());
             return {};
         }
     }
 
-    void onDoorHandleReceived(const geometry_msgs::PoseStamped &pose) {
+    void waitingDoorPose() {}
+
+    void onDoorHandleReceived(const geometry_msgs::PoseStamped& pose) {
         try {
             tf2::Stamped<tf2::Transform> poseTransform;
             tf2::fromMsg(pose, poseTransform);
@@ -149,21 +108,21 @@ struct OpenDoor::Pimpl {
 
             mApproachPosePub.publish(mDoorApproachPose);
 
-            if (mState == State::WaitingDoorPose) {
-                setState(State::RotatingStart);
+            if (isStateFunc(&Pimpl::waitingDoorPose)) {
+                setState(&Pimpl::rotateAtStart);
                 std_msgs::Bool enable;
                 enable.data = false;
                 mEnablePub.publish(enable);
             }
-        } catch (const tf2::TransformException &ex) {
+        } catch (const tf2::TransformException& ex) {
             ROS_WARN_STREAM("onDoorHandleReceived() error: " << ex.what());
         }
     }
 
-    void onServoPosReceived(const std_msgs::Float32 &msg) { mLastServoPos = msg.data; }
+    void onServoPosReceived(const std_msgs::Float32& msg) { mLastServoPos = msg.data; }
 
     void rotateAtStart() {
-        setState(State::DrivingDoor);
+        setState(&Pimpl::driveToDoor);
 
 #if 0
         // rotate away such that goal is at robot's back side
@@ -186,7 +145,7 @@ struct OpenDoor::Pimpl {
         }
     } else {
         mNav.setGoal(mDoorPose);
-        setState(State::DrivingDoor);
+        setState(State::drivingDoor);
     }
 
     mCmdVelPub.publish(cmd_vel);
@@ -200,8 +159,8 @@ struct OpenDoor::Pimpl {
         if (approachPose) {
             const auto handleStart = approachPose->position;
 
-            const float angleDiff = std::atan2(handleStart.y, -handleStart.x);
-            const float floatAngleThres = angles::from_degrees(20);
+            const auto angleDiff = std::atan2(handleStart.y, -handleStart.x);
+            const auto floatAngleThres = angles::from_degrees(20);
 
             ROS_INFO_STREAM("angleDiff: " << angleDiff);
 
@@ -210,17 +169,17 @@ struct OpenDoor::Pimpl {
             } else if (angleDiff < -floatAngleThres) {
                 cmd_vel.angular.z = 0.2;
             } else if (!mVelPlanner.computeVelocity(handleStart.x, handleStart.y, cmd_vel)) {
-                setState(State::RotatingFinal);
+                setState(&Pimpl::rotateFinal);
             }
         }
 
-        mParent.mCmdVelPub.publish(cmd_vel);
+        publishCmdVel(cmd_vel);
 
 #if 0
         if(mNav.isActive()) {
         mNav.runCycle();
     } else {
-        setState(State::RotatingFinal);
+        setState(&Pimpl::RotatingFinal);
     }
 #endif
     }
@@ -233,10 +192,10 @@ struct OpenDoor::Pimpl {
             tf2::Quaternion handleQuat;
             tf2::fromMsg(approachPose->orientation, handleQuat);
             const auto handleDirVec = tf2::quatRotate(handleQuat, tf2::Vector3(1, 0, 0));
-            const float handleAngle = std::atan2(handleDirVec.y(), handleDirVec.x());
+            const auto handleAngle = std::atan2(handleDirVec.y(), handleDirVec.x());
 
-            const float angleDiff = angles::normalize_angle(handleAngle);
-            const float angleThres = angles::from_degrees(5);
+            const auto angleDiff = angles::normalize_angle(handleAngle);
+            const auto angleThres = angles::from_degrees(5);
 
             ROS_INFO_STREAM("angleDiff: " << angleDiff);
 
@@ -245,92 +204,44 @@ struct OpenDoor::Pimpl {
             } else if (angleDiff < -angleThres) {
                 cmd_vel.angular.z = -0.2;
             } else {
-                setState(State::PullHandle);
+                setState(&Pimpl::pullHandle);
             }
         }
 
-        mParent.mCmdVelPub.publish(cmd_vel);
+        publishCmdVel(cmd_vel);
     }
 
     ros::Time mLastTime{0};
 
-    void driveOpen() {
-        geometry_msgs::PoseStamped localPoseMsg;
-        mCostmap.getRobotPose(localPoseMsg);
-        tf2::Stamped<tf2::Transform> localPose;
-        tf2::fromMsg(localPoseMsg, localPose);
-
-        const auto robotFront = localPose * tf2::Vector3{mConfig.drive_open_wall_dist, 0, 0};
-        const auto *costmap = mCostmap.getCostmap();
-        unsigned int mx, my;
-
-        int costs = costmap->worldToMap(robotFront.x(), robotFront.y(), mx, my)
-                        ? costmap->getCost(mx, my)
-                        : costmap_2d::LETHAL_OBSTACLE;
-
-        if (mLastTime.isZero()) {
-            mLastTime = ros::Time::now();
+    void clearAfterPulling() {
+        setServo(0);
+        if (mLastServoPos  < 5.0) {
+            geometry_msgs::Twist cmd_vel;
+            cmd_vel.linear.x = 0.1;
+            mDriveUntilCollision.activate(cmd_vel, mConfig.drive_open_wall_dist/3, ros::Duration{5});
+            execState(&mDriveUntilCollision, nullptr);
         }
-
-        geometry_msgs::Twist cmd_vel;
-
-        const auto duration = ros::Time::now() - mLastTime;
-        if (costs < costmap_2d::INSCRIBED_INFLATED_OBSTACLE && duration.toSec() < 5) {
-            cmd_vel.linear.x = 0.2;
-            cmd_vel.angular.z = 0.3;
-        } else {
-            setServo(0);
-            mLastTime = ros::Time(0);
-            setState(State::DriveAway);
-        }
-
-        mParent.mCmdVelPub.publish(cmd_vel);
-    }
-
-    void driveAway() {
-        if (mLastTime.isZero()) {
-            mLastTime = ros::Time::now();
-        }
-
-        geometry_msgs::Twist cmd_vel;
-
-        const auto duration = ros::Time::now() - mLastTime;
-        if (duration.toSec() < 3.5) {
-
-        } else if (duration.toSec() < 5.0) {
-            cmd_vel.linear.x = 0.0;
-            cmd_vel.angular.z = -0.4;
-        } else {
-            mLastTime = ros::Time(0);
-
-            mCostmap.resetLayers();
-            setState(State::Idle);
-        }
-
-        mParent.mCmdVelPub.publish(cmd_vel);
     }
 
     void pullHandle() {
         setServo(100);
         if (mLastServoPos > 90.0) {
-            setState(State::DriveOpen);
+            geometry_msgs::Twist cmd_vel;
+            cmd_vel.linear.x = 0.2;
+            cmd_vel.angular.z = 0.3;
+            mDriveUntilCollision.activate(cmd_vel, mConfig.drive_open_wall_dist, ros::Duration{5});
+            execState(&mDriveUntilCollision, &Pimpl::clearAfterPulling);
         }
-    }
-
-    void setState(State newState) {
-        mState = newState;
-        ROS_INFO_STREAM("OpenDoor: new state " << (int)newState);
     }
 };
 
-OpenDoor::OpenDoor(tf2_ros::Buffer &tf, ros::Publisher &cmdVelPub,
-                   costmap_2d::Costmap2DROS &costmap)
-    : DrivingStateProto(tf, cmdVelPub), pimpl(std::make_unique<Pimpl>(*this, costmap)) {}
+OpenDoor::OpenDoor(NavigationContext& context, DriveUntilCollision& driveUntilCollision)
+    : pimpl(std::make_unique<Pimpl>(context, driveUntilCollision)) {}
 
 OpenDoor::~OpenDoor() = default;
 
 void OpenDoor::init() { pimpl->init(); }
 
-bool OpenDoor::isActive() { return pimpl->mState != Pimpl::State::Idle; }
+bool OpenDoor::isActive() { return pimpl->isActive(); }
 
 void OpenDoor::runCycle() { pimpl->runCycle(); }

@@ -8,7 +8,7 @@
 
 class CrossDoor: public DrivingState {
 public:
-    CrossDoor(tf2_ros::Buffer& tf, ros::Publisher& cmdVelPub, DriveTo& driveTo, OpenDoor& openDoor);
+    CrossDoor(NavigationContext& ctx, DriveTo& driveTo, OpenDoor& openDoor);
 
     void activate(arips_navigation::CrossDoorInformation const& doorInfo);
 
