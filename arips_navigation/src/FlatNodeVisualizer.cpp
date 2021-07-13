@@ -78,10 +78,13 @@ void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node* node) {
     nodeMarkers.header.stamp = ros::Time::now();
     nodeMarkers.header.frame_id = data.planner->getMap().getGlobalFrameID();
     nodeMarkers.type = visualization_msgs::Marker::POINTS;
-    nodeMarkers.action = visualization_msgs::Marker::ADD;
+    nodeMarkers.action = visualization_msgs::Marker::DELETEALL;
     nodeMarkers.ns = "topo_node";
     nodeMarkers.scale.x = res;
     nodeMarkers.scale.y = res;
+
+    m_nodeMarkerPub.publish(nodeMarkers);
+    nodeMarkers.action = visualization_msgs::Marker::ADD;
 
     using Color = std::array<uint8_t, 3>;
     const std::vector<Color> allColors = {

@@ -34,42 +34,37 @@ parser_data:
             y: -1.941192269325256
             z: -9.5367431640625e-07
           frame_id: map
+        - name: Step_1
+          start:
+            x: 2.344362020492554
+            y: -3.356512308120728
+            z: 2.384185791015625e-07
+          end:
+            x: 2.349725246429443
+            y: -2.560161352157593
+            z: 0
+          frame_id: map
 nodes:
-  - name: appartement
+  - name: Arbeitszimmer
     type: flat
     node_data:
       x: 240
       y: 240
-  - name: map1_node_1
-    type: flat
-    node_data:
-      x: 225
-      y: 225
-  - name: map1_node_2
+  - name: Flur
     type: flat
     node_data:
       x: 129
       y: 129
-  - name: map1_node_3
+  - name: Wohnzimmer
     type: flat
     node_data:
       x: 370
       y: 370
-  - name: map1_node_4
-    type: flat
-    node_data:
-      x: 311
-      y: 311
-  - name: map1_node_5
-    type: flat
-    node_data:
-      x: 203
-      y: 203
 edges:
-  - name: step_0_appartement_appartement
+  - name: step_Arbeitszimmer_Flur
     type: step
-    source: appartement
-    target: map1_node_1
+    source: Arbeitszimmer
+    target: Flur
     approach_data:
       approach:
         type: LineArea
@@ -91,10 +86,10 @@ edges:
     edge_data:
       step_name: Step_0
       step_type: up
-  - name: step_1_appartement_appartement
+  - name: step_Flur_Arbeitszimmer
     type: step
-    source: map1_node_1
-    target: appartement
+    source: Flur
+    target: Arbeitszimmer
     approach_data:
       approach:
         type: LineArea
@@ -115,4 +110,54 @@ edges:
     exit_data: ~
     edge_data:
       step_name: Step_0
+      step_type: up
+  - name: step_Flur_Wohnzimmer
+    type: step
+    source: Flur
+    target: Wohnzimmer
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.097061529489498
+          y: -2.954837729450821
+          z: 2.384185791015625e-07
+        end:
+          x: 2.097037076266821
+          y: -2.958468631352771
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.003367318565516601
+          w: -0.9999943305667679
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
+      step_type: up
+  - name: step_Wohnzimmer_Flur
+    type: step
+    source: Wohnzimmer
+    target: Flur
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 2.597050190655176
+          y: -2.958205028925549
+          z: 2.384185791015625e-07
+        end:
+          x: 2.597025737432499
+          y: -2.9618359308275
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.9999943305667679
+          w: 0.00336731856551654
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_1
       step_type: up
