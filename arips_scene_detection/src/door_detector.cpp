@@ -24,7 +24,7 @@ CloudResolution DoorDetector::preferredResolution() {
 
 void DoorDetector::processPointcloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &input,
                                      visualization_msgs::MarkerArray &markerArray) {
-    const float distanceTolerance = 0.1;
+    const float distanceTolerance = 0.2;
     const float angleTolerance = angles::from_degrees(10);
     const float doorRadius = 0.8;
     const int minDoorPoints = 150;

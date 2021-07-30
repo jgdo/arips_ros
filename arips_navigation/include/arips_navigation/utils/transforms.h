@@ -67,6 +67,12 @@ inline auto createQuaternionMsgFromYaw(double yaw)
     return tf2::toMsg(q);
 }
 
+auto static createQuaternionFromYaw(double yaw) {
+    tf2::Quaternion q;
+    q.setRPY(0, 0, yaw);
+    return q;
+}
+
 
 inline double getYawFromQuaternion(const geometry_msgs::Quaternion& msg) {
     tf2::Quaternion q(msg.x, msg.y, msg.z, msg.w);

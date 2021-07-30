@@ -576,11 +576,11 @@ void StepEdgeModule::setApproachFromStepCB(
     MapStepData &stepData = getMapData(mapEditor->getMap());
     StepInfo const &stepInfo = stepData.steps.at(edgeData.stepName);
 
-    double robotWidth2 = 0.4; // FIXME
-    double robotLength2 = 0.25;
+    const double robotWidth2 = 0.4; // FIXME
+    const double robotLength2 = 1.0;
 
-    auto diff = tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
-    double yaw = atan2(diff.y(), diff.x());
+    const auto diff = tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
+    const double yaw = atan2(diff.y(), diff.x());
 
     tf2::Transform startTrans(createQuaternionFromYaw(yaw), stepInfo.start);
 

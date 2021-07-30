@@ -3,6 +3,9 @@
 //
 
 #include "arips_navigation/TopoExecuter.h"
+#include <arips_navigation/StepEdgeModule.h>
+
+#include <arips_navigation/utils/transforms.h>
 
 #include <memory>
 
@@ -31,9 +34,10 @@ static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
     return true;
 }
 
-TopoExecuter::TopoExecuter(NavigationContext& context, DriveTo& driveTo, toponav_ros::TopoPlannerROS& topoPlanner)
-    : DrivingStateProto{context}, mDriveTo{driveTo}, mTopoPlanner(topoPlanner) {
-}
+TopoExecuter::TopoExecuter(NavigationContext& context, DriveTo& driveTo,
+                           toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor)
+    : DrivingStateProto{context}, mDriveTo{driveTo},
+      mTopoPlanner(topoPlanner), mCrossDoor{crossDoor} {}
 
 void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
     tf2::Stamped<tf2::Transform> pose;
@@ -140,6 +144,25 @@ void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovem
 void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* transition) {
     assert(transition->topoEdge->getTransitionType() == "step");
 
+    const auto& edgeData = toponav_ros::StepEdgeModule::getEdgeData(transition->topoEdge);
+    const auto& stepData = toponav_ros::StepEdgeModule::getMapData(transition->topoEdge->getParentMap());
+    const auto& stepInfo = stepData.steps.at(edgeData.stepName);
+
+    const auto diff = stepInfo.end - stepInfo.start;
+    const double yaw = atan2(diff.y(), diff.x());
+
+    const tf2::Transform startTrans(createQuaternionFromYaw(yaw), stepInfo.start);
+
+    arips_navigation::CrossDoorInformation doorInfo;
+    tf2::toMsg(startTrans, doorInfo.pivotPose.pose);
+    doorInfo.pivotPose.header.frame_id = stepInfo.start.frame_id_;
+
+    auto closeApproach = toponav_ros::StepEdgeModule::getApproachData(transition->topoEdge)->getCenter();
+    closeApproach.setOrigin(closeApproach.getOrigin() * 0.25 + (stepInfo.start + stepInfo.end) *0.5 * 0.75);
+    tf2::toMsg(closeApproach, doorInfo.approachPose);
+
+    mCrossDoor.activate(doorInfo);
+
     mSegmentExec = std::make_unique<TransitionExecuter>();
 }
 
@@ -149,15 +172,24 @@ bool TopoExecuter::MovementExecuter::runCycle(TopoExecuter* parent) {
 }
 
 bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
-    const ros::Time currentTime = ros::Time::now();
-    const double sec = (currentTime - m_StartTime).toSec();
-    const bool finished = sec > 2.0;
+    if(parent->mCrossDoor.isActive()) {
+        parent->mCrossDoor.runCycle();
+        return false;
+    } else {
+        if(m_StartTime.isZero()) {
+            m_StartTime = ros::Time::now();
+        }
 
-    geometry_msgs::Twist cmd_vel;
-    if (!finished) {
-        cmd_vel.linear.x = 0.4;
+        const ros::Time currentTime = ros::Time::now();
+        const double sec = (currentTime - m_StartTime).toSec();
+        const bool finished = sec > 2.0;
+
+        geometry_msgs::Twist cmd_vel;
+        if (!finished) {
+            cmd_vel.linear.x = 0.4;
+        }
+
+        parent->publishCmdVel(cmd_vel);
+        return finished;
     }
-
-    parent->publishCmdVel(cmd_vel);
-    return finished;
 }

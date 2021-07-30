@@ -11,7 +11,7 @@
 struct CrossDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
     constexpr static auto fixedFrame = "map";
     constexpr static auto robotFrame = "arips_base";
-    const double closedDoorAngleThres = angles::from_degrees(30);
+    const double closedDoorAngleThres = angles::from_degrees(50);
     const double fullyOpenDoorAngleThres = angles::from_degrees(80);
 
     Pimpl(NavigationContext& ctx, DriveTo& driveTo, OpenDoor& openDoor)
@@ -43,11 +43,11 @@ struct CrossDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
 
         if (isStateInit()) {
             setKinectAngleDeg(0);
-
-            // TODO find better method
-            mDoorInfo.pivotPose.header.stamp = ros::Time::now();
-            mDoorInfo.approachPose.header.stamp = ros::Time::now();
         }
+
+        // TODO find better method to avoid transform timeout
+        mDoorInfo.pivotPose.header.stamp = ros::Time::now();
+        mDoorInfo.approachPose.header.stamp = ros::Time::now();
 
         if (!mDoorPoseSub.receivedOnce) {
             ROS_INFO_STREAM("Door pose not received yet");
