@@ -39,7 +39,15 @@ public:
 
     [[nodiscard]] bool findNeighborLowerCost(CellIndex& index) const;
 
-    std::optional<double> getGradient(const CellIndex& index) const;
+    [[nodiscard]] std::optional<double> getGradient(const CellIndex& index) const;
+
+    costmap_2d::Costmap2DROS& costmap() {
+        return mCostmapRos;
+    }
+
+    CellIndex lastGoal() const {
+        return mLastGoal;
+    }
 
 private:
     costmap_2d::Costmap2DROS& mCostmapRos;
@@ -79,4 +87,6 @@ private:
 
     template<class M>
     std::optional<double> calcGradientWithMatrix(const CellIndex& index, const M& conv) const;
+
+    CellIndex mLastGoal;
 };

@@ -7,6 +7,8 @@
 
 #include <arips_navigation/path_planning/PotentialMap.h>
 #include <arips_navigation/path_planning/PotentialMapVisualizer.h>
+#include <arips_navigation/path_planning/MotionController.h>
+
 #include <visualization_msgs/MarkerArray.h>
 
 #include <arips_navigation/utils/transforms.h>
@@ -90,7 +92,12 @@ struct DemoNode {
 
                     pathPub.publish(path);
 
+                    const auto cmdVel = motionController.computeVelocity();
+                    cmdVelPub.publish(*cmdVel);
+
+                    /*
                     {
+
 
                         auto optGrad = potentialMap.getGradient({cx, cy});
 
@@ -149,6 +156,7 @@ struct DemoNode {
                         marker.color.b = 0.0;
                         gradPub.publish(marker);
                     }
+                     */
 
                     visualization_msgs::MarkerArray markerArray;
                     visualization_msgs::Marker marker;
@@ -217,6 +225,7 @@ struct DemoNode {
     ros::Publisher gradPub;
     ros::Publisher potentialGradPub;
     global_planner::GlobalPlanner global_planner;
+    MotionController motionController{potentialMap};
     ros::Publisher cmdVelPub;
 
     ros::Timer loopTimer;

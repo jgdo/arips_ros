@@ -5,6 +5,8 @@
 PotentialMap::PotentialMap(costmap_2d::Costmap2DROS& costmap) : mCostmapRos(costmap) {}
 
 void PotentialMap::computeDijkstra(const CellIndex& goal) {
+    mLastGoal = goal;
+
     const auto begin = std::chrono::steady_clock::now();
 
     auto* costmap = mCostmapRos.getCostmap();
@@ -35,6 +37,7 @@ void PotentialMap::computeDijkstra(const CellIndex& goal) {
 
     ROS_INFO_STREAM("Global map dijkstra potential took " << elapsedMs << " ms");
 }
+
 void PotentialMap::insertCellIntoQueue(const CellIndex& index) {
     auto& cell = getCell(index);
     mDistQueue.push({&cell, index});

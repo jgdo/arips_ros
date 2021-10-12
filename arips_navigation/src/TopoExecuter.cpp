@@ -182,11 +182,11 @@ bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
 
         const ros::Time currentTime = ros::Time::now();
         const double sec = (currentTime - m_StartTime).toSec();
-        const bool finished = sec > 2.0;
+        const bool finished = sec > 2.1;
 
         geometry_msgs::Twist cmd_vel;
         if (!finished) {
-            cmd_vel.linear.x = 0.4;
+            cmd_vel.linear.x = 0.5;
         }
 
         parent->publishCmdVel(cmd_vel);

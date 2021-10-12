@@ -1,5 +1,5 @@
 <launch>
-	<arg name="joy" default="false"/>
+	<arg name="joy" default="true"/>
 	
 	<arg name="scan_matcher" default="true"/>
 

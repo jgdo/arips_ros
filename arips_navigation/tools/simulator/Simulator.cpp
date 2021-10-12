@@ -33,7 +33,7 @@ struct Simulator::Pimpl {
     explicit Pimpl(tf2_ros::Buffer& tf) : mTfBuffer{tf} {
         ros::NodeHandle nh;
         mRobotPose.header.frame_id = "map";
-        mRobotPose.child_frame_id = "base_link";
+        mRobotPose.child_frame_id = "arips_base";
         mRobotPose.pose.pose.orientation.w = 1; // start at 0
 
         mOdomPub = nh.advertise<nav_msgs::Odometry>("odom", 5);

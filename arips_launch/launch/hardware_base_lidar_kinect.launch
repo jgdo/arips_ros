@@ -1,0 +1,19 @@
+<launch>
+  
+  <arg name="joy" default="true"/>
+
+  <include file="$(find arips_launch)/launch/hardware_base_lidar.launch" >
+		<arg name="joy" value="$(arg joy)"/>
+	</include>  
+	
+	
+  <!-- arm -->
+	<include file="$(find arips_launch)/launch/arm.launch" />
+
+  <include file="$(find arips_launch)/launch/kinect.launch" />  
+  
+  
+  <node pkg="tf2_ros" type="static_transform_publisher" name="imu_to_base"
+    args="0 0 0 0 0 0 arips_base imu" />  
+    
+</launch>

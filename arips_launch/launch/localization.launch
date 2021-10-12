@@ -1,6 +1,6 @@
 <launch>
   <!-- Run the map server -->
-  <arg name="map_file" default="$(find arips_launch)/../maps/single_room.yaml"/>
+  <arg name="map_file" default="$(find arips_launch)/../maps/cartographer/lu_cart.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
   <arg name="use_map_topic"   default="true"/>

@@ -1,0 +1,15 @@
+<launch>
+
+
+   <remap from="points2" to="/kinect/depth_registered/points" />
+   
+   
+    <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
+          -configuration_directory
+              $(find arips_launch)/configuration_files
+          -configuration_basename arips_lidar_3d.lua" output="screen">
+    </node>
+    
+   
+    
+</launch>

@@ -34,6 +34,8 @@ def battery_loop():
 
     while not rospy.is_shutdown():
         line = serial_device.readline().decode("utf-8")
+        
+        # print(f'Line: {line}')
 
         bat_state = BatteryState()
         parsed_data = parse(

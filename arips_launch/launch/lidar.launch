@@ -21,6 +21,6 @@
     args="0.0 0.0 0.0 0.0 0 3.14159265 arips_base laser_frame" /-->  
     
     <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.07 0.0 0.0 3.14159265 0 0 arips_base laser_frame" />
+    args="0.00 0.0 0.0 3.14159265 0 0 arips_base laser_frame" />
     
 </launch>

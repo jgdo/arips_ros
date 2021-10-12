@@ -1,0 +1,13 @@
+<launch>
+  <node pkg="rosbag" type="play" name="rosbag" required="true" args="/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/bags/door_handle.bag"/>
+  <node name="extract" pkg="image_view" type="extract_images" respawn="false" required="true" output="screen" cwd="ROS_HOME">
+    <remap from="image" to="/kinect/rgb/image_raw"/>
+  </node>
+  
+  
+  <node name="decompress" pkg="image_transport" type="republish" respawn="false" required="true" output="screen" args="compressed in:=/kinect/rgb/image_color out:=/kinect/rgb/image_raw">
+  </node>
+  
+  
+</launch>
+

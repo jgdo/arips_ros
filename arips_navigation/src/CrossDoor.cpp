@@ -20,6 +20,10 @@ struct CrossDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
     ~Pimpl() override = default;
 
     void activate(arips_navigation::CrossDoorInformation const& doorInfo) {
+        setState(&Pimpl::approachCross);
+        return;
+
+        // TODO
         mDoorInfo = doorInfo;
         mDoorPoseSub.receivedOnce = false;
         mDoorPivotPub.publish(doorInfo.pivotPose);

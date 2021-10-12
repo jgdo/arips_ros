@@ -266,21 +266,21 @@ private:
             try {
                 mJointState.position.at(i) = mServos.at(i).updateState() * M_PI / 180.0F;
             } catch (const std::runtime_error& err) {
-                ROS_WARN_STREAM("error when reading servo " << i << ": " << err.what());
+                ROS_WARN_STREAM_ONCE("error when reading servo " << i << ": " << err.what());
             }
         }
 
         try {
             mJointState.position.at(NUM_JOINTS) = mServos.at(NUM_JOINTS).updateState();
         } catch (const std::runtime_error& err) {
-            ROS_WARN_STREAM(err.what());
+            ROS_WARN_STREAM_ONCE(err.what());
         }
 
         for(size_t i = NUM_JOINTS+1; i < mServos.size(); i++) {
             try {
                 mServos.at(i).updateState();
             } catch (const std::runtime_error& err) {
-                ROS_WARN_STREAM(err.what());
+                ROS_WARN_STREAM_ONCE(err.what());
             }
         }
 
