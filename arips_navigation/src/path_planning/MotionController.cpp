@@ -61,17 +61,19 @@ double computeSpeed(double goalDist, double duration, double maxSpeed) {
     return std::min(goalDist / duration, maxSpeed);
 }
 
-Trajectories sampleTrajectories(const Pose2D& currentPose, const Pose2D& goal) {
-    const auto duration = 0.5;
-    const auto transSpeed = computeSpeed((goal.point - currentPose.point).norm(), duration, 0.5);
-    const auto rotSpeed = 0.5;
-    const auto dt = duration / 10;
+Trajectories sampleTrajectories(const Pose2D& currentPose, const Pose2D& goal,
+                                const CostFunction& constFunction) {
+    const auto duration = 0.8;
+    const auto transSpeed = computeSpeed((goal.point - currentPose.point).norm(), duration,
+                                         constFunction.maxWheelSpeed());
+    const auto rotSpeed = 1.0;
+    const auto dt = duration / 20;
 
     Trajectories traj;
     traj.emplace_back(generateTrajectory(currentPose, {{0, 0}, rotSpeed}, duration, dt));
     traj.emplace_back(generateTrajectory(currentPose, {{0, 0}, -rotSpeed}, duration, dt));
 
-    const auto curvatureStep = 1.0;
+    const auto curvatureStep = 0.5;
     for (double curvature = -20; curvature < 20 + curvatureStep / 2; curvature += curvatureStep) {
         const auto speedFactor = transSpeed / (1.0 + std::abs(curvature) * 0.2);
         const Pose2D vel{{1 * speedFactor, 0}, curvature * speedFactor};
@@ -117,7 +119,7 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
             return {};
         }
 
-        const auto meterDist = (b.pose.point - a.pose.point).norm() * resolution;
+        const auto meterDist = (b.pose.point - a.pose.point).norm();
         const auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(cellCost);
         const auto rCost =
             0; // std::abs(angles::shortest_angular_distance(a.pose.theta, b.pose.theta));
@@ -126,7 +128,7 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
         worstCellCost = std::max(worstCellCost, cellCost);
     }
 
-    const auto totalCost = costToGoal + trajectoryCost;
+    const auto totalCost = costToGoal * 1.1 + trajectoryCost;
     return std::pair<double, uint8_t>{totalCost, worstCellCost};
 }
 
@@ -225,8 +227,9 @@ struct MotionController::Pimpl {
                 const auto goalDist = mPotentialMap.getGoalDistance(cx, cy);
 
                 const auto diff = trajCosts - goalDist;
-                textMarker.text += to_string_with_precision(diff, 5) + "+" + to_string_with_precision(goalDist, 3);
-                   //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
+                textMarker.text +=
+                    to_string_with_precision(diff, 5) + "+" + to_string_with_precision(goalDist, 3);
+                //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
             } else {
                 textMarker.text += "NaN";
             }
@@ -274,7 +277,7 @@ struct MotionController::Pimpl {
         const auto trajectories =
             sampleTrajectories({{robotPose.pose.position.x, robotPose.pose.position.y},
                                 getYawFromQuaternion(robotPose.pose.orientation)},
-                               goalPose);
+                               goalPose, mPotentialMap.costFunction());
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());

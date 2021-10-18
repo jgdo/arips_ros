@@ -23,6 +23,10 @@ public:
                cellCost != costmap_2d::NO_INFORMATION;
     }
 
+    double maxWheelSpeed() const {
+        return mMaxWheelSpeed;
+    }
+
 private:
     static constexpr double mMaxWheelSpeed = 0.4;
 
