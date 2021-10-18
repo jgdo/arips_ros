@@ -7,7 +7,7 @@ global_costmap:
   robot_base_frame: arips_base
   robot_radius: 0.2
   transform_tolerance: 1.0
-  inflation_radius: 0.3
+  inflation_radius: 0.5
   plugins:
     - {name: slam_map,       type: "costmap_2d::StaticLayer"}
     # - {name: door_overlay,   type: "costmap_2d::StaticLayer"}

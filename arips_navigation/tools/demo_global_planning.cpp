@@ -79,7 +79,7 @@ struct DemoNode {
                                             << (end - begin).toSec() * 1000);
                     }
 
-                    costmap.getCostmap()->setCost(cx, cy, initialRobotCost);
+                    // costmap.getCostmap()->setCost(cx, cy, initialRobotCost);
 
                     CellIndex index{cx, cy};
                     while (potentialMap.findNeighborLowerCost(index)) {
@@ -92,71 +92,19 @@ struct DemoNode {
 
                     pathPub.publish(path);
 
-                    const auto cmdVel = motionController.computeVelocity();
-                    cmdVelPub.publish(*cmdVel);
-
-                    /*
-                    {
-
-
-                        auto optGrad = potentialMap.getGradient({cx, cy});
-
-                        visualization_msgs::Marker marker;
-                        marker.header.frame_id = costmap.getGlobalFrameID();
-                        marker.header.stamp = ros::Time();
-                        marker.ns = "my_namespace";
-                        marker.id = 0;
-                        marker.type = visualization_msgs::Marker::ARROW;
-                        marker.pose.position = startPose.pose.position;
-
-                        // get gradient from path if too close to obstacle
-                        if (!optGrad) {
-                            CellIndex index{cx, cy};
-                            if (potentialMap.findNeighborLowerCost(index)) {
-                                if (potentialMap.findNeighborLowerCost(index)) {
-                                    if (potentialMap.findNeighborLowerCost(index)) {
-                                        const auto dx = (int)index.x() - (int)cx;
-                                        const auto dy = (int)index.y() - (int)cy;
-                                        optGrad = atan2(dy, dx);
-                                    }
-                                }
-                            }
-                        }
-
-                        geometry_msgs::Twist cmdVel;
-                        if (optGrad) {
-                            ROS_INFO_STREAM("Gradient: " << *optGrad);
-
-                            const double maxCost = 50;
-                            const double velocityScale = (maxCost - std::min<double>(initialRobotCost, maxCost)) / maxCost * 0.4 + 0.2;
-
-                            ROS_INFO_STREAM("initialRobotCost: " << (int)initialRobotCost);
-
-                            marker.action = visualization_msgs::Marker::ADD;
-                            marker.pose.orientation = createQuaternionMsgFromYaw(*optGrad);
-
-                            const double yaw = getYawFromQuaternion(startPose.pose.orientation);
-                            const double yawDiff = *optGrad - yaw;
-                            cmdVel.linear.x = cos(yawDiff) * velocityScale;
-                            cmdVel.angular.z = sin(yawDiff) * 1.0;
-
-
+                    geometry_msgs::Twist cmdVel;
+                    if(motionController.goalReached()) {
+                        goalMsg.header.frame_id.clear();
+                    } else {
+                        const auto optCdVel = motionController.computeVelocity();
+                        if(optCdVel) {
+                            cmdVel = *optCdVel;
                         } else {
-                            marker.action = visualization_msgs::Marker::DELETEALL;
+                            ROS_WARN("Could not compute velocity command");
                         }
-
-                        cmdVelPub.publish(cmdVel);
-
-                        marker.scale.x = 0.3;
-                        marker.scale.y = 0.05;
-                        marker.scale.z = 0.05;
-                        marker.color.a = 1.0; // Don't forget to set the alpha!
-                        marker.color.r = 0.0;
-                        marker.color.g = 1.0;
-                        marker.color.b = 0.0;
-                        gradPub.publish(marker);
                     }
-                     */
+                    cmdVelPub.publish(cmdVel);
+
 
                     visualization_msgs::MarkerArray markerArray;
                     visualization_msgs::Marker marker;
@@ -167,11 +115,11 @@ struct DemoNode {
                     marker.type = visualization_msgs::Marker::LINE_LIST;
                     marker.action = visualization_msgs::Marker::ADD;
                     marker.pose.orientation.w = 1;
-                    marker.scale.x = 0.003;
+                    marker.scale.x = 0.001;
                     marker.color.a = 1.0; // Don't forget to set the alpha!
-                    marker.color.r = 0.0;
+                    marker.color.r = 1.0;
                     marker.color.g = 1.0;
-                    marker.color.b = 0.0;
+                    marker.color.b = 1.0;
 
                     for (int x = cx - 30; x < cx + 30; x++) {
                         for (int y = cy - 30; y < cy + 30; y++) {
@@ -218,7 +166,8 @@ struct DemoNode {
 
     tf2_ros::Buffer& tfBuffer;
     costmap_2d::Costmap2DROS costmap{"global_costmap", tfBuffer};
-    PotentialMap potentialMap{costmap};
+    CostFunction costFunction;
+    PotentialMap potentialMap{costmap, costFunction};
     PotentialMapVisualizer mapViz{"global_potential"};
     ros::Subscriber sub;
     ros::Publisher pathPub;

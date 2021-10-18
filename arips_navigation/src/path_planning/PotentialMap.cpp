@@ -2,7 +2,8 @@
 
 #include <chrono>
 
-PotentialMap::PotentialMap(costmap_2d::Costmap2DROS& costmap) : mCostmapRos(costmap) {}
+PotentialMap::PotentialMap(costmap_2d::Costmap2DROS& costmap, const CostFunction& costFunction)
+    : mCostmapRos(costmap), mCostFunction{costFunction} {}
 
 void PotentialMap::computeDijkstra(const CellIndex& goal) {
     mLastGoal = goal;
@@ -115,9 +116,7 @@ PotentialMap::CellEntry PotentialMap::takeFirstFromQueue() {
 
 void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
                                   const CellIndex& check_index,
-                                  const costmap_2d::Costmap2D& costmap, float dist) {
-
-    static constexpr double costmapFactor = 1 / 300.0; // TODO values
+                                  const costmap_2d::Costmap2D& costmap, double cellDist) {
 
     auto& check_cell = getCell(check_index);
     if (check_cell.visited) {
@@ -125,17 +124,16 @@ void PotentialMap::updatePathCell(const PotentialMap::CellEntry& current_cell,
     }
 
     // if the cell is an obstacle set the max path distance
-    unsigned char check_cost = costmap.getCost(check_index.x(), check_index.y());
-    if ((check_cost == costmap_2d::LETHAL_OBSTACLE ||
-         check_cost == costmap_2d::INSCRIBED_INFLATED_OBSTACLE ||
-         check_cost == costmap_2d::NO_INFORMATION)) {
+    const auto cellCost = costmap.getCost(check_index.x(), check_index.y());
+    if (!mCostFunction.isValidCellCost(cellCost)) {
         check_cell.goalDist = obstacleCosts();
         check_cell.visited = true;
         return;
     }
 
+    const auto meterDist = cellDist * costmap.getResolution();
     const double newGoalDist =
-        current_cell.cell->goalDist + dist * (1.0 + check_cost * costmapFactor);
+        current_cell.cell->goalDist + meterDist / mCostFunction.maxWheelSpeedFromCosts(cellCost);
     if (check_cell.goalDist < 0 || newGoalDist < check_cell.goalDist) {
         check_cell.goalDist = newGoalDist;
 

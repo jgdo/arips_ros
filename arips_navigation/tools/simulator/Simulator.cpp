@@ -5,6 +5,7 @@
 
 #include <geometry_msgs/Twist.h>
 #include <interactive_markers/interactive_marker_server.h>
+#include <interactive_markers/menu_handler.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -19,16 +20,19 @@ struct Simulator::Pimpl {
     ros::Publisher mOdomPub;
     ros::Timer mControlLoopTimer;
 
-    DriveDirectionIndicator mSetpointIndicator {"setpoint_indicator", 0.2};
+    DriveDirectionIndicator mSetpointIndicator{"setpoint_indicator", 0.2};
 
     geometry_msgs::Twist mLastTwist;
-    int mTwistTimeoutCount =
-        0; // will be decremented on each control cycle, reset twist when no feedbeck received
+    // will be decremented on each control cycle, reset twist when no feedback received
+    int mTwistTimeoutCount = 0;
     nav_msgs::Odometry mRobotPose;
 
     tf2_ros::TransformBroadcaster mTfBroadcaster;
 
     interactive_markers::InteractiveMarkerServer mMarkerServer{"simulation_marker"};
+    interactive_markers::MenuHandler mMenuHandler;
+
+    bool mDrivingEnabled = true;
 
     explicit Pimpl(tf2_ros::Buffer& tf) : mTfBuffer{tf} {
         ros::NodeHandle nh;
@@ -55,6 +59,7 @@ struct Simulator::Pimpl {
 
         visualization_msgs::InteractiveMarkerControl box_control;
         box_control.always_visible = true;
+        box_control.name = "robot";
         {
             visualization_msgs::Marker box_marker;
             box_marker.type = visualization_msgs::Marker::CYLINDER;
@@ -102,11 +107,17 @@ struct Simulator::Pimpl {
             int_marker.controls.push_back(control);
         }
 
+        const auto feedback = [this](auto&& PH1) {
+            processMarkerFeedback(std::forward<decltype(PH1)>(PH1));
+        };
+
         // add the interactive marker to our collection &
         // tell the server to call processFeedback() when feedback arrives for it
-        mMarkerServer.insert(int_marker, [this](auto&& PH1) {
-            processMarkerFeedback(std::forward<decltype(PH1)>(PH1));
-        });
+        mMarkerServer.insert(int_marker, feedback);
+
+        mMenuHandler.setCheckState(mMenuHandler.insert("Enable driving", feedback),
+                                   interactive_markers::MenuHandler::CHECKED);
+        mMenuHandler.apply(mMarkerServer, int_marker.name);
 
         // 'commit' changes and send to all clients
         mMarkerServer.applyChanges();
@@ -127,37 +138,42 @@ struct Simulator::Pimpl {
 
         mSetpointIndicator.indicate(mLastTwist);
 
-        // see also http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom
-        double x = mRobotPose.pose.pose.position.x;
-        double y = mRobotPose.pose.pose.position.y;
-        double th = getYawFromQuaternion(mRobotPose.pose.pose.orientation);
+        if (mDrivingEnabled) {
 
-        const double dt = mControlRate.expectedCycleTime().toSec();
-        const double vx = mLastTwist.linear.x;
-        const double vy = mLastTwist.linear.y; // usually 0
-        const double vth = mLastTwist.angular.z;
+            // see also http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom
+            double x = mRobotPose.pose.pose.position.x;
+            double y = mRobotPose.pose.pose.position.y;
+            double th = getYawFromQuaternion(mRobotPose.pose.pose.orientation);
 
-        const double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-        const double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
-        const double delta_th = vth * dt;
+            const double dt = mControlRate.expectedCycleTime().toSec();
+            const double vx = mLastTwist.linear.x;
+            const double vy = mLastTwist.linear.y; // usually 0
+            const double vth = mLastTwist.angular.z;
 
-        x += delta_x;
-        y += delta_y;
-        th += delta_th;
+            const double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
+            const double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
+            const double delta_th = vth * dt;
+
+            x += delta_x;
+            y += delta_y;
+            th += delta_th;
+
+            mRobotPose.pose.pose.position.x = x;
+            mRobotPose.pose.pose.position.y = y;
+            mRobotPose.pose.pose.orientation = createQuaternionMsgFromYaw(th);
+            mRobotPose.twist.twist = mLastTwist;
+        }
 
         mRobotPose.header.stamp = ev.current_expired;
-        mRobotPose.pose.pose.position.x = x;
-        mRobotPose.pose.pose.position.y = y;
-        mRobotPose.pose.pose.orientation = createQuaternionMsgFromYaw(th);
-        mRobotPose.twist.twist = mLastTwist;
+
         // TODO: set covariance
         mOdomPub.publish(mRobotPose);
 
         geometry_msgs::TransformStamped transformStamped;
         transformStamped.header = mRobotPose.header;
         transformStamped.child_frame_id = mRobotPose.child_frame_id;
-        transformStamped.transform.translation.x = x;
-        transformStamped.transform.translation.y = y;
+        transformStamped.transform.translation.x = mRobotPose.pose.pose.position.x;
+        transformStamped.transform.translation.y = mRobotPose.pose.pose.position.y;
         transformStamped.transform.translation.z = 0.0;
         transformStamped.transform.rotation = mRobotPose.pose.pose.orientation;
 
@@ -175,6 +191,22 @@ struct Simulator::Pimpl {
             mRobotPose.pose.pose.position.x = feedback->pose.position.x;
             mRobotPose.pose.pose.position.y = feedback->pose.position.y;
             mRobotPose.pose.pose.orientation = feedback->pose.orientation;
+        } else if (feedback->event_type ==
+                   visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+            interactive_markers::MenuHandler::EntryHandle handle = feedback->menu_entry_id;
+            interactive_markers::MenuHandler::CheckState state;
+
+            mMenuHandler.getCheckState(handle, state);
+            if (state == interactive_markers::MenuHandler::CHECKED) {
+                mMenuHandler.setCheckState(handle, interactive_markers::MenuHandler::UNCHECKED);
+                mDrivingEnabled = false;
+            } else if (state == interactive_markers::MenuHandler::UNCHECKED) {
+                mMenuHandler.setCheckState(handle, interactive_markers::MenuHandler::CHECKED);
+                mDrivingEnabled = true;
+            }
+            mMenuHandler.reApply(mMarkerServer);
+
+            ROS_INFO_STREAM("Simulator driving enabled: " << mDrivingEnabled);
         }
     }
 };

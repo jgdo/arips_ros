@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node pkg="arips_navigation" type="demo_global_planning" respawn="false" name="demo_global_planning" output="screen" clear_params="true">
+    <rosparam file="$(find arips_navigation)/config/test/costmap.yaml" command="load" />
+  </node>
+  
+</launch>
