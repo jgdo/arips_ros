@@ -93,10 +93,10 @@ struct DemoNode {
                     pathPub.publish(path);
 
                     geometry_msgs::Twist cmdVel;
-                    if(motionController.goalReached()) {
+                    if(motionController.goalReached(goalMsg)) {
                         goalMsg.header.frame_id.clear();
                     } else {
-                        const auto optCdVel = motionController.computeVelocity();
+                        const auto optCdVel = motionController.computeVelocity(goalMsg);
                         if(optCdVel) {
                             cmdVel = *optCdVel;
                         } else {

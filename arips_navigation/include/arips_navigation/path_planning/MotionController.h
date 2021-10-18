@@ -21,9 +21,9 @@ public:
     explicit MotionController(PotentialMap& potentialMap);
     ~MotionController();
 
-    bool goalReached();
+    bool goalReached(const geometry_msgs::PoseStamped& gaolPose);
 
-    std::optional<geometry_msgs::Twist> computeVelocity();
+    std::optional<geometry_msgs::Twist> computeVelocity(const geometry_msgs::PoseStamped& goalPose);
 
 private:
     struct Pimpl;

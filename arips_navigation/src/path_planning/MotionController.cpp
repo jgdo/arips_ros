@@ -61,11 +61,10 @@ double computeSpeed(double goalDist, double duration, double maxSpeed) {
     return std::min(goalDist / duration, maxSpeed);
 }
 
-Trajectories sampleTrajectories(const Pose2D& currentPose, const Pose2D& goal,
+Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDistance,
                                 const CostFunction& constFunction) {
     const auto duration = 0.8;
-    const auto transSpeed = computeSpeed((goal.point - currentPose.point).norm(), duration,
-                                         constFunction.maxWheelSpeed());
+    const auto transSpeed = computeSpeed(goalDistance, duration, constFunction.maxWheelSpeed());
     const auto rotSpeed = 1.0;
     const auto dt = duration / 20;
 
@@ -133,6 +132,9 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
 }
 
 struct MotionController::Pimpl {
+    static constexpr auto GoalToleranceXY = 0.1;
+    static constexpr auto GoalToleranceYaw = 0.1;
+
     PotentialMap& mPotentialMap;
     ros::Publisher mVizPub;
 
@@ -141,22 +143,25 @@ struct MotionController::Pimpl {
         mVizPub = nh.advertise<visualization_msgs::MarkerArray>("sampled_trajectories", 10);
     }
 
-    [[nodiscard]] bool goalReached() const {
-        auto& costmap = mPotentialMap.costmap();
+    static double posePositionDistance(const geometry_msgs::PoseStamped& robotPose,
+                                       const geometry_msgs::PoseStamped& goalPose) {
+        return Vector2d{goalPose.pose.position.x - robotPose.pose.position.x,
+                        goalPose.pose.position.y - robotPose.pose.position.y}
+            .norm();
+    }
 
+    [[nodiscard]] bool goalReached(const geometry_msgs::PoseStamped& goalPose) const {
         geometry_msgs::PoseStamped robotPose;
-        if (!costmap.getRobotPose(robotPose)) {
+        if (!mPotentialMap.getCostmapRos().getRobotPose(robotPose)) {
             return false;
         }
 
-        unsigned int cx, cy;
-        if (!costmap.getCostmap()->worldToMap(robotPose.pose.position.x, robotPose.pose.position.y,
-                                              cx, cy)) {
-            return false;
-        }
+        const auto goalDistance = posePositionDistance(robotPose, goalPose);
+        const auto angularDistance =
+            angles::shortest_angular_distance(getYawFromQuaternion(robotPose.pose.orientation),
+                                              getYawFromQuaternion(goalPose.pose.orientation));
 
-        const auto goal = mPotentialMap.lastGoal();
-        return std::abs<int>(goal.x() - cx) <= 2 && std::abs<int>(goal.y() - cy) < 2;
+        return goalDistance <= GoalToleranceXY && std::abs(angularDistance) < GoalToleranceYaw;
     }
 
     void visualizeTrajectories(const Trajectories& trajectories,
@@ -257,10 +262,9 @@ struct MotionController::Pimpl {
         mVizPub.publish(markerArray);
     }
 
-    std::optional<geometry_msgs::Twist> computeVelocity() {
-        if (goalReached()) {
-            return geometry_msgs::Twist{};
-        }
+    std::optional<geometry_msgs::Twist>
+    computeVelocity(const geometry_msgs::PoseStamped& goalPose) {
+        const auto angleThresRotateInPlace = 1.5;
 
         auto& costmap = mPotentialMap.costmap();
 
@@ -269,15 +273,48 @@ struct MotionController::Pimpl {
             return {};
         }
 
-        Pose2D goalPose;
-        const auto goalIndex = mPotentialMap.lastGoal();
-        costmap.getCostmap()->mapToWorld(goalIndex.x(), goalIndex.y(), goalPose.point.x(),
-                                         goalPose.point.y());
+        if (goalReached(goalPose)) {
+            return geometry_msgs::Twist{};
+        }
+
+        const double robotYaw = getYawFromQuaternion(robotPose.pose.orientation);
+
+        const auto goalDistXY = posePositionDistance(robotPose, goalPose);
+        if (goalDistXY < GoalToleranceXY*0.8) {
+            const double goalYaw = getYawFromQuaternion(goalPose.pose.orientation);
+            const auto rotationDiff = angles::shortest_angular_distance(robotYaw, goalYaw);
+
+            if (std::abs(rotationDiff) > GoalToleranceYaw) {
+                const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
+                geometry_msgs::Twist cmdVel;
+                cmdVel.linear.x = 0;
+                cmdVel.linear.y = 0;
+                cmdVel.angular.z = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
+                return cmdVel;
+            }
+        }
+
+        unsigned int robotCx, robotCy;
+        if (costmap.getCostmap()->worldToMap(robotPose.pose.position.x, robotPose.pose.position.y,
+                                             robotCx, robotCy)) {
+            const auto optGrad = mPotentialMap.getGradient({robotCx, robotCy});
+            if (optGrad) {
+                const auto rotationDiff = angles::shortest_angular_distance(robotYaw, *optGrad);
+
+                if (std::abs(rotationDiff) > angleThresRotateInPlace) {
+                    const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
+                    geometry_msgs::Twist cmdVel;
+                    cmdVel.linear.x = 0;
+                    cmdVel.linear.y = 0;
+                    cmdVel.angular.z = 0.5 * sign;
+                    return cmdVel;
+                }
+            }
+        }
 
         const auto trajectories =
-            sampleTrajectories({{robotPose.pose.position.x, robotPose.pose.position.y},
-                                getYawFromQuaternion(robotPose.pose.orientation)},
-                               goalPose, mPotentialMap.costFunction());
+            sampleTrajectories({{robotPose.pose.position.x, robotPose.pose.position.y}, robotYaw},
+                               goalDistXY, mPotentialMap.costFunction());
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
@@ -398,8 +435,11 @@ MotionController::MotionController(PotentialMap& potentialMap)
 
 MotionController::~MotionController() = default;
 
-bool MotionController::goalReached() { return mPimpl->goalReached(); }
+bool MotionController::goalReached(const geometry_msgs::PoseStamped& gaolPose) {
+    return mPimpl->goalReached(gaolPose);
+}
 
-std::optional<geometry_msgs::Twist> MotionController::computeVelocity() {
-    return mPimpl->computeVelocity();
+std::optional<geometry_msgs::Twist>
+MotionController::computeVelocity(const geometry_msgs::PoseStamped& goalPose) {
+    return mPimpl->computeVelocity(goalPose);
 }
