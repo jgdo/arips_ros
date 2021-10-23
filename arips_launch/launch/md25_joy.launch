@@ -1,4 +1,4 @@
 <launch>
-  <include file="$(find arips_launch)/launch/md25.launch" />
-  <include file="$(find arips_launch)/launch/joy_teleop.launch" />
+  <include file="$(find arips_launch)/launch/base_power.launch" />
+  <include file="$(find arips_launch)/capability_launch/cap_md25_joy.launch" />
 </launch>

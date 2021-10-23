@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+<script type="text/javascript" type="text/javascript">
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  var listCapabilityInterfacesClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/capability_server/get_interfaces',
+    serviceType : 'capabilities/GetInterfaces'
+  });
+
+  var runningCapabilityInterfacesClient = new ROSLIB.Service({
+      ros : ros,
+      name : '/capability_server/get_running_capabilities',
+      serviceType : 'capabilities/GetRunningCapabilities'
+  });
+
+  var startCapabilityClient = new ROSLIB.Service({
+      ros : ros,
+      name : '/capability_server/start_capability',
+      serviceType : 'capabilities/StartCapability'
+  });
+
+  var stopCapabilityClient = new ROSLIB.Service({
+      ros : ros,
+      name : '/capability_server/stop_capability',
+      serviceType : 'capabilities/StopCapability'
+  });
+
+  function enableCapability(capability, enabled) {
+    if(enabled) {
+        const request = new ROSLIB.ServiceRequest({
+            capability: capability,
+            preferred_provider: ''
+        });
+
+        startCapabilityClient.callService(request, function(result) {
+            updateCapabilities();
+        });
+    } else {
+        const request = new ROSLIB.ServiceRequest({
+            capability: capability
+        });
+
+        stopCapabilityClient.callService(request, function(result) {
+            updateCapabilities();
+        });
+    }
+  }
+
+  function updateCapabilities() {
+    listCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(capabilitiesResult) {
+        runningCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(runningCapabilitiesResult) {
+        const runningCapabilitiesSet = new Set();
+
+        for(const entry of runningCapabilitiesResult.running_capabilities) {
+            runningCapabilitiesSet.add(entry.capability.capability);
+        }
+
+        capElement = document.getElementById("capabilities");
+        capElement.innerHTML = "";
+
+        for(const capability of capabilitiesResult.interfaces) {
+          const isRunning = runningCapabilitiesSet.has(capability);
+            var checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = capability;
+            checkbox.value = capability;
+            checkbox.checked = isRunning;
+            capElement.appendChild(checkbox);
+
+            var label = document.createElement('label')
+            label.htmlFor = capability;
+            label.appendChild(document.createTextNode(capability));
+
+            capElement.appendChild(label);
+            capElement.appendChild(document.createElement("br"));
+
+            checkbox.addEventListener('change', function() {
+                enableCapability(this.name, this.checked);
+            });
+        }
+      });
+    });
+  }
+
+  ros.on('connection', function() {
+    document.getElementById("status").innerHTML = "Connected";
+
+    updateCapabilities();
+  });
+
+  ros.on('error', function(error) {
+    document.getElementById("status").innerHTML = "Error";
+  });
+
+  ros.on('close', function() {
+    document.getElementById("status").innerHTML = "Closed";
+  });
+</script>
+</head>
+
+<body>
+  <h1>Simple ROS User Interface</h1>
+  <p>Connection status: <span id="status"></span></p>
+  <p>Capabilities:</p>
+  <div id="capabilities"></div>
+</body>
+</html>
+
