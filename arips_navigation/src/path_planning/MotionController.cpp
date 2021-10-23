@@ -1,4 +1,5 @@
 #include <arips_navigation/path_planning/MotionController.h>
+#include <arips_navigation/path_planning/PlanningMath.h>
 
 #include <memory>
 
@@ -10,30 +11,6 @@ template <typename T> std::string to_string_with_precision(const T a_value, cons
     out << std::fixed << a_value;
     return out.str();
 }
-
-using Eigen::Vector2d;
-
-struct Pose2D {
-    Vector2d point;
-    double theta = 0;
-
-    [[nodiscard]] Pose2D moved(const Pose2D& vel, double dt) const {
-        const Vector2d dir = {vel.point.x() * cos(theta) + vel.point.y() * cos(M_PI_2 + theta),
-                              vel.point.x() * sin(theta) + vel.point.y() * cos(M_PI_2 + theta)};
-        return {point + dir * dt, angles::normalize_angle(theta + vel.theta * dt)};
-    }
-
-    // TODO conversion functions from geometry_msgs::PoseStamped and similar
-};
-
-struct TrajectoryPoint {
-    Pose2D pose;
-    Pose2D velocity;
-    double timeFromStart = 0;
-};
-
-using Trajectory = std::vector<TrajectoryPoint>;
-using Trajectories = std::vector<Trajectory>;
 
 Trajectory generateTrajectory(Pose2D currentPose, const Pose2D& vel, double duration, double dt) {
     const int numSteps = std::ceil(duration / dt);
@@ -143,23 +120,10 @@ struct MotionController::Pimpl {
         mVizPub = nh.advertise<visualization_msgs::MarkerArray>("sampled_trajectories", 10);
     }
 
-    static double posePositionDistance(const geometry_msgs::PoseStamped& robotPose,
-                                       const geometry_msgs::PoseStamped& goalPose) {
-        return Vector2d{goalPose.pose.position.x - robotPose.pose.position.x,
-                        goalPose.pose.position.y - robotPose.pose.position.y}
-            .norm();
-    }
-
-    [[nodiscard]] bool goalReached(const geometry_msgs::PoseStamped& goalPose) const {
-        geometry_msgs::PoseStamped robotPose;
-        if (!mPotentialMap.getCostmapRos().getRobotPose(robotPose)) {
-            return false;
-        }
-
-        const auto goalDistance = posePositionDistance(robotPose, goalPose);
+    [[nodiscard]] bool goalReached(const Pose2D& robotPose, const Pose2D& goalPose) const {
+        const auto goalDistance = robotPose.distance(goalPose);
         const auto angularDistance =
-            angles::shortest_angular_distance(getYawFromQuaternion(robotPose.pose.orientation),
-                                              getYawFromQuaternion(goalPose.pose.orientation));
+            angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
         return goalDistance <= GoalToleranceXY && std::abs(angularDistance) < GoalToleranceYaw;
     }
@@ -262,59 +226,46 @@ struct MotionController::Pimpl {
         mVizPub.publish(markerArray);
     }
 
-    std::optional<geometry_msgs::Twist>
-    computeVelocity(const geometry_msgs::PoseStamped& goalPose) {
+    std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose) {
         const auto angleThresRotateInPlace = 1.5;
 
         auto& costmap = mPotentialMap.costmap();
 
-        geometry_msgs::PoseStamped robotPose;
-        if (!costmap.getRobotPose(robotPose)) {
-            return {};
+        if (goalReached(robotPose, goalPose)) {
+            return Pose2D{};
         }
 
-        if (goalReached(goalPose)) {
-            return geometry_msgs::Twist{};
-        }
+        Twist2D result;
 
-        const double robotYaw = getYawFromQuaternion(robotPose.pose.orientation);
-
-        const auto goalDistXY = posePositionDistance(robotPose, goalPose);
-        if (goalDistXY < GoalToleranceXY*0.8) {
-            const double goalYaw = getYawFromQuaternion(goalPose.pose.orientation);
-            const auto rotationDiff = angles::shortest_angular_distance(robotYaw, goalYaw);
+        const auto goalDistXY = robotPose.distance(goalPose);
+        if (goalDistXY < GoalToleranceXY * 0.8) {
+            const auto rotationDiff =
+                angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
             if (std::abs(rotationDiff) > GoalToleranceYaw) {
                 const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
-                geometry_msgs::Twist cmdVel;
-                cmdVel.linear.x = 0;
-                cmdVel.linear.y = 0;
-                cmdVel.angular.z = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
-                return cmdVel;
+                result.theta = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
+                return result;
             }
         }
 
         unsigned int robotCx, robotCy;
-        if (costmap.getCostmap()->worldToMap(robotPose.pose.position.x, robotPose.pose.position.y,
-                                             robotCx, robotCy)) {
+        if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy)) {
             const auto optGrad = mPotentialMap.getGradient({robotCx, robotCy});
             if (optGrad) {
-                const auto rotationDiff = angles::shortest_angular_distance(robotYaw, *optGrad);
+                const auto rotationDiff =
+                    angles::shortest_angular_distance(robotPose.theta, *optGrad);
 
                 if (std::abs(rotationDiff) > angleThresRotateInPlace) {
                     const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
-                    geometry_msgs::Twist cmdVel;
-                    cmdVel.linear.x = 0;
-                    cmdVel.linear.y = 0;
-                    cmdVel.angular.z = 0.5 * sign;
-                    return cmdVel;
+                    result.theta = 0.5 * sign;
+                    return result;
                 }
             }
         }
 
         const auto trajectories =
-            sampleTrajectories({{robotPose.pose.position.x, robotPose.pose.position.y}, robotYaw},
-                               goalDistXY, mPotentialMap.costFunction());
+            sampleTrajectories(robotPose, goalDistXY, mPotentialMap.costFunction());
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
@@ -347,11 +298,7 @@ struct MotionController::Pimpl {
         ROS_INFO_STREAM("best cell cost = " << int(bestCost.second)
                                             << ", velocityScale = " << velocityScale);
         const auto bestVel = bestTraj->at(0).velocity;
-        geometry_msgs::Twist cmdVel;
-        cmdVel.linear.x = bestVel.point.x() * velocityScale;
-        cmdVel.linear.y = bestVel.point.y() * velocityScale;
-        cmdVel.angular.z = bestVel.theta * velocityScale;
-        return cmdVel;
+        return bestVel * velocityScale;
 
         /*
         unsigned int cx, cy;
@@ -435,11 +382,11 @@ MotionController::MotionController(PotentialMap& potentialMap)
 
 MotionController::~MotionController() = default;
 
-bool MotionController::goalReached(const geometry_msgs::PoseStamped& gaolPose) {
-    return mPimpl->goalReached(gaolPose);
+bool MotionController::goalReached(const Pose2D& robotPose, const Pose2D& gaolPose) {
+    return mPimpl->goalReached(robotPose, gaolPose);
 }
 
-std::optional<geometry_msgs::Twist>
-MotionController::computeVelocity(const geometry_msgs::PoseStamped& goalPose) {
-    return mPimpl->computeVelocity(goalPose);
+std::optional<Twist2D> MotionController::computeVelocity(const Pose2D& robotPose,
+                                                         const Pose2D& goalPose) {
+    return mPimpl->computeVelocity(robotPose, goalPose);
 }

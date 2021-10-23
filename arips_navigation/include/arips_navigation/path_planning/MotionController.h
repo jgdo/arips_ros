@@ -14,16 +14,17 @@
 #include <arips_navigation/utils/transforms.h>
 #include <geometry_msgs/Twist.h>
 
-#include <angles/angles.h>
+#include "PlanningMath.h"
 
+// Stateless motion controller
 class MotionController {
 public:
     explicit MotionController(PotentialMap& potentialMap);
     ~MotionController();
 
-    bool goalReached(const geometry_msgs::PoseStamped& gaolPose);
+    bool goalReached(const Pose2D& robotPose, const Pose2D& gaolPose);
 
-    std::optional<geometry_msgs::Twist> computeVelocity(const geometry_msgs::PoseStamped& goalPose);
+    std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose);
 
 private:
     struct Pimpl;
