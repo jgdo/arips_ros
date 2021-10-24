@@ -1,0 +1,6 @@
+name: shutdown_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/shutdown
+launch_file: '../capability_launch/cap_shutdown.launch'
+

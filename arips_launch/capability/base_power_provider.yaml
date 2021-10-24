@@ -1,0 +1,6 @@
+name: BasePowerImpl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/BasePower
+launch_file: '../launch/base_power.launch'
+

@@ -1,4 +1,6 @@
 <launch>  
   <node name="capability_server" pkg="capabilities" type="capability_server" respawn="true" output="screen">
   </node>
+    
+  <include file="$(find arips_web_dashboard)/launch/dashboard.launch"/>
 </launch>

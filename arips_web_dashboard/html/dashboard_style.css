@@ -1,0 +1,61 @@
+body {
+    background-color: ghostwhite;
+}
+
+#connection_status {
+    font-size: large;
+    text-align: center;
+    background-color: lightgray;
+    padding: 4pt;
+}
+
+#capabilities_board {
+    background-color: white;
+    width: 200pt;
+}
+
+#capabilities_board_title {
+    text-align: left;
+    padding: 8pt;
+}
+
+.container {
+    justify-content: space-between;
+    flex-direction: column;
+    height: 100vh;
+    display: flex;
+}
+.container .btn-holder {
+    justify-content: flex-end;
+    display: flex;
+}
+
+#btn_shutdown {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+#zone_joystick {
+    position: fixed;
+    bottom: 80px;
+    width: 100%;
+}
+
+
+#capabilities_elements label {
+    border:1px solid #ccc;
+    padding:10px;
+    margin:0 0 10px;
+    display:block;
+}
+
+#capabilities_elements label:hover {
+    background:#eee;
+    cursor:pointer;
+}
+
+#btn_shutdown {
+    width: 100pt;
+    height: 30pt;
+}

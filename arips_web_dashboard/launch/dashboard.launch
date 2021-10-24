@@ -1,4 +1,7 @@
 <launch>
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+  
+  <node name="web_server" pkg="arips_web_dashboard" type="web_server.py" respawn="true" output="screen">
+  </node>
 </launch>
 

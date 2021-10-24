@@ -1,0 +1,6 @@
+<launch>
+        <node pkg="arips_launch"
+                type="shutdown.sh" name="shutdown"
+                output="screen"
+        />
+</launch>

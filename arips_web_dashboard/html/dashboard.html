@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="stylesheet" href="dashboard_style.css">
 <meta charset="utf-8" />
 
 <script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.js"></script>
 
 <script type="text/javascript" type="text/javascript">
+  const mobileEnvironment = (/Mobi|Android/i.test(navigator.userAgent));
+
+  // alert(`Mobile: ${mobileEnvironment}`);
+
   var ros = new ROSLIB.Ros({
-    url : 'ws://localhost:9090'
+    url : 'ws://arips:9090'
   });
 
   var listCapabilityInterfacesClient = new ROSLIB.Service({
@@ -55,6 +61,8 @@
     }
   }
 
+  const shutdownCapabilityName = 'arips_launch/shutdown';
+
   function updateCapabilities() {
     listCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(capabilitiesResult) {
         runningCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(runningCapabilitiesResult) {
@@ -64,24 +72,25 @@
             runningCapabilitiesSet.add(entry.capability.capability);
         }
 
-        capElement = document.getElementById("capabilities");
-        capElement.innerHTML = "";
+        capContainer = document.getElementById("capabilities_elements");
+          capContainer.innerHTML = "";
 
         for(const capability of capabilitiesResult.interfaces) {
+          if(capability === shutdownCapabilityName) {
+            return;
+          }
+
           const isRunning = runningCapabilitiesSet.has(capability);
-            var checkbox = document.createElement("input");
+            const label = document.createElement('label');
+            const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.name = capability;
             checkbox.value = capability;
             checkbox.checked = isRunning;
-            capElement.appendChild(checkbox);
-
-            var label = document.createElement('label')
-            label.htmlFor = capability;
+            label.appendChild(checkbox);
             label.appendChild(document.createTextNode(capability));
 
-            capElement.appendChild(label);
-            capElement.appendChild(document.createElement("br"));
+            capContainer.append(label)
 
             checkbox.addEventListener('change', function() {
                 enableCapability(this.name, this.checked);
@@ -91,27 +100,148 @@
     });
   }
 
+  function setConnectionStatus(text, backgroundColor) {
+    const status = document.getElementById("connection_status");
+    status.innerHTML = text;
+    status.style.backgroundColor = backgroundColor;
+  }
+
   ros.on('connection', function() {
-    document.getElementById("status").innerHTML = "Connected";
+    setConnectionStatus("Connected", "#BDFFD0");
 
     updateCapabilities();
   });
 
   ros.on('error', function(error) {
-    document.getElementById("status").innerHTML = "Error";
+    setConnectionStatus("Error", "red");
   });
 
   ros.on('close', function() {
-    document.getElementById("status").innerHTML = "Closed";
+    setConnectionStatus("Disconnected", "grey");
   });
+
+  var capabilityEventListener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/capability_server/events',
+    messageType : 'capabilities/CapabilityEvent'
+  });
+
+  capabilityEventListener.subscribe(function(message) {
+    updateCapabilities();
+  });
+
+  cmd_vel_listener = new ROSLIB.Topic({
+    ros : ros,
+    name : "/cmd_vel",
+    messageType : 'geometry_msgs/Twist'
+  });
+
+  move = function (linear, angular) {
+    var twist = new ROSLIB.Message({
+      linear: {
+        x: linear,
+        y: 0,
+        z: 0
+      },
+      angular: {
+        x: 0,
+        y: 0,
+        z: angular
+      }
+    });
+    cmd_vel_listener.publish(twist);
+  }
+
+  createJoystick = function () {
+    let timer = null;
+
+    var options = {
+      zone: document.getElementById('zone_joystick'),
+      threshold: 0.1,
+      position: {left: '50%', top: '50%'},
+      mode: 'static',
+      size: 150,
+      color: '#000000',
+    };
+    manager = nipplejs.create(options);
+
+    linear_speed = 0;
+    angular_speed = 0;
+
+    self.manager.on('start', function (event, nipple) {
+      timer = setInterval(function () {
+        move(linear_speed, angular_speed);
+      }, 25);
+    });
+
+    self.manager.on('move', function (event, nipple) {
+      max_linear = 0.3; // m/s
+      max_angular = 1.0; // rad/s
+      max_distance = 75.0; // pixels;
+      linear_speed = Math.sin(nipple.angle.radian) * max_linear * nipple.distance/max_distance;
+      angular_speed = -Math.cos(nipple.angle.radian) * max_angular * nipple.distance/max_distance;
+    });
+
+    self.manager.on('end', function () {
+      if (timer) {
+        clearInterval(timer);
+      }
+      self.move(0, 0);
+    });
+  }
+  window.onload = function () {
+    createJoystick();
+  }
+
+  let keyListener = (function() {
+    // const lin_speed =
+    let linear = 0;
+    let angular = 0;
+    let timer = null;
+
+    return function (e) {
+      let factor = e.type === "keydown"? 1.0 : 0.0;
+      switch (e.keyCode) {
+        case 37: // left
+          angular = 0.7 * factor;
+          break;
+        case 38: // up
+          linear = 0.3 * factor;
+          break;
+        case 39: // right
+          angular = -0.7 * factor;
+          break;
+        case 40: // down
+          linear = -0.2 * factor;
+          break;
+
+        default:
+          return;
+      }
+
+      move(linear, angular);
+    }
+  })();
+
+  document.addEventListener ("keydown", keyListener);
+  document.addEventListener ("keyup", keyListener);
 </script>
 </head>
 
 <body>
-  <h1>Simple ROS User Interface</h1>
-  <p>Connection status: <span id="status"></span></p>
-  <p>Capabilities:</p>
-  <div id="capabilities"></div>
+  <h1 id="connection_status">Connecting ...</h1>
+
+  <div id="capabilities_board">
+    <div id="capabilities_board_title">Capabilities</div>
+    <div id="capabilities_elements"></div>
+  </div>
+
+  <div class="form-group" style="margin-top: 12%; float:right; position: relative; ">
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <button type="submit" class="btn btn-primary btn-md" id="btn_shutdown" onClick="enableCapability(shutdownCapabilityName, true);">Shutdown</button>
+    </div>
+  </div>
+
+  <div id="zone_joystick"></div>
 </body>
 </html>
-

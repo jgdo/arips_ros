@@ -76,6 +76,12 @@
       <capability_provider>
         capability/md25_provider.yaml
       </capability_provider>
-
+        
+      <capability_interface>
+        capability/shutdown_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/shutdown_provider.yaml
+      </capability_provider>
   </export>
 </package>
