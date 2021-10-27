@@ -1,0 +1,8 @@
+name: arm_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/arm
+launch_file: '../launch/arm.launch'
+depends_on:
+  - arips_launch/BasePower
+

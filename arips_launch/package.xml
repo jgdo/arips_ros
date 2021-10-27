@@ -83,5 +83,12 @@
       <capability_provider>
         capability/shutdown_provider.yaml
       </capability_provider>
+      
+      <capability_interface>
+        capability/arm_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/arm_provider.yaml
+      </capability_provider>
   </export>
 </package>
