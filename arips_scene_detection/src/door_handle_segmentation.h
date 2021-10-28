@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ground_segmentation.h"
+#include "common/ground_segmentation.h"
 
 #include <tf2_ros/buffer.h>
 #include <ros/ros.h>

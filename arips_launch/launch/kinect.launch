@@ -40,8 +40,8 @@
   <!-- Laserscan topic -->
   <arg name="scan_topic" default="scan"/>
   
-  <param name="$(arg camera)/driver/image_mode"  value="5" />
-  <param name="$(arg camera)/driver/depth_mode"  value="5" />
+  <param name="$(arg camera)/driver/image_mode"  value="2" />
+  <param name="$(arg camera)/driver/depth_mode"  value="2" />
 
   <include file="$(find arips_launch)/launch/includes/3dsensor/$(arg 3d_sensor).launch.xml">
     <arg name="camera"                          value="$(arg camera)"/>
@@ -58,16 +58,6 @@
     <arg name="disparity_registered_processing" value="$(arg disparity_registered_processing)"/>
   </include>
   
-  <node pkg="nodelet" type="nodelet" name="rgbd_sync" args="load rtabmap_ros/rgbd_sync $(arg camera)/$(arg camera)_nodelet_manager" output="screen">
-      <remap from="$(arg camera)/rgb/image"       to="$(arg camera)/rgb/image_rect_color"/>
-      <remap from="$(arg camera)/depth/image"     to="$(arg camera)/depth_registered/image_raw"/>
-      <remap from="$(arg camera)/rgb/camera_info" to="$(arg camera)/rgb/camera_info"/>
-      <remap from="rgbd_image"      to="rgbd_image"/> <!-- output -->
-      
-      <!-- Should be true for not synchronized camera topics 
-           (e.g., false for kinectv2, zed, realsense, true for xtion, kinect360)-->
-      <param name="approx_sync"       value="true"/> 
-    </node>
 
    <!--                        Laserscan 
      This uses lazy subscribing, so will not activate until scan is requested.

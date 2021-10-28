@@ -15,7 +15,7 @@
 
 template<class T>
 struct DepthTo3d {
-    DepthTo3d(const image_geometry::PinholeCameraModel& model):
+    explicit DepthTo3d(const image_geometry::PinholeCameraModel& model):
             center_x(model.cx()),
             center_y(model.cy()),
             unit_scaling(depth_image_proc::DepthTraits<T>::toMeters( T(1) )),
@@ -55,10 +55,15 @@ struct DepthTo3d {
  */
 template<class T>
 pcl::PointCloud<pcl::PointXYZ>::Ptr
-convertDepthToUnstructuredSkip(cv::Mat img, const image_geometry::PinholeCameraModel &model, int pixel_inc) {
+convertDepthToPointcloudSkip(cv::Mat img, const image_geometry::PinholeCameraModel &model, int pixel_inc, bool forceStructured) {
     assert(pixel_inc > 0);
 
+    const float bad_float = std::numeric_limits<float>::quiet_NaN();
+    const pcl::PointXYZ bad_point {bad_float, bad_float, bad_float};
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->reserve(img.total());
+    cloud->is_dense = false; // points might be invalid
 
     DepthTo3d <T> d3d{model};
 
@@ -75,20 +80,27 @@ convertDepthToUnstructuredSkip(cv::Mat img, const image_geometry::PinholeCameraM
                 point.data[3] = *reinterpret_cast<const float *>(&index);
 
                 cloud->push_back(point);
+            } else if(forceStructured){
+              cloud->push_back(bad_point);
             }
         }
+    }
+
+    if(forceStructured) {
+      cloud->width = img.cols / pixel_inc;
+      cloud->height = img.rows / pixel_inc;
     }
 
     return cloud;
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr
-depthToCloud(const cv::Mat &depthImage, std_msgs::Header const& depthHeader, const image_geometry::PinholeCameraModel &model, int pixelInc) {
+depthToCloud(const cv::Mat &depthImage, std_msgs::Header const& depthHeader, const image_geometry::PinholeCameraModel &model, int pixelInc, bool forceStructured) {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloudSimple;
     if (depthImage.type() == CV_32F) {
-        cloudSimple = convertDepthToUnstructuredSkip<float>(depthImage, model, pixelInc);
+        cloudSimple = convertDepthToPointcloudSkip<float>(depthImage, model, pixelInc, forceStructured);
     } else if (depthImage.type() == CV_16U) {
-        cloudSimple = convertDepthToUnstructuredSkip<uint16_t>(depthImage, model, pixelInc);
+        cloudSimple = convertDepthToPointcloudSkip<uint16_t>(depthImage, model, pixelInc, forceStructured);
     } else {
         ROS_ERROR_STREAM("Depth image is neither float nor u16, ignoring");
         return nullptr;

@@ -3,7 +3,7 @@
 //
 
 #include "door_detector.h"
-#include "plane_segmentation.h"
+#include "common/plane_segmentation.h"
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <angles/angles.h>

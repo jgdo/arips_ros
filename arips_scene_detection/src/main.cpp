@@ -302,14 +302,15 @@ void depth_cb(const sensor_msgs::ImageConstPtr& depth_msg) {
 
 #endif
 
-class DepthPipeline {
+class RGBDPipeline
+{
 public:
-    DepthPipeline(tf2_ros::Buffer& tf):
+  RGBDPipeline(tf2_ros::Buffer& tf):
         mTfBuffer(tf),
         mDoorDetector{tf}
     {
-        mDepthSub = mImageTransport.subscribe("/kinect/depth_registered/image_raw", 2, &DepthPipeline::onDepthReceived, this);
-        mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>("/kinect/depth_registered/camera_info", 1, &DepthPipeline::onCameraInfoReceived, this);
+        mDepthSub = mImageTransport.subscribe("/kinect/depth_registered/image_raw", 2, &RGBDPipeline::onDepthReceived, this);
+        mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>("/kinect/depth_registered/camera_info", 1, &RGBDPipeline::onCameraInfoReceived, this);
         mMarkerPub = mNode.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
 
         mDoorDetector.enable(true);
@@ -413,7 +414,7 @@ int main(int argc, char **argv) {
     server.setCallback(f);
 
 #endif
-    DepthPipeline depthPipeline {tfBuffer};
+    RGBDPipeline depthPipeline {tfBuffer};
     // Spin
     ros::spin();
 }

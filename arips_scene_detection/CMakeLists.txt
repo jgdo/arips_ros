@@ -8,19 +8,19 @@ project(arips_scene_detection)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  pcl_conversions
-  pcl_ros
-  roscpp
-  sensor_msgs
-        interactive_markers
-        cv_bridge
-        image_transport
-        image_geometry
-        tf2_ros
-        tf2
-        tf2_geometry_msgs
-        dynamic_reconfigure
-)
+    pcl_conversions
+    pcl_ros
+    roscpp
+    sensor_msgs
+    interactive_markers
+    cv_bridge
+    image_transport
+    image_geometry
+    tf2_ros
+    tf2
+    tf2_geometry_msgs
+    dynamic_reconfigure
+    )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -111,10 +111,10 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES arips_groundplane_segmentation
-#  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp sensor_msgs
-#  DEPENDS system_lib
+    #  INCLUDE_DIRS include
+    #  LIBRARIES arips_groundplane_segmentation
+    #  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp sensor_msgs
+    #  DEPENDS system_lib
 )
 
 ###########
@@ -124,8 +124,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+    # include
+    ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -141,11 +141,13 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp
-        src/ground_segmentation.h src/door_handle_segmentation.cpp src/door_handle_segmentation.h
-        src/plane_segmentation.h src/plane_segmentation.cpp
-        src/depth_module.h src/door_detector.h src/door_detector.cpp
-        src/depth_to_cloud.cpp src/depth_to_cloud.h)
+add_library(scene_detection src/common/ground_segmentation.cpp
+    src/common/ground_segmentation.h src/door_handle_segmentation.cpp src/door_handle_segmentation.h
+    src/common/plane_segmentation.h src/common/plane_segmentation.cpp
+    src/depth_module.h src/door_detector.h src/door_detector.cpp
+    src/depth_to_cloud.cpp src/depth_to_cloud.h
+    src/common/objects_to_grasp_detection.h src/common/objects_to_grasp_detection.cpp
+    )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,10 +159,20 @@ add_executable(scene_detection src/main.cpp src/ground_segmentation.cpp
 ## same as for the library above
 add_dependencies(scene_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(scene_detection
-   ${catkin_LIBRARIES}
-)
+    ${catkin_LIBRARIES}
+    )
+
+
+add_executable(object_detection_node
+    src/object_detection_node.cpp
+    )
+
+target_link_libraries(object_detection_node
+    scene_detection
+    )
 
 #############
 ## Install ##
@@ -177,11 +189,11 @@ target_link_libraries(scene_detection
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS scene_detection object_detection_node
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/

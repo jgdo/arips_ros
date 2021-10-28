@@ -44,5 +44,7 @@ PlaneSegmentationResult segmentPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr co
     extract.setNegative(true);
     extract.filter(*result.nonCloud);
 
+    result.modelCoefficients = coefficients;
+
     return result;
 }

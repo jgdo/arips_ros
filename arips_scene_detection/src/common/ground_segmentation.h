@@ -1,9 +1,4 @@
-//
-// Created by jgdo on 10/26/20.
-//
-
-#ifndef ARIPS_SCENE_DETECTION_GROUND_SEGMENTATION_H
-#define ARIPS_SCENE_DETECTION_GROUND_SEGMENTATION_H
+#pragma once
 
 #include <opencv2/core/core.hpp>
 #include <image_geometry/stereo_camera_model.h>
@@ -40,4 +35,3 @@ bool extractGroundPlane(const segmentationInput& input, GroundPlaneFilterResult&
 
 Eigen::Vector4f getPlaneCoefficientsToCamera(const std::vector<float>& coefficients);
 
-#endif //ARIPS_SCENE_DETECTION_GROUND_SEGMENTATION_H

@@ -14,4 +14,4 @@
  * @return null on error
  */
 pcl::PointCloud<pcl::PointXYZ>::Ptr depthToCloud(const cv::Mat &depthImage, std_msgs::Header const& depthHeader,
-                                                 const image_geometry::PinholeCameraModel &model, int pixelInc);
+                                                 const image_geometry::PinholeCameraModel &model, int pixelInc, bool forceStructured = false);

@@ -1,6 +1,6 @@
 #include "door_handle_segmentation.h"
 
-#include "ground_segmentation.h"
+#include "common/ground_segmentation.h"
 #include <pcl/common/centroid.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <visualization_msgs/MarkerArray.h>
