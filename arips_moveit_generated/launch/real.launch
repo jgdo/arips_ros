@@ -28,7 +28,9 @@
   <!-- If needed, broadcast static tf for robot root -->
 
   <!-- Given the published joint states, publish tf for the robot links -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" >
+      <param name="ignore_timestamp" value="true" />
+  </node>
 
   <!-- Run the main MoveIt executable without trajectory execution (we do not have controllers configured by default) -->
   <include file="$(find arips_moveit_generated)/launch/move_group.launch">

@@ -177,7 +177,8 @@ public:
 
         mGripperActionServer.start();
 
-        mKinectTiltSub = nh.subscribe("kinect_tilt_deg", 1, &AripsArmNode::kinectTiltCb, this);
+        mKinectTiltSub = nh.subscribe("set_kinect_tilt_deg", 1, &AripsArmNode::kinectTiltCb, this);
+        mKinectTiltPub = nh.advertise<std_msgs::Float32>("current_kinect_tilt_deg", 1);
 
         mChangeBaudSub = nh.subscribe("change_servo_baud", 1, &AripsArmNode::changeBaudCb, this);
 
@@ -206,6 +207,7 @@ private:
     actionlib::SimpleActionServer<control_msgs::GripperCommandAction> mGripperActionServer;
 
     ros::Subscriber mKinectTiltSub;
+    ros::Publisher mKinectTiltPub;
 
     ros::Subscriber mChangeBaudSub;
 
@@ -309,15 +311,18 @@ private:
             } catch (tf::TransformException ex) {
             }
 
+            const float kinectAngle_deg = mServos.at(NUM_JOINTS+1).getLastPose();
             if(!useCorrected) {
-                float kinectAngle_deg = mServos.at(NUM_JOINTS+1).getLastPose();
-
                 // publish kinect tf
-                float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
+                const float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
 
                 transform.setRotation(tf::createQuaternionFromRPY(0, kinectAngle_rad, 0));
                 transform.setOrigin(transform * tf::Vector3(0.02, 0, 0.025));
             }
+
+            std_msgs::Float32 kinectAngle_msg;
+            kinectAngle_msg.data = kinectAngle_deg;
+            mKinectTiltPub.publish(kinectAngle_msg);
             
             
             mTFBroadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect_base", "/kinect_link"));

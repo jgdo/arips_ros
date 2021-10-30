@@ -31,6 +31,7 @@ class kinect_calibrator:
         try: 
             self.check_transform_robot()
         
+            """
             (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_10', rospy.Time(0))
             (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_11', rospy.Time(0))
             (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_12', rospy.Time(0))
@@ -58,14 +59,30 @@ class kinect_calibrator:
                          rospy.Time.now(),
                          "marker_floor",
                          "kinect_link")
+            """
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
                      
     def check_transform_robot(self):
-        (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_14', rospy.Time(0))
-        (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_11', rospy.Time(0))
-        (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_13', rospy.Time(0))
-        (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/fiducial_12', rospy.Time(0))
+        latest_times = [
+            self.tf_listener.getLatestCommonTime('/ar_marker_10', '/kinect_link'),
+            self.tf_listener.getLatestCommonTime('/ar_marker_11', '/kinect_link'),
+            self.tf_listener.getLatestCommonTime('/ar_marker_12', '/kinect_link'),
+            self.tf_listener.getLatestCommonTime('/ar_marker_13', '/kinect_link'),
+        ]
+
+        now = rospy.Time.now()
+        for t in latest_times:
+            d = (now - t).to_sec()
+            if d > 3.0:
+                rospy.logdebug(f"time too large: {d}")
+                return
+
+
+        (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_11', rospy.Time(0))
+        (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_12', rospy.Time(0))
+        (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_13', rospy.Time(0))
+        (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_10', rospy.Time(0))
         
         v0 = np.zeros((3, 4))
         v0[:, 0] = trans1
@@ -92,7 +109,7 @@ class kinect_calibrator:
 
 def main(args):
     '''Initializes and cleanup ros node'''
-    rospy.init_node('image_feature', anonymous=True)
+    rospy.init_node('get_robot_marker_pose', anonymous=False)
     kc = kinect_calibrator()
 
     try:

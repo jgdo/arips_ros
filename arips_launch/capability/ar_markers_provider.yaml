@@ -1,0 +1,8 @@
+name: ar_markers_alvar
+spec_version: 1
+spec_type: provider
+implements: arips_launch/ar_markers
+launch_file: '../launch/alvar.launch'
+depends_on:
+  - arips_launch/Kinect
+

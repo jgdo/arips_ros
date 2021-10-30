@@ -1,0 +1,8 @@
+name: Kinect_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/Kinect
+launch_file: '../launch/kinect.launch'
+depends_on:
+  - arips_launch/BasePower
+

@@ -201,12 +201,17 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
       Eigen::Matrix<float, Eigen::Dynamic, 2> points2d(objectIndices.size(), 2);
       size_t pointsIndex = 0;
 
+      float topZ = -1000;
+
       for (auto index : objectIndices)
       {
         const auto& p = input.pointcloud->at(index);
         const Eigen::Vector2f p2d {p.getVector3fMap().dot(baseX), p.getVector3fMap().dot(baseY)};
         const auto projected = baseX * p2d.x() +
                                baseY * p2d.y() + planeOrigin;
+
+        const auto zOnPlane = p.getVector3fMap().dot(planeZ);
+        topZ = std::max(topZ, zOnPlane);
 
         centroid3d.add(pcl::PointXYZ{ projected.x(), projected.y(), projected.z() });
         points2d.row(pointsIndex++) = p2d;
@@ -229,8 +234,10 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
       Eigen::MatrixXf cov = (centered.adjoint() * centered) / float(points2d.rows() - 1);
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
 
+
+
       const auto mainDirection = eig.eigenvectors().col(1).x() * baseX + eig.eigenvectors().col(1).y() * baseY;
-      const auto objectCenter = center2d.x() * baseX + center2d.y() * baseY + planeOrigin;
+      const auto objectCenter = center2d.x() * baseX + center2d.y() * baseY + planeZ * topZ;
 
       {
         visualization_msgs::Marker marker;
@@ -260,6 +267,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
       }
 
       ObjectInformation object;
+      object.position.setOrigin(tf2::Vector3(objectCenter.x(), objectCenter.y(), objectCenter.z()));
       result.detectedObjects.emplace_back(std::move(object));
     }
 

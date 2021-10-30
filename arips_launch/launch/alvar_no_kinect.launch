@@ -1,10 +1,10 @@
 <launch>
 	<arg name="marker_size" default="6" />
-	<arg name="max_new_marker_error" default="0.08" />
-	<arg name="max_track_error" default="0.2" />
+	<arg name="max_new_marker_error" default="0.05" />
+	<arg name="max_track_error" default="0.15" />
 	<arg name="cam_image_topic" default="/kinect/rgb/image_raw" />
 	<arg name="cam_info_topic" default="/kinect/rgb/camera_info" />
-	<arg name="output_frame" default="/arips_base" />
+	<arg name="output_frame" default="/kinect_link" />
 
 	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />

@@ -1,6 +1,0 @@
-name: Teleop_Joy
-spec_version: 1
-spec_type: provider
-implements: arips_launch/Teleop
-launch_file: '../launch/joy_teleop.launch'
-

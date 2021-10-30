@@ -1,4 +1,4 @@
-name: Teleop
+name: Kinect
 spec_version: 1
 spec_type: interface
 interface: {}

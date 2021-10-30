@@ -3,9 +3,7 @@
 
   <!--- md25 drive -->
   <include file="$(find arips_launch)/launch/md25.launch" />
-      
-  <!-- kinect frames -->
-  <include file="$(find arips_launch)/launch/includes/frames.launch" />  
+        
   
   <group if="$(arg joy)">
     <include file="$(find arips_launch)/launch/joy_teleop.launch" />

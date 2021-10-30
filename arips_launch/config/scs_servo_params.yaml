@@ -104,6 +104,8 @@ servo_6:
     kp: 15
     ki: 7
     isum_max: 30
+    
+    max_torque: 128
 
 servo_7:
     id: 8

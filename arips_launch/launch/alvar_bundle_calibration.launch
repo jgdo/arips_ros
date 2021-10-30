@@ -4,7 +4,7 @@
 	<arg name="max_track_error" default="0.2" />
 	<arg name="cam_image_topic" default="/kinect/depth_registered/points" />
 	<arg name="cam_info_topic" default="/kinect/rgb/camera_info" />
-	<arg name="output_frame" default="/arips_base" />
+	<arg name="output_frame" default="/kinect_link" />
 	<arg name="med_filt_size" default="8" />
 	<arg name="bundle_files" default="$(find arips_launch)/alvar/MarkerData_0_1_2.xml" />
 	

@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <visualization_msgs/MarkerArray.h>
 
@@ -8,6 +9,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <image_transport/image_transport.h>
 #include <image_geometry/pinhole_camera_model.h>
+#include <moveit_msgs/PlanningScene.h>
 
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
@@ -33,6 +35,7 @@ public:
     sync.registerCallback(boost::bind(&RgbdPipeline::depthRgbCallback, this, _1, _2));
 
     mMarkerPub = mNode.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
+    mPlanningScenePublisher = mNode.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
   }
 
 private:
@@ -66,9 +69,83 @@ private:
 
     const auto plane = segmentPlane(simpleCloud);
     visualization_msgs::MarkerArray markers;
-    const auto objects = detectObjectsInScene({fullCloud, plane.modelCoefficients, cv_depth_ptr->image}, &markers);
+    const auto detectedObjects =
+        detectObjectsInScene({ fullCloud, plane.modelCoefficients, cv_depth_ptr->image }, &markers);
 
     mMarkerPub.publish(markers);
+
+    moveit_msgs::PlanningScene planning_scene;
+    {
+      moveit_msgs::CollisionObject object;
+      object.operation = moveit_msgs::CollisionObject::REMOVE;
+      planning_scene.world.collision_objects.push_back(object);
+    }
+
+    geometry_msgs::TransformStamped arm_transform;
+    try
+    {
+      arm_transform =
+          mTfBuffer.lookupTransform("arm_base_link", msg_depth->header.frame_id, ros::Time(0));
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_ERROR("%s", ex.what());
+      return;
+    }
+
+    constexpr float maxDist_m = 0.3;
+
+    for (int i = 0; i < detectedObjects.detectedObjects.size(); i++)
+    {
+      const auto center = detectedObjects.detectedObjects.at(i).position.getOrigin();
+      geometry_msgs::Point centerMsg;
+      centerMsg.x = center.x();
+      centerMsg.y = center.y();
+      centerMsg.z = center.z();
+
+      geometry_msgs::Point centerBase;
+      tf2::doTransform(centerMsg, centerBase, arm_transform);
+      // const auto centerBase = arm_transform(tfc);
+
+      if ((centerBase.x * centerBase.x + centerBase.y * centerBase.y) > maxDist_m * maxDist_m ||
+          centerBase.z > 0.07)
+      {
+        ROS_INFO_STREAM("Ignoring object at " << centerBase);
+        continue;
+      }
+
+      std_msgs::ColorRGBA color;
+      color.r = 1.0f;
+      color.g = 1.0f;
+      color.b = 0.0f;
+      color.a = 0.3;
+
+      geometry_msgs::Pose objectPose;
+      objectPose.position = centerBase;
+      objectPose.position.z -= 0.015;
+      objectPose.orientation.w = 1;
+
+          moveit_msgs::CollisionObject object;
+      object.header.frame_id = "arm_base_link";
+      object.header.stamp = msg_depth->header.stamp;
+
+      object.operation = moveit_msgs::CollisionObject::ADD;
+      object.id = std::to_string(i);
+
+      /* Define a box to be attached */
+      shape_msgs::SolidPrimitive primitive;
+      primitive.type = primitive.BOX;
+      primitive.dimensions = { 0.03, 0.03, 0.03 };
+
+      object.primitives.push_back(primitive);
+
+      object.primitive_poses.push_back(objectPose);
+
+      planning_scene.world.collision_objects.push_back(object);
+    }
+
+    planning_scene.is_diff = true;
+    mPlanningScenePublisher.publish(planning_scene);
   }
 
   void onCameraInfoReceived(const sensor_msgs::CameraInfoConstPtr& info_msg)
@@ -93,6 +170,8 @@ private:
   ros::Subscriber mCameraInfoSub;
 
   ros::Publisher mMarkerPub;
+
+  ros::Publisher mPlanningScenePublisher;
 };
 
 int main(int argc, char** argv)

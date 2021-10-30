@@ -26,6 +26,7 @@ gripper = moveit_commander.MoveGroupCommander("gripper")
 rospy.sleep(1)
 
 arm.set_goal_tolerance(0.003)
+arm.set_max_velocity_scaling_factor(1.0)
 
 
 print("current pose: ", arm.get_current_pose())
@@ -42,7 +43,7 @@ pose_target.pose.position.z = float(sys.argv[3]) if len(sys.argv) >= 4 else 0.06
 
 pose_target.header.frame_id = "/arips_base"
 
-tp_base = tf_listener.transformPose("/base_link", pose_target)
+tp_base = tf_listener.transformPose("/arm_base_link", pose_target)
 
 arm.set_pose_target(tp_base.pose)
 plan1 = arm.plan()

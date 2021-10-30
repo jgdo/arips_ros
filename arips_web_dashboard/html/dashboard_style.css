@@ -59,3 +59,43 @@ body {
     width: 100pt;
     height: 30pt;
 }
+
+.slider {
+    height: 300pt;
+    position: absolute;
+    right: 20pt;
+    top: 75pt;
+    background-color: black;
+    display:block;
+    width: 3pt;
+}
+
+.thumb {
+    cursor: pointer;
+    position: absolute;
+    right: -13.5pt;
+    top: 50pt;
+    width: 30pt;
+    height: 10pt;
+    background-color: black;
+}
+
+.value {
+    position: absolute;
+    right: 5pt;
+    top: 380pt;
+    width: 30pt;
+    text-align: center;
+    font-family: "Lucida Console", Monaco, monospace;
+    display: block;
+}
+
+#kinect_color_image {
+    position: fixed;
+    width: 70%;
+    max-height: 70%;
+    top: 50pt;
+    left: 300pt;
+    display: block;
+    object-fit: contain
+}

@@ -1,269 +1,394 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="dashboard_style.css">
-<meta charset="utf-8" />
+    <link rel="stylesheet" href="dashboard_style.css">
+    <meta charset="utf-8"/>
 
-<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.js"></script>
+    <script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.js"></script>
 
-<script type="text/javascript" type="text/javascript">
-  const mobileEnvironment = (/Mobi|Android/i.test(navigator.userAgent));
+    <script type="text/javascript" type="text/javascript">
+        const mobileEnvironment = (/Mobi|Android/i.test(navigator.userAgent));
 
-  // alert(`Mobile: ${mobileEnvironment}`);
+        // alert(`Mobile: ${mobileEnvironment}`);
 
-  var ros = new ROSLIB.Ros({
-    url : 'ws://arips:9090'
-  });
-
-  var listCapabilityInterfacesClient = new ROSLIB.Service({
-    ros : ros,
-    name : '/capability_server/get_interfaces',
-    serviceType : 'capabilities/GetInterfaces'
-  });
-
-  var runningCapabilityInterfacesClient = new ROSLIB.Service({
-      ros : ros,
-      name : '/capability_server/get_running_capabilities',
-      serviceType : 'capabilities/GetRunningCapabilities'
-  });
-
-  var startCapabilityClient = new ROSLIB.Service({
-      ros : ros,
-      name : '/capability_server/start_capability',
-      serviceType : 'capabilities/StartCapability'
-  });
-
-  var stopCapabilityClient = new ROSLIB.Service({
-      ros : ros,
-      name : '/capability_server/stop_capability',
-      serviceType : 'capabilities/StopCapability'
-  });
-
-  function enableCapability(capability, enabled) {
-    if(enabled) {
-        const request = new ROSLIB.ServiceRequest({
-            capability: capability,
-            preferred_provider: ''
+        var ros = new ROSLIB.Ros({
+            url: 'ws://arips:9090'
         });
 
-        startCapabilityClient.callService(request, function(result) {
-            updateCapabilities();
-        });
-    } else {
-        const request = new ROSLIB.ServiceRequest({
-            capability: capability
+        var listCapabilityInterfacesClient = new ROSLIB.Service({
+            ros: ros,
+            name: '/capability_server/get_interfaces',
+            serviceType: 'capabilities/GetInterfaces'
         });
 
-        stopCapabilityClient.callService(request, function(result) {
-            updateCapabilities();
+        var runningCapabilityInterfacesClient = new ROSLIB.Service({
+            ros: ros,
+            name: '/capability_server/get_running_capabilities',
+            serviceType: 'capabilities/GetRunningCapabilities'
         });
-    }
-  }
 
-  const shutdownCapabilityName = 'arips_launch/shutdown';
+        var startCapabilityClient = new ROSLIB.Service({
+            ros: ros,
+            name: '/capability_server/start_capability',
+            serviceType: 'capabilities/StartCapability'
+        });
 
-  function updateCapabilities() {
-    listCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(capabilitiesResult) {
-        runningCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function(runningCapabilitiesResult) {
-        const runningCapabilitiesSet = new Set();
+        var stopCapabilityClient = new ROSLIB.Service({
+            ros: ros,
+            name: '/capability_server/stop_capability',
+            serviceType: 'capabilities/StopCapability'
+        });
 
-        for(const entry of runningCapabilitiesResult.running_capabilities) {
-            runningCapabilitiesSet.add(entry.capability.capability);
+        function enableCapability(capability, enabled) {
+            if (enabled) {
+                const request = new ROSLIB.ServiceRequest({
+                    capability: capability,
+                    preferred_provider: ''
+                });
+
+                startCapabilityClient.callService(request, function (result) {
+                    updateCapabilities();
+                });
+            } else {
+                const request = new ROSLIB.ServiceRequest({
+                    capability: capability
+                });
+
+                stopCapabilityClient.callService(request, function (result) {
+                    updateCapabilities();
+                });
+            }
         }
 
-        capContainer = document.getElementById("capabilities_elements");
-          capContainer.innerHTML = "";
+        const shutdownCapabilityName = 'arips_launch/shutdown';
 
-        for(const capability of capabilitiesResult.interfaces) {
-          if(capability === shutdownCapabilityName) {
-            continue;
-          }
+        function updateCapabilities() {
+            listCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function (capabilitiesResult) {
+                runningCapabilityInterfacesClient.callService(new ROSLIB.ServiceRequest({}), function (runningCapabilitiesResult) {
+                    const runningCapabilitiesSet = new Set();
 
-          const isRunning = runningCapabilitiesSet.has(capability);
-            const label = document.createElement('label');
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.name = capability;
-            checkbox.value = capability;
-            checkbox.checked = isRunning;
-            label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(capability));
+                    for (const entry of runningCapabilitiesResult.running_capabilities) {
+                        runningCapabilitiesSet.add(entry.capability.capability);
+                    }
 
-            capContainer.append(label)
+                    capContainer = document.getElementById("capabilities_elements");
+                    capContainer.innerHTML = "";
 
-            checkbox.addEventListener('change', function() {
-                enableCapability(this.name, this.checked);
+                    for (const capability of capabilitiesResult.interfaces) {
+                        if (capability === shutdownCapabilityName) {
+                            continue;
+                        }
+
+                        const isRunning = runningCapabilitiesSet.has(capability);
+                        const label = document.createElement('label');
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.name = capability;
+                        checkbox.value = capability;
+                        checkbox.checked = isRunning;
+                        label.appendChild(checkbox);
+                        label.appendChild(document.createTextNode(capability));
+
+                        capContainer.append(label)
+
+                        checkbox.addEventListener('change', function () {
+                            enableCapability(this.name, this.checked);
+                        });
+                    }
+                });
             });
         }
-      });
-    });
-  }
 
-  function setConnectionStatus(text, backgroundColor) {
-    const status = document.getElementById("connection_status");
-    status.innerHTML = text;
-    status.style.backgroundColor = backgroundColor;
-  }
+        function setConnectionStatus(text, backgroundColor) {
+            const status = document.getElementById("connection_status");
+            status.innerHTML = text;
+            status.style.backgroundColor = backgroundColor;
+        }
 
-  ros.on('connection', function() {
-    setConnectionStatus("Connected", "#BDFFD0");
+        ros.on('connection', function () {
+            setConnectionStatus("Connected", "#BDFFD0");
 
-    updateCapabilities();
-  });
+            updateCapabilities();
+        });
 
-  ros.on('error', function(error) {
-    setConnectionStatus("Error", "red");
-  });
+        ros.on('error', function (error) {
+            setConnectionStatus("Error", "red");
+        });
 
-  ros.on('close', function() {
-    setConnectionStatus("Disconnected", "grey");
-  });
+        ros.on('close', function () {
+            setConnectionStatus("Disconnected", "grey");
+        });
 
-  var capabilityEventListener = new ROSLIB.Topic({
-    ros : ros,
-    name : '/capability_server/events',
-    messageType : 'capabilities/CapabilityEvent'
-  });
+        var capabilityEventListener = new ROSLIB.Topic({
+            ros: ros,
+            name: '/capability_server/events',
+            messageType: 'capabilities/CapabilityEvent'
+        });
 
-  capabilityEventListener.subscribe(function(message) {
-    updateCapabilities();
-  });
+        capabilityEventListener.subscribe(function (message) {
+            updateCapabilities();
+        });
 
-  var reloadCapabilitiesClient = new ROSLIB.Service({
-    ros : ros,
-    name : '/capability_server/reload_capabilities',
-    serviceType : 'std_srvs/Empty'
-  });
+        var reloadCapabilitiesClient = new ROSLIB.Service({
+            ros: ros,
+            name: '/capability_server/reload_capabilities',
+            serviceType: 'std_srvs/Empty'
+        });
 
-  function reloadCapabilities() {
-    const request = new ROSLIB.ServiceRequest({});
+        function reloadCapabilities() {
+            const request = new ROSLIB.ServiceRequest({});
 
-    reloadCapabilitiesClient.callService(request, function(result) {
-      updateCapabilities();
-    });
-  }
+            reloadCapabilitiesClient.callService(request, function (result) {
+                updateCapabilities();
+            });
+        }
 
-  cmd_vel_listener = new ROSLIB.Topic({
-    ros : ros,
-    name : "/cmd_vel",
-    messageType : 'geometry_msgs/Twist'
-  });
+        cmd_vel_listener = new ROSLIB.Topic({
+            ros: ros,
+            name: "/cmd_vel",
+            messageType: 'geometry_msgs/Twist'
+        });
 
-  move = function (linear, angular) {
-    var twist = new ROSLIB.Message({
-      linear: {
-        x: linear,
-        y: 0,
-        z: 0
-      },
-      angular: {
-        x: 0,
-        y: 0,
-        z: angular
-      }
-    });
-    cmd_vel_listener.publish(twist);
-  }
+        move = function (linear, angular) {
+            var twist = new ROSLIB.Message({
+                linear: {
+                    x: linear,
+                    y: 0,
+                    z: 0
+                },
+                angular: {
+                    x: 0,
+                    y: 0,
+                    z: angular
+                }
+            });
+            cmd_vel_listener.publish(twist);
+        }
 
-  createJoystick = function () {
-    let timer = null;
+        createJoystick = function () {
+            let timer = null;
 
-    var options = {
-      zone: document.getElementById('zone_joystick'),
-      threshold: 0.1,
-      position: {left: '50%', top: '50%'},
-      mode: 'static',
-      size: 150,
-      color: '#000000',
-    };
-    manager = nipplejs.create(options);
+            var options = {
+                zone: document.getElementById('zone_joystick'),
+                threshold: 0.1,
+                position: {left: '50%', top: '50%'},
+                mode: 'static',
+                size: 150,
+                color: '#000000',
+            };
+            manager = nipplejs.create(options);
 
-    linear_speed = 0;
-    angular_speed = 0;
+            linear_speed = 0;
+            angular_speed = 0;
 
-    self.manager.on('start', function (event, nipple) {
-      timer = setInterval(function () {
-        move(linear_speed, angular_speed);
-      }, 25);
-    });
+            self.manager.on('start', function (event, nipple) {
+                timer = setInterval(function () {
+                    move(linear_speed, angular_speed);
+                }, 25);
+            });
 
-    self.manager.on('move', function (event, nipple) {
-      max_linear = 0.3; // m/s
-      max_angular = 1.0; // rad/s
-      max_distance = 75.0; // pixels;
-      linear_speed = Math.sin(nipple.angle.radian) * max_linear * nipple.distance/max_distance;
-      angular_speed = -Math.cos(nipple.angle.radian) * max_angular * nipple.distance/max_distance;
-    });
+            self.manager.on('move', function (event, nipple) {
+                max_linear = 0.3; // m/s
+                max_angular = 1.0; // rad/s
+                max_distance = 75.0; // pixels;
+                linear_speed = Math.sin(nipple.angle.radian) * max_linear * nipple.distance / max_distance;
+                angular_speed = -Math.cos(nipple.angle.radian) * max_angular * nipple.distance / max_distance;
+            });
 
-    self.manager.on('end', function () {
-      if (timer) {
-        clearInterval(timer);
-      }
-      self.move(0, 0);
-    });
-  }
-  window.onload = function () {
-    createJoystick();
-  }
+            self.manager.on('end', function () {
+                if (timer) {
+                    clearInterval(timer);
+                }
+                self.move(0, 0);
+            });
+        }
 
-  let keyListener = (function() {
-    // const lin_speed =
-    let linear = 0;
-    let angular = 0;
-    let timer = null;
+        // slider taken from https://pygmalion.nitri.org/a-vertical-slider-in-html-js-css-1083.html
+        function Slider(min, max, element, thumb) {
+            this.min = min;
+            this.max = max;
+            this.value = min;
+            this.element = element;
+            this.thumb = thumb;
 
-    return function (e) {
-      let factor = e.type === "keydown"? 1.0 : 0.0;
-      switch (e.keyCode) {
-        case 37: // left
-          angular = 0.7 * factor;
-          break;
-        case 38: // up
-          linear = 0.3 * factor;
-          break;
-        case 39: // right
-          angular = -0.7 * factor;
-          break;
-        case 40: // down
-          linear = -0.2 * factor;
-          break;
+            sliderInstance = this;
 
-        default:
-          return;
-      }
+            shift = thumb.offsetHeight / 2;
 
-      move(linear, angular);
-    }
-  })();
+            mouseDownCallback = function (evt) {
 
-  function requestShutdown() {
-    if(window.confirm("Really shutdown robot?")) {
-      enableCapability(shutdownCapabilityName, true);
-    }
-  }
+                var thumbYOffset = evt.clientY - thumb.offsetTop;
 
-  document.addEventListener ("keydown", keyListener);
-  document.addEventListener ("keyup", keyListener);
-</script>
+                mouseMoveCallback = function (evt) {
+                    var yRange = element.offsetHeight;
+                    var y = Math.max(0, Math.min(yRange, evt.clientY - thumbYOffset));
+                    thumb.style.top = y - shift + 'px';
+                    sliderInstance.value = max - y / yRange * (max - min);
+                    sliderInstance.onChange();
+                    evt.preventDefault();
+                };
+
+                mouseUpCallback = function (evt) {
+                    document.removeEventListener('mousemove', mouseMoveCallback, false);
+                    document.removeEventListener('mouseup', mouseUpCallback, false);
+                };
+
+                document.addEventListener('mousemove', mouseMoveCallback, false);
+                document.addEventListener('mouseup', mouseUpCallback, false);
+
+                evt.preventDefault();
+            };
+
+            thumb.addEventListener('mousedown', mouseDownCallback, false);
+        }
+
+        Slider.prototype.setValue = function (value) {
+            value = Math.max(this.min, Math.min(this.max, value));
+            var yRange = this.element.clientHeight;
+            var y = Math.floor((this.max - value) / (this.max - this.min) * yRange);
+            this.thumb.style.top = y - shift + 'px';
+            this.value = value;
+            this.onChange();
+        };
+
+        Slider.prototype.getValue = function () {
+            return this.value;
+        };
+
+        Slider.prototype.getId = function () {
+            return this.element.id;
+        };
+
+        var kinectTiltAngleListener = new ROSLIB.Topic({
+            ros: ros,
+            name: '/current_kinect_tilt_deg',
+            messageType: 'std_msgs/Float32'
+        });
+
+        let kinectSlider = null;
+        let tiltAngleTimer = null;
+
+        kinectTiltAngleListener.subscribe(function (message) {
+            if(tiltAngleTimer == null) {
+                kinectSlider.setValue(-message.data);
+            }
+        });
+
+        const kinectTiltAnglePublisher = new ROSLIB.Topic({
+            ros: ros,
+            name: "/set_kinect_tilt_deg",
+            messageType: 'std_msgs/Float32'
+        });
+
+        function onSliderChange() {
+            // We can use this.getId() to identify the slider
+            const currentAngle = -this.getValue();
+            document.getElementById("demo-value").innerHTML = currentAngle.toFixed(0);
+
+            const msg = new ROSLIB.Message({
+                data: currentAngle
+            });
+
+            if(tiltAngleTimer != null) {
+                clearTimeout(tiltAngleTimer);
+            }
+
+            tiltAngleTimer = window.setTimeout(function() {
+                clearTimeout(tiltAngleTimer);
+                tiltAngleTimer = null;
+            }, 1000);
+
+            kinectTiltAnglePublisher.publish(msg);
+        }
+
+        window.onload = function () {
+            createJoystick();
+
+            kinectSlider = new Slider(-60, 90, document.getElementById("demo-slider"),
+                document.getElementById("demo-thumb"));
+            kinectSlider.onChange = onSliderChange;
+        }
+
+        var image_topic = new ROSLIB.Topic({
+            ros: ros, name: '/kinect/rgb/image_rect_color/compressed',
+            messageType: 'sensor_msgs/CompressedImage'
+        });
+
+        image_topic.subscribe(function(message) {
+            document.getElementById('kinect_color_image').src = "data:image/jpg;base64," + message.data;
+        });
+
+
+        let keyListener = (function () {
+            // const lin_speed =
+            let linear = 0;
+            let angular = 0;
+            let timer = null;
+
+            return function (e) {
+                let factor = e.type === "keydown" ? 1.0 : 0.0;
+                switch (e.keyCode) {
+                    case 37: // left
+                        angular = 0.7 * factor;
+                        break;
+                    case 38: // up
+                        linear = 0.3 * factor;
+                        break;
+                    case 39: // right
+                        angular = -0.7 * factor;
+                        break;
+                    case 40: // down
+                        linear = -0.2 * factor;
+                        break;
+
+                    default:
+                        return;
+                }
+
+                move(linear, angular);
+            }
+        })();
+
+        function requestShutdown() {
+            if (window.confirm("Really shutdown robot?")) {
+                enableCapability(shutdownCapabilityName, true);
+            }
+        }
+
+        document.addEventListener("keydown", keyListener);
+        document.addEventListener("keyup", keyListener);
+    </script>
 </head>
 
 <body>
-  <h1 id="connection_status">Connecting ...</h1>
+<h1 id="connection_status">Connecting ...</h1>
 
-  <div id="capabilities_board">
+<div id="capabilities_board">
     <div id="capabilities_board_title">Capabilities
-      <button type="submit" id="btn_reload_capabilities" onClick="reloadCapabilities();">Reload</button>
+        <button type="submit" id="btn_reload_capabilities" onClick="reloadCapabilities();">Reload</button>
     </div>
     <div id="capabilities_elements"></div>
-  </div>
+</div>
 
-  <div class="form-group" style="margin-top: 12%; float:right; position: relative; ">
+<div class="form-group" style="margin-top: 12%; float:right; position: relative; ">
     <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-      <button type="submit" class="btn btn-primary btn-md" id="btn_shutdown" onClick="requestShutdown();">Shutdown</button>
+        <button type="submit" class="btn btn-primary btn-md" id="btn_shutdown" onClick="requestShutdown();">Shutdown
+        </button>
     </div>
-  </div>
+</div>
 
-  <div id="zone_joystick"></div>
+<div id="zone_joystick"></div>
+
+
+<div class="slider" id="demo-slider">
+    <div class="thumb" id="demo-thumb">
+    </div>
+</div>
+
+
+<div class="value" id="demo-value">0</div>
+
+<img id="kinect_color_image">
 </body>
 </html>

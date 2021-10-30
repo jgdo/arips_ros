@@ -55,13 +55,6 @@
       <capability_provider>
         capability/arips_provider.yaml
       </capability_provider>
-
-      <capability_interface>
-        capability/teleop_joy_interface.yaml
-      </capability_interface>
-      <capability_provider>
-        capability/teleop_joy_provider.yaml
-      </capability_provider>
       
       <capability_interface>
         capability/base_power_interface.yaml
@@ -89,6 +82,20 @@
       </capability_interface>
       <capability_provider>
         capability/arm_provider.yaml
+      </capability_provider>
+      
+      <capability_interface>
+        capability/kinect_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/kinect_provider.yaml
+      </capability_provider>
+      
+      <capability_interface>
+        capability/ar_markers_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/ar_markers_provider.yaml
       </capability_provider>
   </export>
 </package>

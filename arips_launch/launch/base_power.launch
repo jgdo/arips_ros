@@ -3,4 +3,7 @@
     <param name="battery_on" value="True" />
     <param name="battery_device" value="/dev/arips_battery_controller" />
   </node>
+  
+  <!-- kinect frames -->
+  <include file="$(find arips_launch)/launch/includes/frames.launch" />
 </launch>

@@ -12,10 +12,10 @@ struct ObjectSegmentationInput {
 
   const cv::Mat& depthImage;
 
-  int minObjectWidth = 5;
+  int minObjectWidth = 8;
   int maxObjectWidth = 50;
 
-  int minObjectHeight = 5;
+  int minObjectHeight = 8;
   int maxObjectHeight = 30;
 };
 

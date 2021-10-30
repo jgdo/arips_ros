@@ -14,6 +14,8 @@ class SceneIntentHandler(IntentHandler):
         self.robot = moveit_commander.RobotCommander()
         self.arm = moveit_commander.MoveGroupCommander("arm")
         self.gripper = moveit_commander.MoveGroupCommander("gripper")
+        self.arm.set_max_velocity_scaling_factor(1.0)
+        self.gripper.set_max_velocity_scaling_factor(1.0)
 
     def handle_intent(self, msg):
         if msg.intent == 'describe_scene':
@@ -46,17 +48,17 @@ class SceneIntentHandler(IntentHandler):
             return
         elif len(objects) > 1:
             if 'position' not in slots:
-                self.ui.say("I see too many objects, please pick one")
+                self.ui.say("I see too many objects, please select the left or the right one")
                 return
             if slots['position'] == 'any':
                 point = next(iter(objects.values())).primitive_poses[0].position
-            elif len(objects) == 2:
+            elif len(objects) == 2 and slots['position'] != "the":
                 # sort objects
                 poses = [p.primitive_poses[0].position for p in objects.values()]
-                poses = sorted(poses, cmp=lambda a, b: a.y < b.y)
+                poses = sorted(poses, key=lambda x: x.y)
                 if slots['position'] == 'left':
                     point = poses[0]
-                else:
+                elif slots['position'] == 'right':
                     point = poses[1]
             else:
                 self.ui.say("I see too many objects, please pick one")
@@ -67,15 +69,17 @@ class SceneIntentHandler(IntentHandler):
         # point = point.point
         rospy.loginfo("picking at " + str(point))
 
+        self.ui.say("I will now pick up the object")
+
         point.x += 0.013
         point.y += 0.008
-        point.z -= 0.010
+        point.z += 0.005
         print("picking at " + str(point))
         print("# open gripper")
 
         self.open_gripper()
 
-        rospy.sleep(0.5)
+        rospy.sleep(0.3)
 
         print("# approach")
 
@@ -90,7 +94,7 @@ class SceneIntentHandler(IntentHandler):
         if (not self.go(self.arm)):
             return
 
-        rospy.sleep(3)
+        rospy.sleep(0.3)
 
         print("pick")
 
@@ -105,13 +109,13 @@ class SceneIntentHandler(IntentHandler):
         if (not self.go(self.arm)):
             return
 
-        rospy.sleep(0.5)
+        rospy.sleep(0.3)
 
         print("close gripper")
 
         self.close_gripper()
 
-        rospy.sleep(1)
+        rospy.sleep(0.3)
 
         print("go drop")
 
@@ -125,13 +129,13 @@ class SceneIntentHandler(IntentHandler):
         if (not self.go(self.arm)):
             return
 
-        rospy.sleep(0.5)
+        rospy.sleep(0.3)
 
         print("idle")
 
         self.open_gripper()
 
-        rospy.sleep(0.5)
+        rospy.sleep(0.3)
 
         print("go home")
 
