@@ -110,7 +110,7 @@ def main():
     ui.add_intent('test_intent', TestIntentHandler(ui))
     ui.add_intent('teleop_joy', teleop_handler.JoyTeleopIntentHandler())
     ui.add_intent('kinect_tilt', look_handler.LookIntentHandler())
-    ui.add_intent(['describe_scene', 'pick_up'], scene_handler.SceneIntentHandler(ui))
+    ui.add_intent(['describe_scene', 'pick_object', 'drop_object', 'place_on_object'], scene_handler.SceneIntentHandler(ui))
 
     rospy.spin()
 

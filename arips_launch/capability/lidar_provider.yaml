@@ -1,0 +1,8 @@
+name: lidar_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/lidar
+launch_file: '../launch/lidar.launch'
+depends_on:
+  - arips_launch/BasePower
+

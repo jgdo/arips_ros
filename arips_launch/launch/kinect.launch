@@ -14,6 +14,13 @@
   rgb_processing for the android tele-view).
 -->
 <launch>
+   <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_base_to_link"
+    args="-0.09834986 0  0.74170686 0 0 0  arips_base kinect_base" />
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_marker_robot"
+    args="0.03417981 -0.01480645 0.21539154 0.004160923029937038 0.0006275551021822737 0.0017468013386928336 arips_base corrected_robot_marker" />  
+
+
   <!-- "camera" should uniquely identify the device. All topics are pushed down
        into the "camera" namespace, and it is prepended to tf frame ids. -->
   <arg name="camera"      default="kinect"/>

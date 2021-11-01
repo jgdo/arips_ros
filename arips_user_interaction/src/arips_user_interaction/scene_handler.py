@@ -20,8 +20,12 @@ class SceneIntentHandler(IntentHandler):
     def handle_intent(self, msg):
         if msg.intent == 'describe_scene':
             self.describe_scene()
-        elif msg.intent == 'pick_up':
-            self.pickup(msg)
+        elif msg.intent == 'pick_object':
+            self.handle_pickup(msg)
+        elif msg.intent == 'drop_object':
+            self.handle_drop(msg)
+        elif msg.intent == 'place_on_object':
+            self.handle_place_on_object(msg)
         else:
             self.ui.say("Cannot handle {}".format(msg.intent))
 
@@ -39,17 +43,17 @@ class SceneIntentHandler(IntentHandler):
             self.ui.say("I see {} object{}".format(len(objects), "s" if len(objects) > 1 else ""))
         else:
             self.ui.say("I don't see any objects")
-
-    def pickup(self, msg):
+    
+    def select_object_pose(self, msg):
         slots = dict(zip(msg.slots, msg.values))
         objects = self.scene.get_objects([])
         if not objects:
             self.ui.say("I don't see any objects")
-            return
+            return None
         elif len(objects) > 1:
             if 'position' not in slots:
                 self.ui.say("I see too many objects, please select the left or the right one")
-                return
+                return None
             if slots['position'] == 'any':
                 point = next(iter(objects.values())).primitive_poses[0].position
             elif len(objects) == 2 and slots['position'] != "the":
@@ -62,21 +66,60 @@ class SceneIntentHandler(IntentHandler):
                     point = poses[1]
             else:
                 self.ui.say("I see too many objects, please pick one")
-                return
+                return None
         else:
             point = next(iter(objects.values())).primitive_poses[0].position
+        
+        point.x += 0.013
+        point.y += 0.01
+        point.z += 0.005
+
+        return point
+
+    def handle_pickup(self, msg):
+        point = self.select_object_pose(msg)
+
+        if point is None:
+            return
 
         # point = point.point
         rospy.loginfo("picking at " + str(point))
 
         self.ui.say("I will now pick up the object")
-
-        point.x += 0.013
-        point.y += 0.008
-        point.z += 0.005
         print("picking at " + str(point))
-        print("# open gripper")
+        
+        try:
+            self.pickup_object_at(point)
+        except Exception as ex:
+            self.ui.say("I could not pick up the object: " + str(ex))
 
+
+    def handle_place_on_object(self, msg):
+        point = self.select_object_pose(msg)
+
+        if point is None:
+            return
+        
+        point.z += 0.035
+
+        self.ui.say("I will now place the object")
+        
+        try:
+            self.place_object_at(point)
+        except Exception as ex:
+            self.ui.say("I could not pick up the object: " + str(ex))
+        
+    
+    def handle_drop(self, msg):
+        self.ui.say("I will now drop the object")
+        try:
+            self.drop_object()
+        except Exception as ex:
+            self.ui.say("I could not drop the object: " + str(ex))
+
+
+    def pickup_object_at(self, point):
+        print("# open gripper")
         self.open_gripper()
 
         rospy.sleep(0.3)
@@ -91,8 +134,7 @@ class SceneIntentHandler(IntentHandler):
         pose_target.position.z = point.z + 0.03
         self.arm.clear_pose_targets()
         self.arm.set_pose_target(pose_target)
-        if (not self.go(self.arm)):
-            return
+        self.go(self.arm)
 
         rospy.sleep(0.3)
 
@@ -106,8 +148,7 @@ class SceneIntentHandler(IntentHandler):
         pose_target.position.z = point.z
         self.arm.clear_pose_targets()
         self.arm.set_pose_target(pose_target)
-        if (not self.go(self.arm)):
-            return
+        self.go(self.arm)
 
         rospy.sleep(0.3)
 
@@ -115,8 +156,9 @@ class SceneIntentHandler(IntentHandler):
 
         self.close_gripper()
 
-        rospy.sleep(0.3)
+        rospy.sleep(0.7)
 
+        """
         print("go drop")
 
         pose_target = geometry_msgs.msg.Pose()
@@ -126,8 +168,7 @@ class SceneIntentHandler(IntentHandler):
         pose_target.position.z = 0.2
         self.arm.clear_pose_targets()
         self.arm.set_pose_target(pose_target)
-        if (not self.go(self.arm)):
-            return
+        self.go(self.arm)
 
         rospy.sleep(0.3)
 
@@ -138,22 +179,81 @@ class SceneIntentHandler(IntentHandler):
         rospy.sleep(0.3)
 
         print("go home")
+        """
 
+        self.goto_idle_pose()
+
+    
+    def place_object_at(self, point):
+        print("# approach")
+
+        pose_target = geometry_msgs.msg.Pose()
+        pose_target.orientation = geometry_msgs.msg.Quaternion(
+            *tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
+        pose_target.position.x = point.x
+        pose_target.position.y = point.y
+        pose_target.position.z = point.z + 0.03
         self.arm.clear_pose_targets()
-        self.arm.set_joint_value_target([0.0, 0.0, -1.3, 0.0, 0])
+        self.arm.set_pose_target(pose_target)
         self.go(self.arm)
+
+        rospy.sleep(0.3)
+
+        print("place")
+
+        pose_target = geometry_msgs.msg.Pose()
+        pose_target.orientation = geometry_msgs.msg.Quaternion(
+            *tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
+        pose_target.position.x = point.x
+        pose_target.position.y = point.y
+        pose_target.position.z = point.z
+        self.arm.clear_pose_targets()
+        self.arm.set_pose_target(pose_target)
+        self.go(self.arm)
+
+        rospy.sleep(0.3)
+
+        print("open gripper")
+
+        self.open_gripper()
+
+        rospy.sleep(0.3)
+
+
+        self.goto_idle_pose()
+
+
+    def goto_idle_pose(self):
+        self.arm.clear_pose_targets()
+        self.arm.set_joint_value_target([0.0, 0.0, -1.5, 0.0, 0])
+        self.go(self.arm)
+
+
+    def drop_object(self):
+        pose_target = geometry_msgs.msg.Pose()
+        pose_target.orientation.w = 1.0
+        pose_target.position.x = 0.3
+        pose_target.position.y = 0.0
+        pose_target.position.z = 0.0
+        self.arm.clear_pose_targets()
+        self.arm.set_pose_target(pose_target)
+        self.go(self.arm)
+        rospy.sleep(0.3)
+        self.open_gripper()
+
+        self.goto_idle_pose()
 
     def go(self, group):
         for i in range(0, 3):
             if group.go():
-                return True
-        return False
+                return
+        raise Exception("Could not move arm, aborting")
 
     def set_gripper(self, width):
         self.gripper.clear_pose_targets()
         self.gripper.set_joint_value_target([width])
         self.gripper.plan()
-        self.gripper.go()
+        self.gripper.go(wait=True)
 
     def open_gripper(self):
         self.set_gripper(0.06)

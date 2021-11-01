@@ -16,7 +16,7 @@ struct ObjectSegmentationInput {
   int maxObjectWidth = 50;
 
   int minObjectHeight = 8;
-  int maxObjectHeight = 30;
+  int maxObjectHeight = 50;
 };
 
 struct ObjectInformation {

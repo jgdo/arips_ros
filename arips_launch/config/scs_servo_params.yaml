@@ -80,7 +80,7 @@ servo_5:
     
     angle_factor: -1
 
-    max_torque: 128
+    max_torque: 64
     
 #  angle_offset: 0
 

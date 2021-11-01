@@ -33,7 +33,7 @@
   <xacro:property name="link6_len" value="0.085" />
   <xacro:property name="link6_radius" value="0.01" />
   
-  <xacro:property name="gripper_open_angle" value="0.3" />
+  <xacro:property name="gripper_open_angle" value="0.06" />
 	
   <link name="arm_base_link">
   	<visual>
@@ -133,7 +133,7 @@
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 ${link3_len}"/>
     
-    <limit effort="1000.0" lower="${-pi*0.48}" upper="3.0" velocity="1.0"/>
+    <limit effort="1000.0" lower="${-pi*0.55}" upper="3.0" velocity="1.0"/>
   </joint>
   
   <joint name="joint4" type="revolute">
@@ -176,7 +176,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="-0.055 0.02 0"/>
     
-    <limit effort="1000.0" lower="0" upper="${gripper_open_angle}" velocity="1.0"/>
+    <limit effort="1000.0" lower="0.02" upper="${gripper_open_angle}" velocity="1.0"/>
   </joint>
   
   <joint name="gripper_joint_right" type="revolute">
@@ -188,7 +188,7 @@
     <axis xyz="0 0 1"/>
     <origin xyz="-0.055 -0.02 0"/>
     
-    <limit effort="1000.0" lower="${gripper_open_angle}" upper="0" velocity="1.0"/>
+    <limit effort="1000.0" lower="${gripper_open_angle}" upper="0.02" velocity="1.0"/>
   </joint>
     
     <link name="gripper_base">

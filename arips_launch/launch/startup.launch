@@ -1,6 +1,10 @@
 <launch>  
   <node name="capability_server" pkg="capabilities" type="capability_server" output="screen">
   </node>
+  
+   <node name="laptop_battery" pkg="laptop_battery_monitor" type="laptop_battery.py" output="screen">
+     <param name="acpi_path" type="string" value="/sys/class/power_supply/CMB0" /> 
+  </node>
     
   <include file="$(find arips_web_dashboard)/launch/dashboard.launch"/>
 </launch>
