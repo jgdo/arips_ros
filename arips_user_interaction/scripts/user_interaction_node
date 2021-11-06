@@ -3,7 +3,7 @@
 import rhasspy_ros_interface.msg
 import rospy
 import std_msgs.msg
-from arips_user_interaction import intent_handler, teleop_handler, look_handler, scene_handler
+from arips_user_interaction import intent_handler, teleop_handler, look_handler, scene_handler, shutdown_handler
 
 
 class UserInteraction:
@@ -111,6 +111,7 @@ def main():
     ui.add_intent('teleop_joy', teleop_handler.JoyTeleopIntentHandler())
     ui.add_intent('kinect_tilt', look_handler.LookIntentHandler())
     ui.add_intent(['describe_scene', 'pick_object', 'drop_object', 'place_on_object'], scene_handler.SceneIntentHandler(ui))
+    ui.add_intent(["shutdown"], shutdown_handler.ShutdownHandler())
 
     rospy.spin()
 
