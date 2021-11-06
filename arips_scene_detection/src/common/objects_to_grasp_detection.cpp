@@ -9,8 +9,15 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/centroid.h>
 
+#include <tf2_eigen/tf2_eigen.h>
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+
+tf2::Vector3 eigen2tf(const Eigen::Vector3f& v)
+{
+  return { v.x(), v.y(), v.z() };
+}
 
 template <typename PointT>
 pcl::Indices selectOutsideDistance(const pcl::SampleConsensusModelPlane<PointT>& model_plane,
@@ -96,7 +103,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
   cv::Mat labeledMask;
   cv::cvtColor(imgMask, labeledMask, cv::COLOR_GRAY2BGR);
 
-  std::vector<pcl::Indices> allObjectIndices;
+  std::vector<std::pair<pcl::Indices, pcl::RGB>> allObjectIndices;
 
   for (int i = 0; i < label_count; i++)
   {
@@ -112,6 +119,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
     {
       cv::rectangle(labeledMask, { x, y }, { x + w - 1, y + h - 1 }, { 0, 0, 255 }, 3);
 
+      pcl::CentroidPoint<pcl::RGB> colorCentroid;
       std::vector<int> objectIndices;
       const cv::Rect2i objectRect(x, y, w, h);
 
@@ -121,14 +129,19 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
       {
         const unsigned int inlierX = inlierIndex % input.pointcloud->width;
         const unsigned int inlierY = inlierIndex / input.pointcloud->width;
+        const auto pt = cv::Point2i(inlierX, inlierY);
 
-        if (objectRect.contains(cv::Point2i(inlierX, inlierY)))
+        if (objectRect.contains(pt))
         {
           objectIndices.push_back(inlierIndex);
+          const auto color = input.colorImage.at<cv::Vec3b>(pt);
+          colorCentroid.add(pcl::RGB(color[2], color[1], color[0]));
         }
       }
 
-      allObjectIndices.emplace_back(std::move(objectIndices));
+      pcl::RGB color;
+      colorCentroid.get(color);
+      allObjectIndices.emplace_back(std::move(objectIndices), color);
     }
   }
 
@@ -155,7 +168,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
     for (const auto& objectIndices : allObjectIndices)
     {
-      for (auto index : objectIndices)
+      for (auto index : objectIndices.first)
       {
         const auto& point = input.pointcloud->at(index);
         geometry_msgs::Point pointMsg;
@@ -195,37 +208,94 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
     const auto baseY = planeZ.cross(baseX).normalized();
     const auto planeOrigin = planeZ * -planeCoefficients.w();
 
-    for (const auto& objectIndices : allObjectIndices)
+    for (const auto& objectIndicesColor : allObjectIndices)
     {
+      const auto& objectIndices = objectIndicesColor.first;
+      const auto objectColor = objectIndicesColor.second;
+
       pcl::CentroidPoint<pcl::PointXYZ> centroid3d;
       Eigen::Matrix<float, Eigen::Dynamic, 2> points2d(objectIndices.size(), 2);
       size_t pointsIndex = 0;
 
-      float topZ = -1000;
+      float topHeight = -1000;
 
       for (auto index : objectIndices)
       {
         const auto& p = input.pointcloud->at(index);
-        const Eigen::Vector2f p2d {p.getVector3fMap().dot(baseX), p.getVector3fMap().dot(baseY)};
-        const auto projected = baseX * p2d.x() +
-                               baseY * p2d.y() + planeOrigin;
+        const Eigen::Vector2f p2d{ p.getVector3fMap().dot(baseX), p.getVector3fMap().dot(baseY) };
+        const auto projectedOnPlane = baseX * p2d.x() + baseY * p2d.y() + planeOrigin;
 
-        const auto zOnPlane = p.getVector3fMap().dot(planeZ);
-        topZ = std::max(topZ, zOnPlane);
+        const auto heightAbovePlane = p.getVector3fMap().dot(planeZ);
+        topHeight = std::max(topHeight, heightAbovePlane);
 
-        centroid3d.add(pcl::PointXYZ{ projected.x(), projected.y(), projected.z() });
+        centroid3d.add(p);
         points2d.row(pointsIndex++) = p2d;
 
         geometry_msgs::Point pointMsg;
-        pointMsg.x = projected.x();
-        pointMsg.y = projected.y();
-        pointMsg.z = projected.z();
+        pointMsg.x = projectedOnPlane.x();
+        pointMsg.y = projectedOnPlane.y();
+        pointMsg.z = projectedOnPlane.z();
         marker.points.emplace_back(pointMsg);
         marker.colors.emplace_back(color);
       }
 
       pcl::PointXYZ objectCenterPCL;
       centroid3d.get(objectCenterPCL);
+
+      if (topHeight > input.maxCenterHeightAboveFloor)
+      {
+        // object is too high to consider
+        continue;
+      }
+
+      const auto centerTfInBase = input.cameraToBase(eigen2tf(objectCenterPCL.getVector3fMap()));
+      if (centerTfInBase.length() > input.maxRadiusAroundBase)
+      {
+        continue;
+      }
+
+      const auto getRotation = [](tf2::Matrix3x3 const& rot) {
+        tf2::Quaternion q;
+        rot.getRotation(q);
+
+        return Eigen::Quaterniond{ q.w(), q.x(), q.y(), q.z() }.cast<float>();
+      };
+
+      /*
+
+      // get orientation
+      Eigen::Affine3f cameraToBase {getRotation(input.cameraToBase.getBasis())};
+      cameraToBase.translation() =
+          Eigen::Vector3d{ input.cameraToBase.getOrigin().x(), input.cameraToBase.getOrigin().z(),
+                           input.cameraToBase.getOrigin().z() }.cast<float>();
+
+      float bestWidth = 1000;
+      float bestAngle = 0;
+
+      for(float angle = -M_PI_2; angle < M_PI_2; angle += M_PI_2/4)
+      {
+        const auto preRot = Eigen::AngleAxisf(angle, Eigen::Vector3f{0,0,1});
+
+        float minX = 1000, maxX = -1000;
+        for (auto index : objectIndices)
+        {
+          const auto& p = input.pointcloud->at(index);
+          auto pBase = preRot*(cameraToBase * p.getVector3fMap());
+
+          minX = std::min(minX, pBase.x());
+          maxX = std::max(maxX, pBase.x());
+        }
+        const auto maxWidth = std::abs(maxX - minX);
+
+        if(maxWidth < bestWidth) {
+          bestWidth = maxWidth;
+          bestAngle = angle;
+        }
+      }
+
+      ROS_INFO_STREAM("Best angle: " << bestAngle << " width " << bestWidth);
+
+       */
 
       // perform PCA
       // https://stackoverflow.com/questions/15138634/eigen-is-there-an-inbuilt-way-to-calculate-sample-covariance
@@ -234,16 +304,15 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
       Eigen::MatrixXf cov = (centered.adjoint() * centered) / float(points2d.rows() - 1);
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
 
-
-
-      const auto mainDirection = eig.eigenvectors().col(1).x() * baseX + eig.eigenvectors().col(1).y() * baseY;
-      const auto objectCenter = center2d.x() * baseX + center2d.y() * baseY + planeZ * topZ;
+      const auto mainDirection =
+          eig.eigenvectors().col(1).x() * baseX + eig.eigenvectors().col(1).y() * baseY;
+      const auto objectCenter = center2d.x() * baseX + center2d.y() * baseY + planeZ * topHeight;
 
       {
         visualization_msgs::Marker marker;
         marker.header = pcl_conversions::fromPCL(input.pointcloud->header);
         marker.ns = "objects_to_grasp_segmented_arrows";
-        marker.id = &objectIndices - allObjectIndices.data();
+        marker.id = &objectIndicesColor - allObjectIndices.data();
         marker.type = visualization_msgs::Marker::ARROW;
         marker.action = visualization_msgs::Marker::ADD;
         marker.pose.orientation.w = 1;
@@ -268,6 +337,11 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
       ObjectInformation object;
       object.position.setOrigin(tf2::Vector3(objectCenter.x(), objectCenter.y(), objectCenter.z()));
+      object.meanColor.r = objectColor.r / 255.0f;
+      object.meanColor.g = objectColor.g / 255.0f;
+      object.meanColor.b = objectColor.b / 255.0f;
+      object.meanColor.a = 1.0;
+
       result.detectedObjects.emplace_back(std::move(object));
     }
 

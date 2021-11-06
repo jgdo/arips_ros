@@ -46,19 +46,26 @@ class SceneIntentHandler(IntentHandler):
     
     def select_object_pose(self, msg):
         slots = dict(zip(msg.slots, msg.values))
-        objects = self.scene.get_objects([])
+        objects = list(self.scene.get_objects([]).values())
+
+        color_filter = slots['color'] if 'color' in slots else ''
+
+        if color_filter:
+            objects = list(filter(lambda obj: obj.type.key == color_filter, objects))
+
         if not objects:
-            self.ui.say("I don't see any objects")
-            return None
-        elif len(objects) > 1:
+            self.ui.say(f"I don't see any {color_filter} objects")
+            return None, color_filter
+
+        if len(objects) > 1:
             if 'position' not in slots:
                 self.ui.say("I see too many objects, please select the left or the right one")
-                return None
+                return None, color_filter
             if slots['position'] == 'any':
-                point = next(iter(objects.values())).primitive_poses[0].position
+                point = objects[0].primitive_poses[0].position
             elif len(objects) == 2 and slots['position'] != "the":
                 # sort objects
-                poses = [p.primitive_poses[0].position for p in objects.values()]
+                poses = [p.primitive_poses[0].position for p in objects]
                 poses = sorted(poses, key=lambda x: x.y)
                 if slots['position'] == 'left':
                     point = poses[0]
@@ -66,18 +73,18 @@ class SceneIntentHandler(IntentHandler):
                     point = poses[1]
             else:
                 self.ui.say("I see too many objects, please pick one")
-                return None
+                return None, color_filter
         else:
-            point = next(iter(objects.values())).primitive_poses[0].position
+            point = objects[0].primitive_poses[0].position
         
         point.x += 0.013
         point.y += 0.01
         point.z += 0.005
 
-        return point
+        return point, color_filter
 
     def handle_pickup(self, msg):
-        point = self.select_object_pose(msg)
+        point, color = self.select_object_pose(msg)
 
         if point is None:
             return
@@ -85,7 +92,7 @@ class SceneIntentHandler(IntentHandler):
         # point = point.point
         rospy.loginfo("picking at " + str(point))
 
-        self.ui.say("I will now pick up the object")
+        self.ui.say(f"I will now pick up the {color} object")
         print("picking at " + str(point))
         
         try:
@@ -95,14 +102,14 @@ class SceneIntentHandler(IntentHandler):
 
 
     def handle_place_on_object(self, msg):
-        point = self.select_object_pose(msg)
+        point, color = self.select_object_pose(msg)
 
         if point is None:
             return
         
         point.z += 0.035
 
-        self.ui.say("I will now place the object")
+        self.ui.say(f"I will now place the object onto {color} object")
         
         try:
             self.place_object_at(point)

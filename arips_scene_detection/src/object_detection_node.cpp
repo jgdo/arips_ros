@@ -18,6 +18,53 @@
 #include "depth_to_cloud.h"
 #include "common/objects_to_grasp_detection.h"
 
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+
+#include <angles/angles.h>
+
+struct HSV
+{
+  float h, s, v;
+};
+
+// https://wisotop.de/rgb-nach-hsv.php
+HSV rgbToHsv(const std_msgs::ColorRGBA& rgb)
+{
+  const auto min = std::min({ rgb.r, rgb.g, rgb.b });
+  const auto max = std::max({ rgb.r, rgb.g, rgb.b });
+  const auto delta = max - min;
+
+  // black
+  if (max == 0.0)
+  {
+    return { 0, 0, 0 };
+  }
+
+  // pure gray
+  if (max == min)
+  {
+    return { 0, 0, max };
+  }
+
+  const auto s = delta / max;
+
+  float h = 0.0;
+  if (rgb.r == max)
+  {
+    h = (rgb.g - rgb.b) / delta;
+  }
+  else if (rgb.g == max)
+  {
+    h = 2 + (rgb.b - rgb.r) / delta;
+  }
+  else
+  {
+    h = 4 + (rgb.r - rgb.g) / delta;
+  }
+
+  return { static_cast<float>(angles::normalize_angle_positive(h * M_PI / 3.0)), s, max };
+}
+
 // see also
 // https://answers.ros.org/question/46280/reg-subscribing-to-depth-and-rgb-image-at-the-same-time/
 
@@ -27,7 +74,7 @@ class RgbdPipeline
       MySyncPolicy;
 
 public:
-  RgbdPipeline(tf2_ros::Buffer& tf) : mTfBuffer(tf)
+  RgbdPipeline(const std::shared_ptr<tf2_ros::Buffer>& tf) : mTfBuffer(tf)
   {
     mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>(
         "/kinect/depth_registered/camera_info", 1, &RgbdPipeline::onCameraInfoReceived, this);
@@ -35,7 +82,13 @@ public:
     sync.registerCallback(boost::bind(&RgbdPipeline::depthRgbCallback, this, _1, _2));
 
     mMarkerPub = mNode.advertise<visualization_msgs::MarkerArray>("scene_objects", 1);
-    mPlanningScenePublisher = mNode.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+
+    mPsm = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description",
+                                                                          mTfBuffer);
+    mPsm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                       "/planning_scene");
+
+    // mPsm->startSceneMonitor();
   }
 
 private:
@@ -59,6 +112,8 @@ private:
       return;
     }
 
+    assert(cv_rgb_ptr->image.type() == CV_8UC3);
+
     auto fullCloud = depthToCloud(cv_depth_ptr->image, cv_depth_ptr->header, mCameraModel, 1, true);
     auto simpleCloud = depthToCloud(cv_depth_ptr->image, cv_depth_ptr->header, mCameraModel, 8);
 
@@ -67,25 +122,11 @@ private:
       return;
     }
 
-    const auto plane = segmentPlane(simpleCloud);
-    visualization_msgs::MarkerArray markers;
-    const auto detectedObjects =
-        detectObjectsInScene({ fullCloud, plane.modelCoefficients, cv_depth_ptr->image }, &markers);
-
-    mMarkerPub.publish(markers);
-
-    moveit_msgs::PlanningScene planning_scene;
-    {
-      moveit_msgs::CollisionObject object;
-      object.operation = moveit_msgs::CollisionObject::REMOVE;
-      planning_scene.world.collision_objects.push_back(object);
-    }
-
     geometry_msgs::TransformStamped arm_transform;
     try
     {
       arm_transform =
-          mTfBuffer.lookupTransform("arm_base_link", msg_depth->header.frame_id, ros::Time(0));
+          mTfBuffer->lookupTransform("arm_base_link", msg_depth->header.frame_id, ros::Time(0));
     }
     catch (tf2::TransformException& ex)
     {
@@ -93,59 +134,91 @@ private:
       return;
     }
 
-    constexpr float maxDist_m = 0.3;
+    auto convertTransform = [](const geometry_msgs::TransformStamped& msg) {
+      tf2::Stamped<tf2::Transform> out;
+      tf2::fromMsg(msg, out);
+      return out;
+    };
 
-    for (int i = 0; i < detectedObjects.detectedObjects.size(); i++)
+    const auto armTransformTf = convertTransform(arm_transform);
+
+    const auto plane = segmentPlane(simpleCloud);
+    visualization_msgs::MarkerArray markers;
+    const auto detectedObjects =
+        detectObjectsInScene({ fullCloud, plane.modelCoefficients, cv_depth_ptr->image,
+                               cv_rgb_ptr->image, armTransformTf },
+                             &markers);
+
+    mMarkerPub.publish(markers);
+
     {
-      const auto center = detectedObjects.detectedObjects.at(i).position.getOrigin();
-      geometry_msgs::Point centerMsg;
-      centerMsg.x = center.x();
-      centerMsg.y = center.y();
-      centerMsg.z = center.z();
+      planning_scene_monitor::LockedPlanningSceneRW scene(mPsm);
+      scene->removeAllCollisionObjects();
 
-      geometry_msgs::Point centerBase;
-      tf2::doTransform(centerMsg, centerBase, arm_transform);
-      // const auto centerBase = arm_transform(tfc);
+      constexpr float maxDist_m = 0.3;
 
-      if ((centerBase.x * centerBase.x + centerBase.y * centerBase.y) > maxDist_m * maxDist_m ||
-          centerBase.z > 0.07)
+      for (int i = 0; i < detectedObjects.detectedObjects.size(); i++)
       {
-        ROS_INFO_STREAM("Ignoring object at " << centerBase);
-        continue;
+        const auto center = detectedObjects.detectedObjects.at(i).position.getOrigin();
+        geometry_msgs::Point centerMsg;
+        centerMsg.x = center.x();
+        centerMsg.y = center.y();
+        centerMsg.z = center.z();
+
+        geometry_msgs::Point centerBase;
+        tf2::doTransform(centerMsg, centerBase, arm_transform);
+        // const auto centerBase = arm_transform(tfc);
+
+        if ((centerBase.x * centerBase.x + centerBase.y * centerBase.y) > maxDist_m * maxDist_m ||
+            centerBase.z > 0.07)
+        {
+          ROS_DEBUG_STREAM("Ignoring object at " << centerBase);
+          continue;
+        }
+
+        geometry_msgs::Pose objectPose;
+        objectPose.position = centerBase;
+        objectPose.position.z -= 0.015;
+        objectPose.orientation.w = 1;
+
+        moveit_msgs::CollisionObject object;
+        object.header.frame_id = "arm_base_link";
+        object.header.stamp = msg_depth->header.stamp;
+
+        object.operation = moveit_msgs::CollisionObject::ADD;
+        object.id = std::to_string(i);
+
+        const auto meanColor = detectedObjects.detectedObjects.at(i).meanColor;
+        const auto hsv = rgbToHsv(meanColor);
+
+        if(hsv.v < 0.3 && hsv.s < 0.2) {
+          object.type.key = "black";
+        }
+        else if(hsv.s < 0.25) {
+          object.type.key = "white";
+        } else if (std::abs(angles::normalize_angle(hsv.h - 0.0)) < 0.7) {
+          object.type.key = "red";
+        } else if (std::abs(angles::normalize_angle(hsv.h - 2.1)) < 0.7) {
+          object.type.key = "green";
+        } else if (std::abs(angles::normalize_angle(hsv.h - 4.18879)) < 0.7) {
+          object.type.key = "blue";
+        }
+
+        /* Define a box to be attached */
+        shape_msgs::SolidPrimitive primitive;
+        primitive.type = primitive.BOX;
+        primitive.dimensions = { 0.03, 0.03, 0.03 };
+
+        object.primitives.push_back(primitive);
+
+        object.primitive_poses.push_back(objectPose);
+
+        scene->processCollisionObjectMsg(object);
+        scene->setObjectColor(object.id, meanColor);
       }
-
-      std_msgs::ColorRGBA color;
-      color.r = 1.0f;
-      color.g = 1.0f;
-      color.b = 0.0f;
-      color.a = 0.3;
-
-      geometry_msgs::Pose objectPose;
-      objectPose.position = centerBase;
-      objectPose.position.z -= 0.015;
-      objectPose.orientation.w = 1;
-
-          moveit_msgs::CollisionObject object;
-      object.header.frame_id = "arm_base_link";
-      object.header.stamp = msg_depth->header.stamp;
-
-      object.operation = moveit_msgs::CollisionObject::ADD;
-      object.id = std::to_string(i);
-
-      /* Define a box to be attached */
-      shape_msgs::SolidPrimitive primitive;
-      primitive.type = primitive.BOX;
-      primitive.dimensions = { 0.03, 0.03, 0.03 };
-
-      object.primitives.push_back(primitive);
-
-      object.primitive_poses.push_back(objectPose);
-
-      planning_scene.world.collision_objects.push_back(object);
     }
 
-    planning_scene.is_diff = true;
-    mPlanningScenePublisher.publish(planning_scene);
+    mPsm->triggerSceneUpdateEvent(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE);
   }
 
   void onCameraInfoReceived(const sensor_msgs::CameraInfoConstPtr& info_msg)
@@ -153,7 +226,7 @@ private:
     mCameraModel.fromCameraInfo(info_msg);
   }
 
-  tf2_ros::Buffer& mTfBuffer;
+  std::shared_ptr<tf2_ros::Buffer> mTfBuffer;
   ros::NodeHandle mNode;
 
   image_geometry::PinholeCameraModel mCameraModel;
@@ -171,7 +244,7 @@ private:
 
   ros::Publisher mMarkerPub;
 
-  ros::Publisher mPlanningScenePublisher;
+  planning_scene_monitor::PlanningSceneMonitorPtr mPsm;
 };
 
 int main(int argc, char** argv)
@@ -180,8 +253,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "arips_scene_detection");
   ros::NodeHandle nh;
 
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
+  auto tfBuffer = std::make_shared<tf2_ros::Buffer>();
+  tf2_ros::TransformListener tfListener(*tfBuffer);
 
   RgbdPipeline depthPipeline{ tfBuffer };
   // Spin
