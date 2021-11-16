@@ -227,7 +227,7 @@ struct MotionController::Pimpl {
     }
 
     std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose) {
-        const auto angleThresRotateInPlace = 1.5;
+        const auto angleThresRotateInPlace = 1.0;
 
         auto& costmap = mPotentialMap.costmap();
 
