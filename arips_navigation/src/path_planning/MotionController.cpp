@@ -1,7 +1,10 @@
+#include <memory>
+
+#include <dynamic_reconfigure/server.h>
+
+#include <arips_navigation/MotionControllerConfig.h>
 #include <arips_navigation/path_planning/MotionController.h>
 #include <arips_navigation/path_planning/PlanningMath.h>
-
-#include <memory>
 
 // See
 // https://stackoverflow.com/questions/16605967/set-precision-of-stdto-string-when-converting-floating-point-values
@@ -39,18 +42,20 @@ double computeSpeed(double goalDist, double duration, double maxSpeed) {
 }
 
 Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDistance,
-                                const CostFunction& constFunction) {
-    const auto duration = 0.8;
+                                const CostFunction& constFunction,
+                                const arips_navigation::MotionControllerConfig& config) {
+    const auto duration = config.traj_sampling_duration_s;
     const auto transSpeed = computeSpeed(goalDistance, duration, constFunction.maxWheelSpeed());
     const auto rotSpeed = 1.0;
-    const auto dt = duration / 20;
+    const auto dt = duration / config.traj_sampling_steps;
 
     Trajectories traj;
     traj.emplace_back(generateTrajectory(currentPose, {{0, 0}, rotSpeed}, duration, dt));
     traj.emplace_back(generateTrajectory(currentPose, {{0, 0}, -rotSpeed}, duration, dt));
 
-    const auto curvatureStep = 0.5;
-    for (double curvature = -20; curvature < 20 + curvatureStep / 2; curvature += curvatureStep) {
+    const auto curvatureStep = config.traj_curvature_stepsize;
+    for (double curvature = -config.traj_curvature_range;
+         curvature < config.traj_curvature_range + curvatureStep / 2; curvature += curvatureStep) {
         const auto speedFactor = transSpeed / (1.0 + std::abs(curvature) * 0.2);
         const Pose2D vel{{1 * speedFactor, 0}, curvature * speedFactor};
 
@@ -109,15 +114,23 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
 }
 
 struct MotionController::Pimpl {
-    static constexpr auto GoalToleranceXY = 0.1;
-    static constexpr auto GoalToleranceYaw = 0.1;
+    arips_navigation::MotionControllerConfig mConfig;
 
     PotentialMap& mPotentialMap;
     ros::Publisher mVizPub;
+    dynamic_reconfigure::Server<arips_navigation::MotionControllerConfig> mConfigServer{
+        ros::NodeHandle{"~/MotionController"}};
 
     explicit Pimpl(PotentialMap& potentialMap) : mPotentialMap{potentialMap} {
         ros::NodeHandle nh;
         mVizPub = nh.advertise<visualization_msgs::MarkerArray>("sampled_trajectories", 10);
+
+        dynamic_reconfigure::Server<arips_navigation::MotionControllerConfig>::CallbackType cb =
+            [this](auto&& PH1, auto&& PH2) {
+                onDynamicReconfigure(std::forward<decltype(PH1)>(PH1),
+                                     std::forward<decltype(PH2)>(PH2));
+            };
+        mConfigServer.setCallback(cb);
     }
 
     [[nodiscard]] bool goalReached(const Pose2D& robotPose, const Pose2D& goalPose) const {
@@ -125,7 +138,8 @@ struct MotionController::Pimpl {
         const auto angularDistance =
             angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
-        return goalDistance <= GoalToleranceXY && std::abs(angularDistance) < GoalToleranceYaw;
+        return goalDistance <= mConfig.goal_tolerance_xy_m &&
+               angles::to_degrees(std::abs(angularDistance)) < mConfig.goal_tolerance_yaw_deg;
     }
 
     void visualizeTrajectories(const Trajectories& trajectories,
@@ -238,11 +252,11 @@ struct MotionController::Pimpl {
         Twist2D result;
 
         const auto goalDistXY = robotPose.distance(goalPose);
-        if (goalDistXY < GoalToleranceXY * 0.8) {
+        if (goalDistXY < mConfig.goal_tolerance_xy_m * 0.8) {
             const auto rotationDiff =
                 angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
-            if (std::abs(rotationDiff) > GoalToleranceYaw) {
+            if (angles::to_degrees(std::abs(rotationDiff)) > mConfig.goal_tolerance_yaw_deg) {
                 const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
                 result.theta = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
                 return result;
@@ -265,7 +279,7 @@ struct MotionController::Pimpl {
         }
 
         const auto trajectories =
-            sampleTrajectories(robotPose, goalDistXY, mPotentialMap.costFunction());
+            sampleTrajectories(robotPose, goalDistXY, mPotentialMap.costFunction(), mConfig);
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
@@ -374,6 +388,10 @@ struct MotionController::Pimpl {
 
         return cmdVel;
          */
+    }
+
+    void onDynamicReconfigure(arips_navigation::MotionControllerConfig& config, uint32_t level) {
+        mConfig = config;
     }
 };
 
