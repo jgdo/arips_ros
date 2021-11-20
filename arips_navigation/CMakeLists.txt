@@ -264,6 +264,9 @@ install(DIRECTORY maps
 ## Testing ##
 #############
 
+find_package(rostest REQUIRED)
+
+#[[
 ## Add gtest based cpp test target and link libraries
 catkin_add_gtest(${PROJECT_NAME}-test test/test_arips_navigation.cpp)
 if(TARGET ${PROJECT_NAME}-test)
@@ -273,9 +276,15 @@ if(TARGET ${PROJECT_NAME}-test)
 endif()
 
 catkin_add_gtest(${PROJECT_NAME}-demo-test test/demo_test_arips_navigation.cpp)
-target_link_libraries(${PROJECT_NAME}-demo-test ${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME}-demo-test
         ${PROJECT_NAME}
 )
+
+#]]
+
+add_rostest_gtest(global_planning_test test/global_planning.test test/test_global_navigation_sim.cpp tools/simulator/Simulator.cpp
+        tools/simulator/Simulator.h)
+target_link_libraries(global_planning_test ${PROJECT_NAME})
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

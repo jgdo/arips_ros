@@ -22,9 +22,9 @@ struct Simulator::Pimpl {
 
     DriveDirectionIndicator mSetpointIndicator{"setpoint_indicator", 0.2};
 
-    geometry_msgs::Twist mLastTwist;
+    Pose2D mLastTwist;
     // will be decremented on each control cycle, reset twist when no feedback received
-    int mTwistTimeoutCount = 0;
+    double mTwistTimeoutCount = 0;
     nav_msgs::Odometry mRobotPose;
 
     tf2_ros::TransformBroadcaster mTfBroadcaster;
@@ -34,7 +34,7 @@ struct Simulator::Pimpl {
 
     bool mDrivingEnabled = true;
 
-    explicit Pimpl(tf2_ros::Buffer& tf) : mTfBuffer{tf} {
+    explicit Pimpl(tf2_ros::Buffer& tf, bool runInOwnThread) : mTfBuffer{tf} {
         ros::NodeHandle nh;
         mRobotPose.header.frame_id = "map";
         mRobotPose.child_frame_id = "arips_base";
@@ -42,7 +42,10 @@ struct Simulator::Pimpl {
 
         mOdomPub = nh.advertise<nav_msgs::Odometry>("odom", 5);
         mCmdVelSub = nh.subscribe("cmd_vel", 100, &Pimpl::onCmdVel, this);
-        mControlLoopTimer = nh.createTimer(mControlRate, &Pimpl::onRunControlLoop, this);
+
+        if (runInOwnThread) {
+            mControlLoopTimer = nh.createTimer(mControlRate, &Pimpl::onRunControlLoop, this);
+        }
 
         setupMarkers();
     }
@@ -98,9 +101,9 @@ struct Simulator::Pimpl {
             // which will cause RViz to insert two arrows
             visualization_msgs::InteractiveMarkerControl control;
             control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE;
-            control.orientation.w = 1;
+            control.orientation.w = 1.0 / std::sqrt(2.0);
             control.orientation.x = 0;
-            control.orientation.y = 1;
+            control.orientation.y = 1.0 / std::sqrt(2.0);
             control.orientation.z = 0;
 
             // add the control to the interactive marker
@@ -123,32 +126,32 @@ struct Simulator::Pimpl {
         mMarkerServer.applyChanges();
     }
 
-    void onCmdVel(geometry_msgs::Twist const& cmd_vel) {
-        mLastTwist = cmd_vel;
-        mTwistTimeoutCount = static_cast<int>(0.5 / mControlRate.expectedCycleTime().toSec());
+    void onCmdVel(geometry_msgs::Twist const& cmd_vel) { setSpeed(Pose2D::fromTwistMsg(cmd_vel)); }
+
+    void setSpeed(const Pose2D& twist) {
+        mLastTwist = twist;
+        mTwistTimeoutCount = 0.5;
     }
 
-    void onRunControlLoop(const ros::TimerEvent& ev) {
+    void makeStep(double dt, ros::Time now) {
         // reset velocity after timeout
         if (mTwistTimeoutCount > 0) {
-            mTwistTimeoutCount--;
+            mTwistTimeoutCount -= mControlRate.expectedCycleTime().toSec();
         } else {
-            mLastTwist = geometry_msgs::Twist{};
+            mLastTwist = {};
         }
 
-        mSetpointIndicator.indicate(mLastTwist);
+        mSetpointIndicator.indicate(mLastTwist.toTwistMsg());
 
         if (mDrivingEnabled) {
-
             // see also http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom
             double x = mRobotPose.pose.pose.position.x;
             double y = mRobotPose.pose.pose.position.y;
             double th = getYawFromQuaternion(mRobotPose.pose.pose.orientation);
 
-            const double dt = mControlRate.expectedCycleTime().toSec();
-            const double vx = mLastTwist.linear.x;
-            const double vy = mLastTwist.linear.y; // usually 0
-            const double vth = mLastTwist.angular.z;
+            const double vx = mLastTwist.x();
+            const double vy = mLastTwist.y(); // usually 0
+            const double vth = mLastTwist.theta;
 
             const double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
             const double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
@@ -161,10 +164,10 @@ struct Simulator::Pimpl {
             mRobotPose.pose.pose.position.x = x;
             mRobotPose.pose.pose.position.y = y;
             mRobotPose.pose.pose.orientation = createQuaternionMsgFromYaw(th);
-            mRobotPose.twist.twist = mLastTwist;
+            mRobotPose.twist.twist = mLastTwist.toTwistMsg();
         }
 
-        mRobotPose.header.stamp = ev.current_expired;
+        mRobotPose.header.stamp = now;
 
         // TODO: set covariance
         mOdomPub.publish(mRobotPose);
@@ -183,6 +186,10 @@ struct Simulator::Pimpl {
         markerPose.position.z = 0.1;
         mMarkerServer.setPose("robot_sim_marker", markerPose, mRobotPose.header);
         mMarkerServer.applyChanges();
+    }
+
+    void onRunControlLoop(const ros::TimerEvent& ev) {
+        makeStep(mControlRate.expectedCycleTime().toSec(), ev.current_expected);
     }
 
     void
@@ -211,6 +218,14 @@ struct Simulator::Pimpl {
     }
 };
 
-Simulator::Simulator(tf2_ros::Buffer& tf) : mPimpl{std::make_unique<Pimpl>(tf)} {}
+Simulator::Simulator(tf2_ros::Buffer& tf, bool runInOwnThread)
+    : mPimpl{std::make_unique<Pimpl>(tf, runInOwnThread)} {}
+
+Pose2D Simulator::getRobotPose() const {
+    return {{mPimpl->mRobotPose.pose.pose.position.x, mPimpl->mRobotPose.pose.pose.position.y},
+            getYawFromQuaternion(mPimpl->mRobotPose.pose.pose.orientation)};
+}
+void Simulator::makeStep(double dt, ros::Time now) { return mPimpl->makeStep(dt, now); }
+void Simulator::setSpeed(const Pose2D& twist) { return mPimpl->setSpeed(twist); }
 
 Simulator::~Simulator() = default;

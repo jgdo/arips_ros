@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include <angles/angles.h>
+#include <geometry_msgs/Twist.h>
 
 using Vector2d = Eigen::Vector2d;
 
@@ -12,6 +13,14 @@ using Twist2D = Pose2D;
 struct Pose2D {
     Vector2d point = {0, 0};
     double theta = 0;
+
+    Pose2D() = default;
+    Pose2D(const Pose2D& other) = default;
+    Pose2D(const Vector2d& point, double theta) : point{point}, theta{theta} {}
+
+    static Pose2D fromTwistMsg(const geometry_msgs::Twist& msg) {
+        return {{msg.linear.x, msg.linear.y}, msg.angular.z};
+    }
 
     [[nodiscard]] double x() const { return point.x(); }
 
@@ -37,6 +46,14 @@ struct Pose2D {
 
     [[nodiscard]] double distance(const Pose2D& other) const {
         return (point - other.point).norm();
+    }
+
+    geometry_msgs::Twist toTwistMsg() const {
+        geometry_msgs::Twist msg;
+        msg.linear.x = point.x();
+        msg.linear.y = point.y();
+        msg.angular.z = theta;
+        return msg;
     }
 
     // TODO conversion functions from geometry_msgs::PoseStamped and similar
