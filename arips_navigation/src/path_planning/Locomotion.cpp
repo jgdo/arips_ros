@@ -16,14 +16,14 @@ struct Locomotion::Pimpl {
         return mPotentialMap.getCostmapRos();
     }
 
-    bool setGoal(const Pose2D& robotPose, const Pose2D& goal) {
+    std::optional<double> makePlan(const Pose2D& robotPose, const Pose2D& goal) {
         // path.poses.push_back(robotPose);
         unsigned int robotCx, robotCy, goalCx, goalCy;
         if (!costmap().getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy) ||
             !costmap().getCostmap()->worldToMap(goal.x(), goal.y(), goalCx, goalCy)) {
 
             ROS_WARN_STREAM("Could not find robot or goal pose on costmap.");
-            return false;
+            return {};
         }
 
         const auto initialRobotCost = costmap().getCostmap()->getCost(robotCx, robotCy);
@@ -47,9 +47,17 @@ struct Locomotion::Pimpl {
 
         pathPub.publish(path); */
 
-        mCurrentGoal = goal;
+        return mPotentialMap.getGoalDistance(robotCx, robotCy);
+    }
 
-        return true;
+    bool setGoal(const Pose2D& robotPose, const Pose2D& goal) {
+        if(makePlan(robotPose, goal)) {
+            mCurrentGoal = goal;
+            return true;
+        }
+
+        mCurrentGoal = {};
+        return false;
     }
 
     bool goalReached(const Pose2D& robotPose) {
@@ -66,7 +74,7 @@ struct Locomotion::Pimpl {
 
     void cancel() { mCurrentGoal = {}; }
 
-    bool hasGoal() const { return static_cast<bool>(mCurrentGoal); }
+    [[nodiscard]] bool hasGoal() const { return static_cast<bool>(mCurrentGoal); }
 };
 
 Locomotion::Locomotion(costmap_2d::Costmap2DROS& costmap)
@@ -83,3 +91,7 @@ std::optional<Pose2D> Locomotion::computeVelocityCommands(const Pose2D& robotPos
 void Locomotion::cancel() { mPimpl->cancel(); }
 bool Locomotion::hasGoal() const { return mPimpl->hasGoal(); }
 const PotentialMap& Locomotion::potentialMap() const { return mPimpl->mPotentialMap; }
+
+std::optional<double> Locomotion::makePlan(const Pose2D& robotPose, const Pose2D& goal) {
+    return mPimpl->makePlan(robotPose, goal);
+}

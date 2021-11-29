@@ -167,27 +167,28 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node* node, LocalPosition 
     tf2::Stamped<tf2::Transform> startTransformed =
         _context.tfBuffer->transform(srcData.pose, mapData.planner->getMap().getGlobalFrameID());
 
-    std::vector<geometry_msgs::PoseStamped> plan;
     geometry_msgs::PoseStamped startMsg;
     tf2::toMsg(startTransformed, startMsg);
 
-    double distance;
     tf2::Stamped<tf2::Transform> actualApproachPose;
     // needed since local planner expects a height of 0
     startMsg.pose.position.z = 0;
-    bool success =
-        mapData.planner->makePlan(startMsg, approach, plan, &distance, &actualApproachPose);
 
-    if (!success) {
+    const auto distanceCosts = mapData.planner->computeCosts(startMsg, approach, &actualApproachPose);
+
+    if (!distanceCosts) {
         return std::make_pair(std::numeric_limits<double>::max(), LocalPositionConstPtr());
     }
 
     // throw std::runtime_error("FlatGroundModule::computeCostOnRegion() for region '" +
     // node->getName() + "' planning failed");
 
-    double costs = getCosts(mapData, distance);
 
     if (pathData) {
+        *pathData = actualApproachPose;
+
+        // TODO
+        /*
         std::vector<geometry_msgs::PoseStamped> planTransformed;
         planTransformed.reserve(plan.size());
 
@@ -198,11 +199,12 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node* node, LocalPosition 
         }
 
         *pathData = plan; // planTransformed;
+         * */
     }
 
     auto pos_data = std::make_shared<PositionData>(actualApproachPose);
     pos_data->goal_properties = approach->goal_properties;
-    return std::make_pair(costs, pos_data);
+    return std::make_pair(*distanceCosts, pos_data);
 }
 
 void FlatGroundModule::convertGlobalPoseToApproachExitData(const GlobalPosition& pos,

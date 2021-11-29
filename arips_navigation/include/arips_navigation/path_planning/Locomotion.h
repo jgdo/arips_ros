@@ -14,6 +14,9 @@ public:
 
     ~Locomotion();
 
+    // Return costs on success, otherwise nullopt
+    std::optional<double> makePlan(const Pose2D& robotPose, const Pose2D& goal);
+
     // goal must be in costmaps global frame
     // will block until planning finished
     // return true if planning successful

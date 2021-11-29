@@ -19,6 +19,8 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 
+#include <optional>
+
 namespace toponav_ros {
 
 struct FlatGroundModule;
@@ -30,13 +32,11 @@ template <> struct BaseTraits<FlatGroundModule> {
 
         inline virtual ~CostsPlanner() {}
 
-        virtual bool makePlan(const geometry_msgs::PoseStamped& start,
-                              ApproachExit3DPtr const& goal,
-                              std::vector<geometry_msgs::PoseStamped>& plan,
-                              double* costs = nullptr,
-                              tf2::Stamped<tf2::Transform>* actualApproachPose = nullptr) = 0;
+        virtual std::optional<double>
+        computeCosts(const geometry_msgs::PoseStamped& start, ApproachExit3DPtr const& goal,
+                     tf2::Stamped<tf2::Transform>* actualApproachPose = nullptr) = 0;
 
-        virtual costmap_2d::Costmap2DROS& getMap() = 0;
+        virtual const costmap_2d::Costmap2DROS& getMap() = 0;
     };
 
     typedef CostsPlanner::Ptr CostsPlannerPtr;
@@ -120,8 +120,8 @@ public:
      * @param nodeType
      * @param minNumCells 0 means no restriction
      */
-    static void segmentAllNodes(toponav_core::TopoMap* map,
-                                std::string const& nodeType, size_t minNumCells);
+    static void segmentAllNodes(toponav_core::TopoMap* map, std::string const& nodeType,
+                                size_t minNumCells);
 
     static void combineNodeMatrix(NodeMatrix& mat, const NodeMatrix& other);
 

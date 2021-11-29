@@ -5,6 +5,10 @@
 #include <angles/angles.h>
 #include <geometry_msgs/Twist.h>
 
+#include <tf2/utils.h>
+
+#include <arips_navigation/utils/transforms.h>
+
 using Vector2d = Eigen::Vector2d;
 
 struct Pose2D;
@@ -18,9 +22,18 @@ struct Pose2D {
     Pose2D(const Pose2D& other) = default;
     Pose2D(const Vector2d& point, double theta) : point{point}, theta{theta} {}
 
-    static Pose2D fromTwistMsg(const geometry_msgs::Twist& msg) {
+    static Pose2D fromMsg(const geometry_msgs::Twist& msg) {
         return {{msg.linear.x, msg.linear.y}, msg.angular.z};
     }
+
+    static Pose2D fromMsg(geometry_msgs::Pose const& msg) {
+        return {{msg.position.x, msg.position.y}, getYawFromQuaternion(msg.orientation)};
+    }
+
+    static Pose2D fromTf(const tf2::Transform& trans) {
+        return {{trans.getOrigin().x(), trans.getOrigin().y()}, tf2::getYaw(trans.getRotation())};
+    }
+
 
     [[nodiscard]] double x() const { return point.x(); }
 

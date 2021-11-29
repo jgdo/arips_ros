@@ -56,7 +56,7 @@
 #include <base_local_planner/odometry_helper_ros.h>
 
 #include <arips_navigation/local_planner/arips_planner.h>
-#include <arips_navigation/odometry/OdometryBuffer.h>
+#include <arips_navigation/odometry/OdometryForecaster.h>
 
 namespace arips_local_planner {
   /**

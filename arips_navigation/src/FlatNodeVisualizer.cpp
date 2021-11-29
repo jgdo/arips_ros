@@ -34,7 +34,10 @@ void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path* pathPtr, std::st
                                                 boost::any const& pathData) {
     const std::vector<geometry_msgs::PoseStamped>* plan =
         boost::any_cast<std::vector<geometry_msgs::PoseStamped>>(&pathData);
-    pathPtr->poses.insert(pathPtr->poses.end(), plan->begin(), plan->end());
+
+    if(plan) {
+        pathPtr->poses.insert(pathPtr->poses.end(), plan->begin(), plan->end());
+    }
 
     //	if(plan && plan->size() > 0) {
     //		visualization_msgs::Marker marker;

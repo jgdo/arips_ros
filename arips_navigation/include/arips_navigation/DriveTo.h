@@ -10,9 +10,11 @@
 #include <arips_navigation/FlatNavigationConfig.h>
 #include <dynamic_reconfigure/server.h>
 
+#include <arips_navigation/path_planning/Locomotion.h>
+
 class DriveTo : public DrivingStateProto {
 public:
-    DriveTo(NavigationContext& context, toponav_core::TopoMapPtr topoMap);
+    DriveTo(NavigationContext& context, Locomotion& locomotion);
     ~DriveTo() override = default;
 
     /**
@@ -25,25 +27,15 @@ public:
     /**
      *
      * @param goal must be directly reachable from current node
-     * @return Path if planning was successful otherwise false
+     * @return costs if planning successful
      */
-    std::vector<geometry_msgs::PoseStamped> planTo(tf2::Stamped<tf2::Transform> const& goal);
-
-    /**
-     * Drive according to path. Will become active if path not empty
-     * @return true if planning was successful and driving can start, otherwise false
-     */
-    bool followPath(std::vector<geometry_msgs::PoseStamped> const& path);
+    std::optional<double> planTo(tf2::Stamped<tf2::Transform> const& goal);
 
     bool isActive() override;
     void runCycle() override;
 
 private:
-    toponav_core::TopoMapPtr mTopoMap;
-
-    std::unique_ptr<nav_core::BaseLocalPlanner> mLocalPlanner;
-
-    std::vector<geometry_msgs::PoseStamped> mCurrentPath;
+    Locomotion& mLocomotion;
 
     arips_navigation::FlatNavigationConfig mConfig;
     dynamic_reconfigure::Server<arips_navigation::FlatNavigationConfig> mConfigServer{

@@ -8,14 +8,14 @@
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 
-class OdometryBuffer {
+class OdometryForecaster {
 public:
     struct Entry {
         nav_msgs::Odometry odom;
         geometry_msgs::Twist cmdVel;
     };
 
-    explicit OdometryBuffer(bool alwaysPublish = true);
+    explicit OdometryForecaster(bool alwaysPublish = true);
 
     void saveBuffer(const std::string& filename);
 

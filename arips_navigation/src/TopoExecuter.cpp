@@ -136,9 +136,11 @@ bool TopoExecuter::isActive() { return !!mCurrentPlan; }
 void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement* mov) {
     assert(mov->start.node->getRegionType() == "flat");
 
-    const auto pathPtr = boost::any_cast<std::vector<geometry_msgs::PoseStamped>>(&mov->pathData);
-    mDriveTo.followPath(*pathPtr);
-    mSegmentExec = std::make_unique<MovementExecuter>(pathPtr);
+    const auto goalPtr = boost::any_cast<tf2::Stamped<tf2::Transform>>(&mov->pathData);
+    assert(goalPtr);
+
+    mDriveTo.driveTo(*goalPtr);
+    mSegmentExec = std::make_unique<MovementExecuter>();
 }
 
 void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* transition) {

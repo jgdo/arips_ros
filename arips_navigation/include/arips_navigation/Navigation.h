@@ -19,6 +19,8 @@
 #include <toponav_ros/TopoPlannerROS.h>
 #include <arips_navigation/DriveUntilCollision.h>
 
+#include <arips_navigation/path_planning/Locomotion.h>
+
 class Navigation {
 public:
     Navigation();
@@ -26,8 +28,9 @@ public:
 private:
     NavigationContext mContext;
 
-    navfn::NavfnROS mNavfnPlanner{"navfn_planner", &mContext.globalCostmap};
-    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext.globalCostmap, mNavfnPlanner, mContext.tf};
+    Locomotion mLocomotion {mContext.globalCostmap};
+
+    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext.tf, mLocomotion};
 
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 

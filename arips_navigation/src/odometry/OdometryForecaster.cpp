@@ -1,4 +1,4 @@
-#include <arips_navigation/odometry/OdometryBuffer.h>
+#include <arips_navigation/odometry/OdometryForecaster.h>
 
 #include <fstream>
 
@@ -7,20 +7,20 @@
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-OdometryBuffer::OdometryBuffer(bool alwaysPublish) {
+OdometryForecaster::OdometryForecaster(bool alwaysPublish) {
     ros::NodeHandle nh;
 
     mForecastCmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel_forecast", 10);
     mMarkerPub = nh.advertise<visualization_msgs::Marker>("driven_path", 10);
-    mCmdVelSub = nh.subscribe("cmd_vel", 10, &OdometryBuffer::onCmdVel, this);
-    mOdomSub = nh.subscribe("odom", 10, &OdometryBuffer::onOdom, this);
+    mCmdVelSub = nh.subscribe("cmd_vel", 10, &OdometryForecaster::onCmdVel, this);
+    mOdomSub = nh.subscribe("odom", 10, &OdometryForecaster::onOdom, this);
 
     if(alwaysPublish) {
-        mPublishTimer = nh.createTimer(ros::Rate{100.0}, &OdometryBuffer::onTimer, this);
+        mPublishTimer = nh.createTimer(ros::Rate{100.0}, &OdometryForecaster::onTimer, this);
     }
 }
 
-void OdometryBuffer::onOdom(const nav_msgs::Odometry& msg) {
+void OdometryForecaster::onOdom(const nav_msgs::Odometry& msg) {
     mBuffer.push_back({msg, mLastCmdVel});
     while (mBuffer.size() > 1000) {
         mBuffer.pop_front();
@@ -30,9 +30,9 @@ void OdometryBuffer::onOdom(const nav_msgs::Odometry& msg) {
     publishPoint(pos.x, pos.y, 0, 1, 0);
 }
 
-void OdometryBuffer::onCmdVel(const geometry_msgs::Twist& msg) { mLastCmdVel = msg; }
+void OdometryForecaster::onCmdVel(const geometry_msgs::Twist& msg) { mLastCmdVel = msg; }
 
-void OdometryBuffer::saveBuffer(const std::string& filename) {
+void OdometryForecaster::saveBuffer(const std::string& filename) {
     std::ofstream fout{filename};
     if (!fout) {
         return;
@@ -61,13 +61,13 @@ static auto createQuaternionMsgFromYaw(double yaw)
     return tf2::toMsg(q);
 }
 
-std::optional<geometry_msgs::PoseStamped> OdometryBuffer::forecastRobotPose() {
+std::optional<geometry_msgs::PoseStamped> OdometryForecaster::forecastRobotPose() {
     if (mBuffer.size() < 2) {
         return {};
     }
 
     const auto now = ros::Time::now();
-    const auto forecastOffset = ros::Duration{0.15};
+    const auto forecastOffset = ros::Duration{0.07};
     const auto time = now - forecastOffset;
 
     auto iter = mBuffer.begin();
@@ -160,7 +160,7 @@ std::optional<geometry_msgs::PoseStamped> OdometryBuffer::forecastRobotPose() {
     return result;
 }
 
-void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
+void OdometryForecaster::onTimer(const ros::TimerEvent& ev) {
     const auto pose = forecastRobotPose();
     if(pose) {
         publishPoint(pose->pose.position.x, pose->pose.position.y, 1, 0, 0);
@@ -183,7 +183,7 @@ void OdometryBuffer::onTimer(const ros::TimerEvent& ev) {
      */
 }
 
-void OdometryBuffer::publishPoint(double x, double y, float r, float g, float b) {
+void OdometryForecaster::publishPoint(double x, double y, float r, float g, float b) {
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
     marker.header.frame_id = mBuffer.back().odom.header.frame_id;

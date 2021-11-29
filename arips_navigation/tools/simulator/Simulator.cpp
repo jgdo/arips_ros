@@ -126,7 +126,7 @@ struct Simulator::Pimpl {
         mMarkerServer.applyChanges();
     }
 
-    void onCmdVel(geometry_msgs::Twist const& cmd_vel) { setSpeed(Pose2D::fromTwistMsg(cmd_vel)); }
+    void onCmdVel(geometry_msgs::Twist const& cmd_vel) { setSpeed(Pose2D::fromMsg(cmd_vel)); }
 
     void setSpeed(const Pose2D& twist) {
         mLastTwist = twist;

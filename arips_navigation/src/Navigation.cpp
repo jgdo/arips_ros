@@ -61,7 +61,7 @@ Navigation::Navigation() {
 
     m_TopoPlanner.init("topo_planner", factory, &mContext.tf);
 
-    mDriveTo = std::make_unique<DriveTo>(mContext, m_TopoPlanner.getContext().topoMap);
+    mDriveTo = std::make_unique<DriveTo>(mContext, mLocomotion);
 
     mCrossDoor = std::make_unique<CrossDoor>(mContext, *mDriveTo, mOpenDoor);
 
@@ -75,12 +75,6 @@ Navigation::Navigation() {
     mActivePub = nh.advertise<std_msgs::Bool>("/arips_navigation_active", 1, false);
 
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
-}
-
-auto static createQuaternionFromYaw(double yaw) {
-    tf2::Quaternion q;
-    q.setRPY(0, 0, yaw);
-    return q;
 }
 
 void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped& msg) {
