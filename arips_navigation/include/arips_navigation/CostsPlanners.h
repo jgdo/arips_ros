@@ -13,7 +13,7 @@ public:
 
     std::optional<double> computeCosts(const geometry_msgs::PoseStamped& start,
                                        ApproachExit3DPtr const& goal,
-                                       tf2::Stamped<tf2::Transform>* actualApproachPose) override;
+                                       tf2::Stamped<tf2::Transform>* actualApproachPose, std::vector<geometry_msgs::PoseStamped>* path) override;
 
     const costmap_2d::Costmap2DROS& getMap() override;
 

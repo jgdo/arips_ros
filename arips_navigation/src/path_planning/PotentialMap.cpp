@@ -251,3 +251,26 @@ std::optional<double> PotentialMap::calcGradientWithMatrix(const CellIndex& inde
     const auto grad = atan2(dy, dx);
     return grad;
 }
+
+std::vector<Pose2D> PotentialMap::traceCurrentPath(const Pose2D& robotPose) const {
+    unsigned int robotCx, robotCy;
+    if (!costmap().getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy)) {
+
+        ROS_WARN_STREAM("Could not find robot or goal pose on costmap.");
+        return {};
+    }
+
+    auto pathPose = robotPose;
+    std::vector<Pose2D> path = {pathPose};
+    pathPose.theta = 0; // TODO for now orientation is always 0
+
+    CellIndex index{robotCx, robotCy};
+    while (findNeighborLowerCost(index)) {
+        costmap().getCostmap()->mapToWorld(index.x(), index.y(), pathPose.point.x(),
+                                           pathPose.point.y());
+
+        path.push_back(pathPose);
+    }
+
+    return path;
+}

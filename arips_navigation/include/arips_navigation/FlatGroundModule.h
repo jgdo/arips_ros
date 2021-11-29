@@ -34,7 +34,7 @@ template <> struct BaseTraits<FlatGroundModule> {
 
         virtual std::optional<double>
         computeCosts(const geometry_msgs::PoseStamped& start, ApproachExit3DPtr const& goal,
-                     tf2::Stamped<tf2::Transform>* actualApproachPose = nullptr) = 0;
+                     tf2::Stamped<tf2::Transform>* actualApproachPose, std::vector<geometry_msgs::PoseStamped>* path) = 0;
 
         virtual const costmap_2d::Costmap2DROS& getMap() = 0;
     };

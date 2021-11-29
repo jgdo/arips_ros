@@ -69,6 +69,14 @@ struct Pose2D {
         return msg;
     }
 
+    geometry_msgs::Pose toPoseMsg() const {
+        geometry_msgs::Pose pose;
+        pose.position.x = point.x();
+        pose.position.y = point.y();
+        pose.orientation = createQuaternionMsgFromYaw(theta);
+        return pose;
+    }
+
     // TODO conversion functions from geometry_msgs::PoseStamped and similar
 };
 

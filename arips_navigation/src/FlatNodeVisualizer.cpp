@@ -6,6 +6,7 @@
 
 #include <toponav_ros/MapEditor.h>
 
+#include <arips_navigation/utils/FlatPathData.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace toponav_ros {
@@ -31,12 +32,11 @@ void FlatNodeVisualizer::initializeVisualization(MapEditor* editor) {
 }
 
 void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path* pathPtr, std::string regionType,
-                                                boost::any const& pathData) {
-    const std::vector<geometry_msgs::PoseStamped>* plan =
-        boost::any_cast<std::vector<geometry_msgs::PoseStamped>>(&pathData);
+                                                boost::any const& anyPathData) {
+    const auto* pathData = boost::any_cast<FlatPathData>(&anyPathData);
 
-    if(plan) {
-        pathPtr->poses.insert(pathPtr->poses.end(), plan->begin(), plan->end());
+    if(pathData) {
+        pathPtr->poses.insert(pathPtr->poses.end(), pathData->plan.begin(), pathData->plan.end());
     }
 
     //	if(plan && plan->size() > 0) {

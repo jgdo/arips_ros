@@ -5,6 +5,7 @@
 
 #include <Eigen/Core>
 
+#include "PlanningMath.h"
 #include "CostFunction.h"
 #include <costmap_2d/costmap_2d_ros.h>
 
@@ -49,6 +50,8 @@ public:
     const costmap_2d::Costmap2DROS& costmap() const { return mCostmapRos; }
 
     CellIndex lastGoal() const { return mLastGoal; }
+
+    std::vector<Pose2D> traceCurrentPath(const Pose2D& robotPose) const;
 
 private:
     costmap_2d::Costmap2DROS& mCostmapRos;

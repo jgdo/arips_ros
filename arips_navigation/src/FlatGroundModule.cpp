@@ -2,6 +2,7 @@
 #include <arips_navigation/utils/ApproachLineArea.h>
 #include <arips_navigation/utils/FixedPosition.h>
 
+#include <arips_navigation/utils/FlatPathData.h>
 #include <set>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <toponav_ros/utils/CommonCostProfiles.h>
@@ -174,7 +175,9 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node* node, LocalPosition 
     // needed since local planner expects a height of 0
     startMsg.pose.position.z = 0;
 
-    const auto distanceCosts = mapData.planner->computeCosts(startMsg, approach, &actualApproachPose);
+    std::vector<geometry_msgs::PoseStamped> path;
+    const auto distanceCosts =
+        mapData.planner->computeCosts(startMsg, approach, &actualApproachPose, &path);
 
     if (!distanceCosts) {
         return std::make_pair(std::numeric_limits<double>::max(), LocalPositionConstPtr());
@@ -183,23 +186,8 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node* node, LocalPosition 
     // throw std::runtime_error("FlatGroundModule::computeCostOnRegion() for region '" +
     // node->getName() + "' planning failed");
 
-
     if (pathData) {
-        *pathData = actualApproachPose;
-
-        // TODO
-        /*
-        std::vector<geometry_msgs::PoseStamped> planTransformed;
-        planTransformed.reserve(plan.size());
-
-        for (auto& pose : plan) {
-            geometry_msgs::PoseStamped tp =
-                _context.tfBuffer->transform(pose, _context.globalFrame);
-            planTransformed.push_back(tp);
-        }
-
-        *pathData = plan; // planTransformed;
-         * */
+        *pathData = FlatPathData{path, actualApproachPose};
     }
 
     auto pos_data = std::make_shared<PositionData>(actualApproachPose);

@@ -11,6 +11,7 @@
 
 #include <arips_navigation/local_planner/arips_planner_ros.h>
 
+#include <arips_navigation/utils/FlatPathData.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using namespace toponav_ros;
@@ -136,10 +137,10 @@ bool TopoExecuter::isActive() { return !!mCurrentPlan; }
 void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement* mov) {
     assert(mov->start.node->getRegionType() == "flat");
 
-    const auto goalPtr = boost::any_cast<tf2::Stamped<tf2::Transform>>(&mov->pathData);
-    assert(goalPtr);
+    const auto pathData = boost::any_cast<FlatPathData>(&mov->pathData);
+    assert(pathData);
 
-    mDriveTo.driveTo(*goalPtr);
+    mDriveTo.driveTo(pathData->actualApproachPose);
     mSegmentExec = std::make_unique<MovementExecuter>();
 }
 

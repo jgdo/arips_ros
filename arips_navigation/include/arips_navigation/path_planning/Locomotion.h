@@ -34,7 +34,7 @@ public:
     // cancel navigation
     void cancel();
 
-    const PotentialMap& potentialMap() const;
+    [[nodiscard]] const PotentialMap& potentialMap() const;
 
 private:
     struct Pimpl;
