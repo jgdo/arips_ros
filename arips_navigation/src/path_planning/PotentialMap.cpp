@@ -163,7 +163,7 @@ bool PotentialMap::findNeighborLowerCost(CellIndex& index) const {
                 continue;
             }
 
-            const auto dist = getGoalDistance(x, y);
+            const auto dist = goalDist(x, y);
             if (dist < 0) {
                 continue;
             }

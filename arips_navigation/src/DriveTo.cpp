@@ -1,88 +1,78 @@
 #include <utility>
 
 #include <arips_navigation/DriveTo.h>
-#include <arips_navigation/local_planner/arips_planner_ros.h>
 
-#include <arips_navigation/FlatGroundModule.h>
-#include <arips_navigation/utils/FixedPosition.h>
+#include <arips_navigation/path_planning/Locomotion.h>
+#include <arips_navigation/path_planning/PotentialMapVisualizer.h>
 
-using toponav_core::TopoMap;
-using toponav_ros::FlatGroundModule;
 
-DriveTo::DriveTo(NavigationContext& context, Locomotion& locomotion)
-    : DrivingStateProto(context), mLocomotion{locomotion} {
+struct DriveTo::Pimpl {
+    DriveTo& mParent;
+    Locomotion& mLocomotion;
+    PotentialMapVisualizer mMapViz;
 
-    dynamic_reconfigure::Server<arips_navigation::FlatNavigationConfig>::CallbackType cb =
-        boost::bind(&DriveTo::onDynamicReconfigure, this, _1, _2);
-    mConfigServer.setCallback(cb);
-}
+    explicit Pimpl(DriveTo& parent, Locomotion& locomotion)
+        : mParent{parent}, mLocomotion{locomotion} {
 
-bool DriveTo::driveTo(const tf2::Stamped<tf2::Transform>& goal) {
-    geometry_msgs::PoseStamped robotPose;
-    if (!mContext.globalCostmap.getRobotPose(robotPose)) {
-        ROS_WARN_STREAM("Could not get robot pose");
-        mLocomotion.cancel(); // make sure robot stops instead of using the old goal
-        return false;
     }
 
-    try {
-        const auto poseOnFloor =
-            mContext.tf.transform(goal, mContext.globalCostmap.getGlobalFrameID());
-        const auto planOk =
-            mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
-
-        if (!planOk) {
-            ROS_WARN("Could not plan path to goal, clearing global costmap...");
-            mContext.globalCostmap.resetLayers();
-            if (!mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose),
-                                     Pose2D::fromTf(poseOnFloor))) {
-                ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
-                return false;
-            }
+    bool driveTo(const tf2::Stamped<tf2::Transform>& goal) {
+        geometry_msgs::PoseStamped robotPose;
+        if (!mParent.mContext.globalCostmap.getRobotPose(robotPose)) {
+            ROS_WARN_STREAM("Could not get robot pose");
+            mLocomotion.cancel(); // make sure robot stops instead of using the old goal
+            return false;
         }
-    } catch (const tf2::TransformException& ex) {
-        ROS_WARN("DriveTo::driveTo(): %s", ex.what());
-        return false;
-    }
 
-    return true;
-}
+        try {
+            const auto poseOnFloor =
+                mParent.mContext.tf.transform(goal, mParent.mContext.globalCostmap.getGlobalFrameID());
+            const auto planOk =
+                mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
-bool DriveTo::isActive() { return mLocomotion.hasGoal(); }
-
-void DriveTo::runCycle() {
-    geometry_msgs::Twist cmd_vel;
-
-    geometry_msgs::PoseStamped robotPoseMsg;
-    if (mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
-        const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
-
-        if (mLocomotion.goalReached(robotPose)) {
-            mLocomotion.cancel();
-        } else {
-            const auto optTwist = mLocomotion.computeVelocityCommands(robotPose);
-            if (optTwist) {
-                cmd_vel = optTwist->toTwistMsg();
-                mLastControllerSuccessfulTime = ros::Time::now();
-            } else {
-                ROS_WARN("Could not compute velocity command");
-                if (ros::Time::now() >
-                    mLastControllerSuccessfulTime + ros::Duration(mConfig.controller_patience)) {
-                    doRecovery();
-                    mLastControllerSuccessfulTime = ros::Time::now();
+            if (!planOk) {
+                ROS_WARN("Could not plan path to goal, clearing global costmap...");
+                mParent.mContext.globalCostmap.resetLayers();
+                if (!mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose),
+                                         Pose2D::fromTf(poseOnFloor))) {
+                    ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
+                    return false;
                 }
             }
+        } catch (const tf2::TransformException& ex) {
+            ROS_WARN("DriveTo::driveTo(): %s", ex.what());
+            return false;
         }
 
-    } else {
-        ROS_WARN_STREAM("Could not get robot pose");
-        mLocomotion.cancel();
+        return true;
     }
 
-    mContext.publishCmdVel(cmd_vel);
-}
-void DriveTo::onDynamicReconfigure(arips_navigation::FlatNavigationConfig& config, uint32_t level) {
-    mConfig = config;
-}
+    void runCycle() {
+        geometry_msgs::PoseStamped robotPoseMsg;
+        if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
+            const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
+            const auto optTwist = mLocomotion.computeVelocityCommands(robotPose);
 
-void DriveTo::doRecovery() { mContext.localCostmap.resetLayers(); }
+            if (optTwist) {
+                mParent.mContext.publishCmdVel(optTwist->toTwistMsg());
+                mMapViz.showMap(mLocomotion.potentialMap(), robotPose);
+                return;
+            }
+        }
+
+        ROS_WARN("Could not get robot pose or robot stuck, cancelling");
+        mLocomotion.cancel();
+        mParent.mContext.publishCmdVel({});
+    }
+};
+
+DriveTo::DriveTo(NavigationContext& context, Locomotion& locomotion)
+    : DrivingStateProto(context), pimpl{std::make_unique<Pimpl>(*this, locomotion)} {}
+
+bool DriveTo::driveTo(const tf2::Stamped<tf2::Transform>& goal) { return pimpl->driveTo(goal); }
+
+bool DriveTo::isActive() { return pimpl->mLocomotion.hasGoal(); }
+
+void DriveTo::runCycle() { return pimpl->runCycle(); }
+
+DriveTo::~DriveTo()  = default;

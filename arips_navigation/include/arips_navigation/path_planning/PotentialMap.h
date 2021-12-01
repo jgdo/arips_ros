@@ -37,8 +37,6 @@ public:
         return mCostmapRos;
     }
 
-    [[nodiscard]] double getGoalDistance(int x, int y) const { return mMatrix(x, y).goalDist; }
-
     [[nodiscard]] bool findNeighborLowerCost(CellIndex& index) const;
 
     [[nodiscard]] std::optional<double> getGradient(const CellIndex& index) const;
@@ -52,6 +50,15 @@ public:
     CellIndex lastGoal() const { return mLastGoal; }
 
     std::vector<Pose2D> traceCurrentPath(const Pose2D& robotPose) const;
+
+    [[nodiscard]] std::optional<double> getGoalDistance(int x, int y) const {
+        const auto dist = goalDist(x, y);
+        if(dist < 0 || std::isnan(dist) || std::isinf(dist)) {
+            return {};
+        }
+
+        return dist;
+    }
 
 private:
     costmap_2d::Costmap2DROS& mCostmapRos;
@@ -82,6 +89,8 @@ private:
     static inline double obstacleCosts() {
         return -1.0F; // TODO
     }
+
+    [[nodiscard]] double goalDist(int x, int y) const { return mMatrix(x, y).goalDist; }
 
     void insertCellIntoQueue(const CellIndex& index);
 

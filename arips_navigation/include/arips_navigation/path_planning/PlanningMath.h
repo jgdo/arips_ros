@@ -76,8 +76,6 @@ struct Pose2D {
         pose.orientation = createQuaternionMsgFromYaw(theta);
         return pose;
     }
-
-    // TODO conversion functions from geometry_msgs::PoseStamped and similar
 };
 
 struct TrajectoryPoint {

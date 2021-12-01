@@ -22,7 +22,11 @@ public:
     // return true if planning successful
     bool setGoal(const Pose2D& robotPose, const Pose2D& goal);
 
-    [[nodiscard]] bool hasGoal() const;
+    [[nodiscard]] std::optional<Pose2D> currentGoal() const;
+
+    [[nodiscard]] inline bool hasGoal() const {
+        return static_cast<bool>(currentGoal());
+    }
 
     // will return true if no goal is set
     bool goalReached(const Pose2D& robotPose);

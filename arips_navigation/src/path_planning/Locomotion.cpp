@@ -1,3 +1,4 @@
+#include <arips_navigation/LocomotionConfig.h>
 #include <arips_navigation/path_planning/Locomotion.h>
 #include <arips_navigation/path_planning/MotionController.h>
 #include <arips_navigation/path_planning/PotentialMap.h>
@@ -9,14 +10,31 @@ struct Locomotion::Pimpl {
 
     std::optional<Pose2D> mCurrentGoal;
 
+    ros::Time mLastControllerSuccessfulTime{0};
+
+    arips_navigation::LocomotionConfig mConfig;
+    dynamic_reconfigure::Server<arips_navigation::LocomotionConfig> mConfigServer{
+        ros::NodeHandle{"~/locomotion"}};
+
     explicit Pimpl(costmap_2d::Costmap2DROS& costmap)
-        : mPotentialMap{costmap, mCostFunction}, mMotionController{mPotentialMap} {}
+        : mPotentialMap{costmap, mCostFunction}, mMotionController{mPotentialMap} {
+
+        dynamic_reconfigure::Server<arips_navigation::LocomotionConfig>::CallbackType cb =
+            [this](auto&& PH1, auto&& PH2) {
+                onDynamicReconfigure(std::forward<decltype(PH1)>(PH1),
+                                     std::forward<decltype(PH2)>(PH2));
+            };
+        mConfigServer.setCallback(cb);
+    }
 
     [[nodiscard]] const costmap_2d::Costmap2DROS& costmap() const {
         return mPotentialMap.getCostmapRos();
     }
 
     std::optional<double> makePlan(const Pose2D& robotPose, const Pose2D& goal) {
+        const boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(
+            *(costmap().getCostmap()->getMutex()));
+
         // path.poses.push_back(robotPose);
         unsigned int robotCx, robotCy, goalCx, goalCy;
         if (!costmap().getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy) ||
@@ -26,7 +44,6 @@ struct Locomotion::Pimpl {
             return {};
         }
 
-        const auto initialRobotCost = costmap().getCostmap()->getCost(robotCx, robotCy);
         costmap().getCostmap()->setCost(robotCx, robotCy, costmap_2d::FREE_SPACE);
 
         const auto begin = ros::WallTime::now();
@@ -36,22 +53,11 @@ struct Locomotion::Pimpl {
 
         // costmap.getCostmap()->setCost(robotCx, robotCy, initialRobotCost);
 
-        /*
-        CellIndex index{cx, goalCy};
-        while (potentialMap.findNeighborLowerCost(index)) {
-            costmap.getCostmap()->mapToWorld(index.x(), index.y(), robotPose.pose.position.x,
-                                             robotPose.pose.position.y);
-
-            path.poses.push_back(robotPose);
-        }
-
-        pathPub.publish(path); */
-
         return mPotentialMap.getGoalDistance(robotCx, robotCy);
     }
 
     bool setGoal(const Pose2D& robotPose, const Pose2D& goal) {
-        if(makePlan(robotPose, goal)) {
+        if (makePlan(robotPose, goal)) {
             mCurrentGoal = goal;
             return true;
         }
@@ -68,13 +74,69 @@ struct Locomotion::Pimpl {
         return true;
     }
 
-    std::optional<Pose2D> computeVelocityCommands(const Pose2D& robotPose) {
+    std::optional<double> getGoalDistance(const Pose2D& robotPose) const {
+        unsigned int robotCx, robotCy;
+        if (!costmap().getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy)) {
+            return {};
+        }
+
+        return mPotentialMap.getGoalDistance(robotCx, robotCy);
+    }
+
+    std::optional<Pose2D> computeVelNoRecovery(const Pose2D& robotPose) {
+        const boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(
+            *(costmap().getCostmap()->getMutex()));
+
+        if (mMotionController.goalReached(robotPose, *mCurrentGoal)) {
+            mCurrentGoal = {};
+            return Pose2D{};
+        }
+
+        bool failed = false;
+        if (mConfig.replan_every_step || !getGoalDistance(robotPose)) {
+            if (!makePlan(robotPose, *mCurrentGoal)) {
+                return {};
+            }
+        }
+
         return mMotionController.computeVelocity(robotPose, *mCurrentGoal);
+    }
+
+    std::optional<Pose2D> computeVelocityCommands(const Pose2D& robotPose) {
+        const boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(
+            *(costmap().getCostmap()->getMutex()));
+
+        if (!mCurrentGoal) {
+            return {};
+        }
+
+        auto vel = computeVelNoRecovery(robotPose);
+        if (vel) {
+            mLastControllerSuccessfulTime = ros::Time::now();
+            return vel;
+        }
+
+        ROS_WARN("Could not compute velocity command, choosing alternatives");
+        if (ros::Time::now() >
+            mLastControllerSuccessfulTime + ros::Duration(mConfig.controller_patience)) {
+            doRecovery();
+        }
+
+        if (ros::Time::now() >
+            mLastControllerSuccessfulTime + ros::Duration(mConfig.fault_patience)) {
+            return {};
+        }
+
+        return Pose2D{};
     }
 
     void cancel() { mCurrentGoal = {}; }
 
-    [[nodiscard]] bool hasGoal() const { return static_cast<bool>(mCurrentGoal); }
+    void onDynamicReconfigure(arips_navigation::LocomotionConfig& config, uint32_t level) {
+        mConfig = config;
+    }
+
+    void doRecovery() { mPotentialMap.costmap().resetLayers(); }
 };
 
 Locomotion::Locomotion(costmap_2d::Costmap2DROS& costmap)
@@ -89,7 +151,7 @@ std::optional<Pose2D> Locomotion::computeVelocityCommands(const Pose2D& robotPos
     return mPimpl->computeVelocityCommands(robotPose);
 }
 void Locomotion::cancel() { mPimpl->cancel(); }
-bool Locomotion::hasGoal() const { return mPimpl->hasGoal(); }
+std::optional<Pose2D> Locomotion::currentGoal() const { return mPimpl->mCurrentGoal; }
 const PotentialMap& Locomotion::potentialMap() const { return mPimpl->mPotentialMap; }
 
 std::optional<double> Locomotion::makePlan(const Pose2D& robotPose, const Pose2D& goal) {

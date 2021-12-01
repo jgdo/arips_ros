@@ -81,7 +81,7 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
     }
 
     const auto costToGoal = map.getGoalDistance(cx, cy);
-    if (costToGoal < 0.0 || std::isnan(costToGoal) || std::isinf(costToGoal)) {
+    if (!costToGoal) {
         return {};
     }
 
@@ -109,7 +109,7 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
         worstCellCost = std::max(worstCellCost, cellCost);
     }
 
-    const auto totalCost = costToGoal * 1.1 + trajectoryCost;
+    const auto totalCost = *costToGoal * 1.1 + trajectoryCost;
     return std::pair<double, uint8_t>{totalCost, worstCellCost};
 }
 
@@ -208,11 +208,15 @@ struct MotionController::Pimpl {
                                                                        cx, cy)) {
 
                 const auto goalDist = mPotentialMap.getGoalDistance(cx, cy);
+                if(goalDist) {
 
-                const auto diff = trajCosts - goalDist;
-                textMarker.text +=
-                    to_string_with_precision(diff, 5) + "+" + to_string_with_precision(goalDist, 3);
-                //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
+                    const auto diff = trajCosts - *goalDist;
+                    textMarker.text += to_string_with_precision(diff, 5) + "+" +
+                                       to_string_with_precision(*goalDist, 3);
+                    //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
+                } else {
+                    textMarker.text += "NaN";
+                }
             } else {
                 textMarker.text += "NaN";
             }
@@ -243,9 +247,10 @@ struct MotionController::Pimpl {
     std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose) {
         const auto angleThresRotateInPlace = 1.0;
 
-        auto& costmap = mPotentialMap.costmap();
+        const auto& costmap = mPotentialMap.costmap();
 
         if (goalReached(robotPose, goalPose)) {
+            visualizeTrajectories({}, {}, {});
             return Pose2D{};
         }
 
@@ -256,9 +261,13 @@ struct MotionController::Pimpl {
             const auto rotationDiff =
                 angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
-            if (angles::to_degrees(std::abs(rotationDiff)) > mConfig.goal_tolerance_yaw_deg) {
+            const auto rotDiffDeg = angles::to_degrees(rotationDiff);
+
+            if (std::abs(rotDiffDeg) > mConfig.goal_tolerance_yaw_deg) {
+
                 const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
                 result.theta = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
+                visualizeTrajectories({}, {}, {});
                 return result;
             }
         }
@@ -266,13 +275,25 @@ struct MotionController::Pimpl {
         unsigned int robotCx, robotCy;
         if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy)) {
             const auto optGrad = mPotentialMap.getGradient({robotCx, robotCy});
-            if (optGrad) {
+            const auto optGrad2 = mPotentialMap.getGradient({robotCx, robotCy});
+            const auto optGrad3 = mPotentialMap.getGradient({robotCx, robotCy});
+            if (optGrad2) {
                 const auto rotationDiff =
-                    angles::shortest_angular_distance(robotPose.theta, *optGrad);
+                    angles::shortest_angular_distance(robotPose.theta, *optGrad2);
+
+                /*
+                ROS_INFO_STREAM("Rotational diff at("
+                                << robotCx << ", " << robotCy << ") to path is "
+                                << angles::to_degrees(rotationDiff) << ", robot grad: "
+                                << robotPose.theta << ", map grad: " << *optGrad << " -- " << *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<< *optGrad << " * " << *optGrad3);
+
+                ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293 from viz is " << *mPotentialMap.getGradient({266, 293}));
+                 */
 
                 if (std::abs(rotationDiff) > angleThresRotateInPlace) {
                     const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
                     result.theta = 0.5 * sign;
+                    visualizeTrajectories({}, {}, {});
                     return result;
                 }
             }

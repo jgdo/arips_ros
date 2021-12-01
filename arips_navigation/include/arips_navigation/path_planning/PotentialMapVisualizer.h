@@ -1,14 +1,19 @@
 #pragma once
 
-#include <ros/ros.h>
+#include <ros/publisher.h>
 
 #include "PotentialMap.h"
 
 class PotentialMapVisualizer {
 public:
-    explicit PotentialMapVisualizer(const std::string& name);
+    explicit PotentialMapVisualizer();
 
-    void visualizeMap(const PotentialMap& map);
+    void showGradients(const PotentialMap& map, const Pose2D& robotPose);
+    void showPotential(const PotentialMap& map);
+    void showMap(const PotentialMap& map, const Pose2D& robotPose);
+
 private:
     ros::Publisher mPub;
+    ros::Publisher mPotentialGradPub;
+
 };

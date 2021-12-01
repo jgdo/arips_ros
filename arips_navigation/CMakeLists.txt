@@ -104,11 +104,11 @@ generate_messages(
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
- generate_dynamic_reconfigure_options(
+generate_dynamic_reconfigure_options(
    cfg/AripsPlanner.cfg
    cfg/OpenDoor.cfg
-   cfg/FlatNavigation.cfg
    cfg/MotionController.cfg
+   cfg/Locomotion.cfg
 )
 
 ###################################
