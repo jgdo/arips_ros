@@ -14,6 +14,7 @@
 #include <geometry_msgs/Twist.h>
 
 #include <angles/angles.h>
+#include <nav_msgs/Odometry.h>
 
 #include "simulator/Simulator.h"
 
@@ -22,13 +23,19 @@ Pose2D fromStampedPose(geometry_msgs::PoseStamped const& msg) {
 }
 
 struct DemoNode {
+    ros::Subscriber mTwistSub;
+    nav_msgs::Odometry mLastOdom;
+
     explicit DemoNode(tf2_ros::Buffer& tfBuffer) : tfBuffer{tfBuffer} {
         ros::NodeHandle nh;
         global_planner.initialize("global_planner", &costmap);
         sub = nh.subscribe("/topo_planner/nav_goal", 1, &DemoNode::poseCallback, this);
-        pathPub = nh.advertise<nav_msgs::Path>("global_path", 1, true);
+        pathPub = nh.advertise<nav_msgs::Path>("/topo_planner/original_path", 1, true);
         cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         loopTimer = nh.createTimer(ros::Rate(10), &DemoNode::doLoop, this);
+
+        mTwistSub = ros::NodeHandle().subscribe<nav_msgs::Odometry>(
+            "/odom", 1, [this](const nav_msgs::OdometryConstPtr& msg) { mLastOdom = *msg; });
     }
 
     void poseCallback(const geometry_msgs::PoseStamped& msg) {
@@ -49,14 +56,40 @@ struct DemoNode {
             return;
         }
 
-        geometry_msgs::PoseStamped robotPose;
-        if (!costmap.getRobotPose(robotPose)) {
+        geometry_msgs::PoseStamped robotPoseMsg;
+        if (!costmap.getRobotPose(robotPoseMsg)) {
             ROS_WARN_STREAM("Could not get robot pose");
             locomotion.cancel(); // make sure robot stops instead of using the old goal
             return;
         }
 
-        locomotion.setGoal(fromStampedPose(robotPose), fromStampedPose(*goalPose));
+        const auto robotPose = fromStampedPose(robotPoseMsg);
+
+        locomotion.setGoal(robotPose, fromStampedPose(*goalPose));
+
+        if(locomotion.hasGoal()) {
+            nav_msgs::Path path;
+            path.header.stamp = ros::Time::now();
+            path.header.frame_id = costmap.getGlobalFrameID();
+            auto pathPose = robotPoseMsg;
+            path.poses.push_back(robotPoseMsg);
+            unsigned int cx, cy;
+            if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), cx, cy)) {
+                const auto& potentialMap = locomotion.potentialMap();
+
+                CellIndex index{cx, cy};
+                while (potentialMap.findNeighborLowerCost(index)) {
+                    costmap.getCostmap()->mapToWorld(index.x(), index.y(), pathPose.pose.position.x,
+                                                     pathPose.pose.position.y);
+
+                    path.poses.push_back(pathPose);
+                }
+
+                pathPub.publish(path);
+            } else {
+                ROS_WARN_STREAM("robot coordinates not inside costmap");
+            }
+        }
     }
 
     void doLoop(const ros::TimerEvent& ev) {
@@ -77,10 +110,11 @@ struct DemoNode {
             locomotion.cancel();
         } else {
 
-            // ROS_WARN_STREAM("From loop: gradient at 266,293 from viz is " << *locomotion.potentialMap().getGradient({266, 293}));
+            // ROS_WARN_STREAM("From loop: gradient at 266,293 from viz is " <<
+            // *locomotion.potentialMap().getGradient({266, 293}));
 
-
-            const auto optTwist = locomotion.computeVelocityCommands(robotPose);
+            const auto optTwist = locomotion.computeVelocityCommands(
+                {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
             if (optTwist) {
                 cmdVel.linear.x = optTwist->x();
                 cmdVel.linear.y = optTwist->y();
@@ -91,31 +125,7 @@ struct DemoNode {
         }
         cmdVelPub.publish(cmdVel);
 
-        // publish path, ignore orientation for now
-
-        nav_msgs::Path path;
-        path.header.stamp = ros::Time::now();
-        path.header.frame_id = costmap.getGlobalFrameID();
-        auto pathPose = robotPoseMsg;
-        path.poses.push_back(pathPose);
-        unsigned int cx, cy;
-        if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), cx, cy)) {
-            const auto& potentialMap = locomotion.potentialMap();
-
-            CellIndex index{cx, cy};
-            while (potentialMap.findNeighborLowerCost(index)) {
-                costmap.getCostmap()->mapToWorld(index.x(), index.y(), pathPose.pose.position.x,
-                                                 pathPose.pose.position.y);
-
-                path.poses.push_back(pathPose);
-            }
-
-            pathPub.publish(path);
-
-            mapViz.showMap(potentialMap, robotPose);
-        } else {
-            ROS_WARN_STREAM("robot coordinates not inside costmap");
-        }
+        mapViz.showMap(locomotion.potentialMap(), robotPose);
     }
 
     tf2_ros::Buffer& tfBuffer;
@@ -132,7 +142,7 @@ struct DemoNode {
 };
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "demo_global_planning");
+    ros::init(argc, argv, "arips_navigation_node");
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener{tfBuffer};

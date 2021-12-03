@@ -5,15 +5,21 @@
 #include <arips_navigation/path_planning/Locomotion.h>
 #include <arips_navigation/path_planning/PotentialMapVisualizer.h>
 
+#include <nav_msgs/Odometry.h>
 
 struct DriveTo::Pimpl {
     DriveTo& mParent;
     Locomotion& mLocomotion;
     PotentialMapVisualizer mMapViz;
 
+    ros::Subscriber mTwistSub;
+    nav_msgs::Odometry mLastOdom;
+
     explicit Pimpl(DriveTo& parent, Locomotion& locomotion)
         : mParent{parent}, mLocomotion{locomotion} {
 
+        mTwistSub = ros::NodeHandle().subscribe<nav_msgs::Odometry>(
+            "/odom", 1, [this](const nav_msgs::OdometryConstPtr& msg) { mLastOdom = *msg; });
     }
 
     bool driveTo(const tf2::Stamped<tf2::Transform>& goal) {
@@ -25,8 +31,8 @@ struct DriveTo::Pimpl {
         }
 
         try {
-            const auto poseOnFloor =
-                mParent.mContext.tf.transform(goal, mParent.mContext.globalCostmap.getGlobalFrameID());
+            const auto poseOnFloor = mParent.mContext.tf.transform(
+                goal, mParent.mContext.globalCostmap.getGlobalFrameID());
             const auto planOk =
                 mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
@@ -51,7 +57,8 @@ struct DriveTo::Pimpl {
         geometry_msgs::PoseStamped robotPoseMsg;
         if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
             const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
-            const auto optTwist = mLocomotion.computeVelocityCommands(robotPose);
+            const auto optTwist = mLocomotion.computeVelocityCommands(
+                {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
 
             if (optTwist) {
                 mParent.mContext.publishCmdVel(optTwist->toTwistMsg());
@@ -75,4 +82,4 @@ bool DriveTo::isActive() { return pimpl->mLocomotion.hasGoal(); }
 
 void DriveTo::runCycle() { return pimpl->runCycle(); }
 
-DriveTo::~DriveTo()  = default;
+DriveTo::~DriveTo() = default;

@@ -22,6 +22,8 @@
 
 #include <angles/angles.h>
 
+#include <utility>
+
 struct HSV
 {
   float h, s, v;
@@ -74,7 +76,7 @@ class RgbdPipeline
       MySyncPolicy;
 
 public:
-  RgbdPipeline(const std::shared_ptr<tf2_ros::Buffer>& tf) : mTfBuffer(tf)
+  explicit RgbdPipeline(std::shared_ptr<tf2_ros::Buffer> tf) : mTfBuffer(std::move(tf))
   {
     mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>(
         "/kinect/depth_registered/camera_info", 1, &RgbdPipeline::onCameraInfoReceived, this);
@@ -191,16 +193,24 @@ private:
         const auto meanColor = detectedObjects.detectedObjects.at(i).meanColor;
         const auto hsv = rgbToHsv(meanColor);
 
-        if(hsv.v < 0.3 && hsv.s < 0.2) {
+        if (hsv.v < 0.3 && hsv.s < 0.2)
+        {
           object.type.key = "black";
         }
-        else if(hsv.s < 0.25) {
+        else if (hsv.s < 0.25)
+        {
           object.type.key = "white";
-        } else if (std::abs(angles::normalize_angle(hsv.h - 0.0)) < 0.7) {
+        }
+        else if (std::abs(angles::normalize_angle(hsv.h - 0.0)) < 0.7)
+        {
           object.type.key = "red";
-        } else if (std::abs(angles::normalize_angle(hsv.h - 2.1)) < 0.7) {
+        }
+        else if (std::abs(angles::normalize_angle(hsv.h - 2.1)) < 0.7)
+        {
           object.type.key = "green";
-        } else if (std::abs(angles::normalize_angle(hsv.h - 4.18879)) < 0.7) {
+        }
+        else if (std::abs(angles::normalize_angle(hsv.h - 4.18879)) < 0.7)
+        {
           object.type.key = "blue";
         }
 

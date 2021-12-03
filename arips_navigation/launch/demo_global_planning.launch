@@ -11,7 +11,7 @@
     <remap from="map_metadata" to="flat_layer_map1_metadata"/>
   </node>
 
-  <node pkg="arips_navigation" type="demo_global_planning" respawn="false" name="demo_global_planning" output="screen" clear_params="true">
+  <node pkg="arips_navigation" type="demo_global_planning" respawn="false" name="arips_navigation_node" output="screen" clear_params="true">
     <rosparam file="$(find arips_navigation)/config/test/costmap.yaml" command="load" />
   </node>
   

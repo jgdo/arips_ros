@@ -11,7 +11,7 @@ TopoPathVisualizer::TopoPathVisualizer(ModuleContainer &factory, RosContext& con
 	_context(context) {
 	ros::NodeHandle nh;
 	// _planPub = nh.advertise<visualization_msgs::MarkerArray>("topo_plan", 3, true);
-	_planPub = nh.advertise<nav_msgs::Path>("/topo_planner/plan", 3, true);
+	_planPub = nh.advertise<nav_msgs::Path>("/topo_planner/original_path", 3, true);
 	_poseArrayPub = nh.advertise<geometry_msgs::PoseArray>("/topo_planner/poses_plan", 3, true);
 }
 

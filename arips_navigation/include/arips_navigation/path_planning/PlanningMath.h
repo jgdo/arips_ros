@@ -86,3 +86,8 @@ struct TrajectoryPoint {
 
 using Trajectory = std::vector<TrajectoryPoint>;
 using Trajectories = std::vector<Trajectory>;
+
+struct Odom2D {
+    Pose2D pose;
+    Twist2D vel;
+};

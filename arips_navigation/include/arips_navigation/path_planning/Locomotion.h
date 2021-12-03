@@ -33,7 +33,7 @@ public:
 
     // If nullopt returned, no valid velocity could be sampled
     // If goal is reached, zero velocity is returned.
-    std::optional<Twist2D> computeVelocityCommands(const Pose2D& robotPose);
+    std::optional<Twist2D> computeVelocityCommands(const Odom2D& robotPose);
 
     // cancel navigation
     void cancel();

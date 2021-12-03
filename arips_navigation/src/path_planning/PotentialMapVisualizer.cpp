@@ -4,11 +4,13 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <nav_msgs/Path.h>
 
 PotentialMapVisualizer::PotentialMapVisualizer() {
     ros::NodeHandle nh("~");
     mPub = nh.advertise<sensor_msgs::PointCloud2>("potential_map", 1, true);
     mPotentialGradPub = nh.advertise<visualization_msgs::MarkerArray>("gradient_map", 1);
+    mPathPub = nh.advertise<nav_msgs::Path>("current_path", 1);
 }
 
 void PotentialMapVisualizer::showGradients(const PotentialMap& map, const Pose2D& robotPose) {
@@ -115,4 +117,28 @@ void PotentialMapVisualizer::showPotential(const PotentialMap& map) {
 void PotentialMapVisualizer::showMap(const PotentialMap& map, const Pose2D& robotPose) {
     showPotential(map);
     showGradients(map, robotPose);
+    showPath(map, robotPose);
+}
+
+void PotentialMapVisualizer::showPath(const PotentialMap& map, const Pose2D& robotPose) {
+    if(mPathPub.getNumSubscribers() == 0) {
+        return;
+    }
+
+    const auto& costmap = map.costmap();
+    nav_msgs::Path path;
+    path.header.stamp = ros::Time::now();
+    path.header.frame_id = costmap.getGlobalFrameID();
+
+    const auto path2d = map.traceCurrentPath(robotPose);
+    geometry_msgs::PoseStamped pathPoint;
+    pathPoint.header = path.header;
+
+    for(const auto& p2d: path2d) {
+        pathPoint.pose = p2d.toPoseMsg();
+        // header stays same
+        path.poses.emplace_back(pathPoint);
+    }
+
+    mPathPub.publish(path);
 }

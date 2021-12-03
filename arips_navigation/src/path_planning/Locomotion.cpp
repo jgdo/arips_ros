@@ -83,18 +83,18 @@ struct Locomotion::Pimpl {
         return mPotentialMap.getGoalDistance(robotCx, robotCy);
     }
 
-    std::optional<Pose2D> computeVelNoRecovery(const Pose2D& robotPose) {
+    std::optional<Pose2D> computeVelNoRecovery(const Odom2D& robotPose) {
         const boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(
             *(costmap().getCostmap()->getMutex()));
 
-        if (mMotionController.goalReached(robotPose, *mCurrentGoal)) {
+        if (mMotionController.goalReached(robotPose.pose, *mCurrentGoal)) {
             mCurrentGoal = {};
             return Pose2D{};
         }
 
         bool failed = false;
-        if (mConfig.replan_every_step || !getGoalDistance(robotPose)) {
-            if (!makePlan(robotPose, *mCurrentGoal)) {
+        if (mConfig.replan_every_step || !getGoalDistance(robotPose.pose)) {
+            if (!makePlan(robotPose.pose, *mCurrentGoal)) {
                 return {};
             }
         }
@@ -102,7 +102,8 @@ struct Locomotion::Pimpl {
         return mMotionController.computeVelocity(robotPose, *mCurrentGoal);
     }
 
-    std::optional<Pose2D> computeVelocityCommands(const Pose2D& robotPose) {
+
+    std::optional<Pose2D> computeVelocityCommands(const Odom2D& robotPose) {
         const boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(
             *(costmap().getCostmap()->getMutex()));
 
@@ -147,7 +148,7 @@ bool Locomotion::setGoal(const Pose2D& robotPose, const Pose2D& goal) {
     return mPimpl->setGoal(robotPose, goal);
 }
 bool Locomotion::goalReached(const Pose2D& robotPose) { return mPimpl->goalReached(robotPose); }
-std::optional<Pose2D> Locomotion::computeVelocityCommands(const Pose2D& robotPose) {
+std::optional<Pose2D> Locomotion::computeVelocityCommands(const Odom2D& robotPose) {
     return mPimpl->computeVelocityCommands(robotPose);
 }
 void Locomotion::cancel() { mPimpl->cancel(); }

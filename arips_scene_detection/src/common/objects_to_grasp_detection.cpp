@@ -14,7 +14,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-tf2::Vector3 eigen2tf(const Eigen::Vector3f& v)
+#include <algorithm>
+
+inline tf2::Vector3 eigen2tf(const Eigen::Vector3f& v)
 {
   return { v.x(), v.y(), v.z() };
 }
@@ -71,14 +73,116 @@ static Eigen::Vector4f getPlaneCoefficientsToCamera(const std::vector<float>& co
   return coeff;
 }
 
+cv::Mat projectPointsOntoImage(const pcl::PointCloud<pcl::PointXYZ>& pointcloud,
+                               const pcl::Indices& indices, const tf2::Transform& transform,
+                               const cv::Rect2f& targetArea, float resolution,
+                               float heightResolution)
+{
+  const auto resolutionInverse = 1.0 / resolution;
+  const auto heightResolutionInverse = 1.0 / heightResolution;
+  const int imageWidth = std::ceil(targetArea.size().width * resolutionInverse);
+  const int imageHeight = std::ceil(targetArea.size().height * resolutionInverse);
+
+  cv::Mat image(imageHeight, imageWidth, CV_8UC1, cv::Scalar::all(0));
+  for (auto index : indices)
+  {
+    const auto& originalPoint = pointcloud[index];
+    const auto transformedPoint =
+        transform(tf2::Vector3(originalPoint.x, originalPoint.y, originalPoint.z));
+
+    const int xImg = (transformedPoint.x() - targetArea.x) * resolutionInverse;
+    const int yImg = (transformedPoint.y() - targetArea.y) * resolutionInverse;
+
+    if (xImg >= 0 && xImg < imageWidth && yImg >= 0 && yImg < imageHeight)
+    {
+      const uint8_t valImg =
+          std::clamp<int>((transformedPoint.z() + 0.2) * heightResolutionInverse, 0, 255);
+      image.at<uint8_t>(yImg, xImg) = valImg;
+    }
+  }
+
+  cv::imshow("projectedImageOrig", image);
+  cv::waitKey(1);
+
+  cv::Mat element5 = cv::getStructuringElement(cv::MorphShapes::MORPH_ELLIPSE, { 5, 5 });
+  cv::morphologyEx(image, image, cv::MorphTypes::MORPH_CLOSE, element5);
+
+  cv::Mat element3 = cv::getStructuringElement(cv::MorphShapes::MORPH_ELLIPSE, { 5, 5 });
+  cv::morphologyEx(image, image, cv::MorphTypes::MORPH_OPEN, element3);
+
+  /*
+  // cluster contours in stencil image
+  cv::Mat labels, stats, centroids;
+  int label_count = cv::connectedComponentsWithStats(image, labels, stats, centroids, 8);
+
+  cv::Mat labeledMask;
+  cv::cvtColor(image, labeledMask, cv::COLOR_GRAY2BGR);
+
+  for (int i = 0; i < label_count; i++)
+  {
+    int x = stats.at<int>(i, cv::CC_STAT_LEFT);
+    int y = stats.at<int>(i, cv::CC_STAT_TOP);
+    int w = stats.at<int>(i, cv::CC_STAT_WIDTH);
+    int h = stats.at<int>(i, cv::CC_STAT_HEIGHT);
+    int area = stats.at<int>(i, cv::CC_STAT_AREA);
+
+      cv::rectangle(labeledMask, { x, y }, { x + w - 1, y + h - 1 }, { 0, 0, 255 }, 1);
+  }
+
+   */
+
+  std::vector<std::vector<cv::Point>> contours;
+  findContours(image, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+
+  cv::Mat labeledMask;
+  cv::cvtColor(image, labeledMask, cv::COLOR_GRAY2BGR);
+
+  std::vector<std::vector<cv::Point>> hull(contours.size());
+  for (size_t i = 0; i < contours.size(); i++)
+  {
+    convexHull(contours[i], hull[i]);
+  }
+
+  for (size_t i = 0; i < contours.size(); i++)
+  {
+    cv::Scalar color = { 0, 0, 255 };  // cv::Scalar( rand()%256, rand()%256, rand()%256 );
+    // drawContours( labeledMask, contours, (int)i, color );
+    // drawContours( labeledMask, hull, (int)i, color, 2 );
+    const auto rect = cv::minAreaRect(contours[i]);
+
+
+
+    cv::Point2f vertices2f[4];
+    rect.points(vertices2f);
+
+    // Convert them so we can use them in a fillConvexPoly
+    std::vector<cv::Point> rectPoints;
+    for(int i = 0; i < 4; ++i)
+    {
+      rectPoints.push_back(vertices2f[i]);
+    }
+
+    cv::polylines( labeledMask, rectPoints, true, color, 2 );
+  }
+
+  cv::imshow("projectedImageMorphed", labeledMask);
+  cv::waitKey(1);
+
+  return image;
+}
+
 ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& input,
                                               visualization_msgs::MarkerArray* markerArray)
 {
   // filter indices in dense cloud according to plane coefficients
   const auto planeCoefficients = getPlaneCoefficientsToCamera(input.modelCoefficients.values);
-  pcl::SampleConsensusModelPlane<pcl::PointXYZ> modelPlane(input.pointcloud);
+  const pcl::SampleConsensusModelPlane<pcl::PointXYZ> modelPlane(input.pointcloud);
   const auto outsideGroundIndices =
       selectOutsideDistance(modelPlane, planeCoefficients, 0.01, true);
+
+  const auto projectedImage =
+      projectPointsOntoImage(*input.pointcloud, outsideGroundIndices, input.cameraToBase,
+                             cv::Rect2f{ 0.05, -0.3, 0.3, 0.6 }, 0.001, 0.0001);
 
   // create stencil image from indices
   cv::Mat imgMask =
@@ -146,7 +250,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
   }
 
   cv::imshow("labeledMask", labeledMask);
-  cv::waitKey(3);
+  cv::waitKey(1);
 
   if (markerArray)
   {

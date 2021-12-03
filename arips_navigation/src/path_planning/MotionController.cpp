@@ -42,10 +42,10 @@ double computeSpeed(double goalDist, double duration, double maxSpeed) {
 }
 
 Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDistance,
-                                const CostFunction& constFunction,
+                                const CostFunction& costFunction,
                                 const arips_navigation::MotionControllerConfig& config) {
     const auto duration = config.traj_sampling_duration_s;
-    const auto transSpeed = computeSpeed(goalDistance, duration, constFunction.maxWheelSpeed());
+    const auto transSpeed = computeSpeed(goalDistance, duration, costFunction.maxWheelSpeed());
     const auto rotSpeed = 1.0;
     const auto dt = duration / config.traj_sampling_steps;
 
@@ -56,8 +56,9 @@ Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDist
     const auto curvatureStep = config.traj_curvature_stepsize;
     for (double curvature = -config.traj_curvature_range;
          curvature < config.traj_curvature_range + curvatureStep / 2; curvature += curvatureStep) {
-        const auto speedFactor = transSpeed / (1.0 + std::abs(curvature) * 0.2);
-        const Pose2D vel{{1 * speedFactor, 0}, curvature * speedFactor};
+        const auto speedFactor =
+            transSpeed / (1.0 + std::abs(curvature) * config.robot_wheel_base_m / 2.0);
+        const Pose2D vel{{speedFactor, 0}, curvature * speedFactor};
 
         traj.emplace_back(generateTrajectory(currentPose, vel, duration, dt));
     }
@@ -208,7 +209,7 @@ struct MotionController::Pimpl {
                                                                        cx, cy)) {
 
                 const auto goalDist = mPotentialMap.getGoalDistance(cx, cy);
-                if(goalDist) {
+                if (goalDist) {
 
                     const auto diff = trajCosts - *goalDist;
                     textMarker.text += to_string_with_precision(diff, 5) + "+" +
@@ -244,9 +245,46 @@ struct MotionController::Pimpl {
         mVizPub.publish(markerArray);
     }
 
-    std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose) {
-        const auto angleThresRotateInPlace = 1.0;
+    std::pair<double, double> calcWheelSpeed(const Twist2D& vel) const {
+        const auto velRot = vel.theta * mConfig.robot_wheel_base_m / 2.0;
 
+        return {vel.x() - velRot, vel.x() + velRot};
+    }
+
+    Twist2D scaleAcceleration(const Twist2D& in, const Odom2D& current) const {
+        const auto wheelIn = calcWheelSpeed(in);
+        const auto wheelCurrent = calcWheelSpeed(current.vel);
+
+        const auto maxDiff = std::max(std::abs(wheelIn.first - wheelCurrent.first),
+                                      std::abs(wheelIn.second - wheelCurrent.second)) /
+                             10.0f; // TODO controller frequency
+
+        const auto scalingFactor = mConfig.acc_limit_m_s2 / maxDiff;
+        if (scalingFactor >= 1.0) {
+            return in; // acceleration already within limits, original trajectory assumed to be safe
+        }
+
+        const auto newVel = in * scalingFactor;
+        // we have now a new velocity, check if it's safe to drive
+
+        const auto traj =
+            generateTrajectory(current.pose, newVel, mConfig.collision_lookahead_s,
+                               mConfig.collision_lookahead_s / mConfig.traj_sampling_steps);
+
+        const auto optScore = scoreTrajectory(mPotentialMap, traj, mPotentialMap.costFunction());
+        if(optScore) {
+            ROS_INFO("Scaling trajectory is safe");
+            return newVel;
+        }
+
+        ROS_INFO_STREAM("Scaling trajectory is not safe, using old velocity, scalingFactor: " << scalingFactor);
+
+        // new trajectory would collide, ignore acceleration limits
+        return in;
+    }
+
+    std::optional<Twist2D> computeVelocity(const Odom2D& odom, const Pose2D& goalPose) {
+        const auto& robotPose = odom.pose;
         const auto& costmap = mPotentialMap.costmap();
 
         if (goalReached(robotPose, goalPose)) {
@@ -285,12 +323,16 @@ struct MotionController::Pimpl {
                 ROS_INFO_STREAM("Rotational diff at("
                                 << robotCx << ", " << robotCy << ") to path is "
                                 << angles::to_degrees(rotationDiff) << ", robot grad: "
-                                << robotPose.theta << ", map grad: " << *optGrad << " -- " << *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<< *optGrad << " * " << *optGrad3);
+                                << robotPose.theta << ", map grad: " << *optGrad << " -- " <<
+                *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<<
+                *optGrad << " * " << *optGrad3);
 
-                ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293 from viz is " << *mPotentialMap.getGradient({266, 293}));
+                ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293
+                from viz is " << *mPotentialMap.getGradient({266, 293}));
                  */
 
-                if (std::abs(rotationDiff) > angleThresRotateInPlace) {
+                if (std::abs(rotationDiff) >
+                    angles::from_degrees(mConfig.angle_diff_rotate_in_place_deg)) {
                     const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
                     result.theta = 0.5 * sign;
                     visualizeTrajectories({}, {}, {});
@@ -333,7 +375,7 @@ struct MotionController::Pimpl {
         ROS_INFO_STREAM("best cell cost = " << int(bestCost.second)
                                             << ", velocityScale = " << velocityScale);
         const auto bestVel = bestTraj->at(0).velocity;
-        return bestVel * velocityScale;
+        return scaleAcceleration(bestVel * velocityScale, odom);
 
         /*
         unsigned int cx, cy;
@@ -425,7 +467,7 @@ bool MotionController::goalReached(const Pose2D& robotPose, const Pose2D& gaolPo
     return mPimpl->goalReached(robotPose, gaolPose);
 }
 
-std::optional<Twist2D> MotionController::computeVelocity(const Pose2D& robotPose,
+std::optional<Twist2D> MotionController::computeVelocity(const Odom2D& robotPose,
                                                          const Pose2D& goalPose) {
     return mPimpl->computeVelocity(robotPose, goalPose);
 }

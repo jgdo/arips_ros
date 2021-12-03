@@ -105,7 +105,7 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES arips_user_interaction
-#  CATKIN_DEPENDS rospy std_msgs
+   CATKIN_DEPENDS rospy std_msgs rhasspy_ros_interface
 #  DEPENDS system_lib
 )
 

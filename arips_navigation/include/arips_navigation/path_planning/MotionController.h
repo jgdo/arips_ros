@@ -24,7 +24,7 @@ public:
 
     bool goalReached(const Pose2D& robotPose, const Pose2D& gaolPose);
 
-    std::optional<Twist2D> computeVelocity(const Pose2D& robotPose, const Pose2D& goalPose) ;
+    std::optional<Twist2D> computeVelocity(const Odom2D& robotPose, const Pose2D& goalPose) ;
 
 private:
     struct Pimpl;

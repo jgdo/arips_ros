@@ -40,8 +40,8 @@ struct Simulator::Pimpl {
         mRobotPose.child_frame_id = "arips_base";
         mRobotPose.pose.pose.orientation.w = 1; // start at 0
 
-        mOdomPub = nh.advertise<nav_msgs::Odometry>("odom", 5);
-        mCmdVelSub = nh.subscribe("cmd_vel", 100, &Pimpl::onCmdVel, this);
+        mOdomPub = nh.advertise<nav_msgs::Odometry>("/odom", 5);
+        mCmdVelSub = nh.subscribe("cmd_vel", 1, &Pimpl::onCmdVel, this);
 
         if (runInOwnThread) {
             mControlLoopTimer = nh.createTimer(mControlRate, &Pimpl::onRunControlLoop, this);
