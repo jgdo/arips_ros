@@ -161,27 +161,17 @@ private:
 
       for (int i = 0; i < detectedObjects.detectedObjects.size(); i++)
       {
-        const auto center = detectedObjects.detectedObjects.at(i).position.getOrigin();
-        geometry_msgs::Point centerMsg;
-        centerMsg.x = center.x();
-        centerMsg.y = center.y();
-        centerMsg.z = center.z();
+        const auto& detectedObject = detectedObjects.detectedObjects.at(i);
+        geometry_msgs::Pose objectPose;
+        tf2::toMsg(detectedObjects.detectedObjects.at(i).position, objectPose);
+        tf2::doTransform(objectPose, objectPose, arm_transform);
 
-        geometry_msgs::Point centerBase;
-        tf2::doTransform(centerMsg, centerBase, arm_transform);
-        // const auto centerBase = arm_transform(tfc);
-
-        if ((centerBase.x * centerBase.x + centerBase.y * centerBase.y) > maxDist_m * maxDist_m ||
-            centerBase.z > 0.07)
+        if ((objectPose.position.x * objectPose.position.x + objectPose.position.y * objectPose.position.y) > maxDist_m * maxDist_m ||
+            objectPose.position.z > 0.07)
         {
-          ROS_DEBUG_STREAM("Ignoring object at " << centerBase);
+          ROS_DEBUG_STREAM("Ignoring object at " << objectPose);
           continue;
         }
-
-        geometry_msgs::Pose objectPose;
-        objectPose.position = centerBase;
-        objectPose.position.z -= 0.015;
-        objectPose.orientation.w = 1;
 
         moveit_msgs::CollisionObject object;
         object.header.frame_id = "arm_base_link";
@@ -190,7 +180,7 @@ private:
         object.operation = moveit_msgs::CollisionObject::ADD;
         object.id = std::to_string(i);
 
-        const auto meanColor = detectedObjects.detectedObjects.at(i).meanColor;
+        const auto meanColor = detectedObject.meanColor;
         const auto hsv = rgbToHsv(meanColor);
 
         if (hsv.v < 0.3 && hsv.s < 0.2)
@@ -217,7 +207,7 @@ private:
         /* Define a box to be attached */
         shape_msgs::SolidPrimitive primitive;
         primitive.type = primitive.BOX;
-        primitive.dimensions = { 0.03, 0.03, 0.03 };
+        primitive.dimensions = { detectedObject.size.x(), detectedObject.size.y(), detectedObject.size.z() };
 
         object.primitives.push_back(primitive);
 

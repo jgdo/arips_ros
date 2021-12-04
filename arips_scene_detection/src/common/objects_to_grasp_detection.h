@@ -19,16 +19,14 @@ struct ObjectSegmentationInput
   const float maxRadiusAroundBase = 0.3;
   const float maxCenterHeightAboveFloor = 0.10;
 
-  int minObjectWidth = 8;
-  int maxObjectWidth = 50;
-
-  int minObjectHeight = 8;
-  int maxObjectHeight = 50;
+  float minObjectArea = 0.02*0.02;
+  float maxObjectArea = 0.05*0.05;
 };
 
 struct ObjectInformation
 {
   tf2::Stamped<tf2::Transform> position;
+  tf2::Vector3 size; // x is the longer side, y is shorter side, z is height
   std_msgs::ColorRGBA meanColor;
 };
 
