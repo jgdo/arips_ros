@@ -1,9 +1,17 @@
+import copy
+import math
+
+import tf.transformations
 from arips_user_interaction.intent_handler import IntentHandler
 import moveit_commander
 import sys
 import rospy
 import geometry_msgs.msg
 import tf_conversions
+from typing import Tuple
+
+from moveit_msgs.msg import MoveItErrorCodes
+
 
 class SceneIntentHandler(IntentHandler):
     def __init__(self, ui):
@@ -16,6 +24,8 @@ class SceneIntentHandler(IntentHandler):
         self.gripper = moveit_commander.MoveGroupCommander("gripper")
         self.arm.set_max_velocity_scaling_factor(1.0)
         self.gripper.set_max_velocity_scaling_factor(1.0)
+
+        self.pick_pose_pub = rospy.Publisher('pick_target', geometry_msgs.msg.PoseStamped, queue_size=1)
 
     def handle_intent(self, msg):
         if msg.intent == 'describe_scene':
@@ -44,7 +54,7 @@ class SceneIntentHandler(IntentHandler):
         else:
             self.ui.say("I don't see any objects")
     
-    def select_object_pose(self, msg):
+    def select_object_pose(self, msg) -> Tuple[geometry_msgs.msg.Pose, str]:
         slots = dict(zip(msg.slots, msg.values))
         objects = list(self.scene.get_objects([]).values())
 
@@ -62,61 +72,64 @@ class SceneIntentHandler(IntentHandler):
                 self.ui.say("I see too many objects, please select the left or the right one")
                 return None, color_filter
             if slots['position'] == 'any':
-                point = objects[0].primitive_poses[0].position
+                pose = objects[0].primitive_poses[0]
             elif len(objects) == 2 and slots['position'] != "the":
                 # sort objects
-                poses = [p.primitive_poses[0].position for p in objects]
-                poses = sorted(poses, key=lambda x: x.y)
+                poses = [p.primitive_poses[0] for p in objects]
+                poses = sorted(poses, key=lambda x: x.position.y)
                 if slots['position'] == 'left':
-                    point = poses[0]
+                    pose = poses[0]
                 elif slots['position'] == 'right':
-                    point = poses[1]
+                    pose = poses[1]
+                else:
+                    self.ui.say(f"I don't know what the {slots['position']} object is, please choose left or right.")
+                    return None, color_filter
             else:
                 self.ui.say("I see too many objects, please pick one")
                 return None, color_filter
         else:
-            point = objects[0].primitive_poses[0].position
+            pose = objects[0].primitive_poses[0]
         
-        point.x += 0.013
-        point.y += 0.01
-        point.z += 0.005
+        pose.position.x += 0.01
+        pose.position.y += 0.02
+        pose.position.z += 0.005
 
-        return point, color_filter
+        return pose, color_filter
 
     def handle_pickup(self, msg):
-        point, color = self.select_object_pose(msg)
+        pose, color = self.select_object_pose(msg)
 
-        if point is None:
+        if pose is None:
             return
 
         # point = point.point
-        rospy.loginfo("picking at " + str(point))
+        rospy.loginfo("picking at " + str(pose))
 
         self.ui.say(f"I will now pick up the {color} object")
-        print("picking at " + str(point))
+        print("picking at " + str(pose))
         
         try:
-            self.pickup_object_at(point)
+            self.pickup_object_at(pose)
         except Exception as ex:
+            rospy.logerr("I could not pick up the object: " + str(ex))
             self.ui.say("I could not pick up the object: " + str(ex))
 
-
     def handle_place_on_object(self, msg):
-        point, color = self.select_object_pose(msg)
+        pose, color = self.select_object_pose(msg)
 
-        if point is None:
+        if pose is None:
             return
         
-        point.z += 0.035
+        pose.position.z += 0.035
 
         self.ui.say(f"I will now place the object onto {color} object")
         
         try:
-            self.place_object_at(point)
+            self.place_object_at(pose.position)
         except Exception as ex:
-            self.ui.say("I could not pick up the object: " + str(ex))
-        
-    
+            rospy.logerr("I could not place on the object: " + str(ex))
+            self.ui.say("I could not place on the object: " + str(ex))
+
     def handle_drop(self, msg):
         self.ui.say("I will now drop the object")
         try:
@@ -124,37 +137,77 @@ class SceneIntentHandler(IntentHandler):
         except Exception as ex:
             self.ui.say("I could not drop the object: " + str(ex))
 
-
-    def pickup_object_at(self, point):
+    def pickup_object_at(self, pose: geometry_msgs.msg.Pose):
         print("# open gripper")
         self.open_gripper()
 
         rospy.sleep(0.3)
 
-        print("# approach")
+        print(f"# approach {pose}")
 
-        pose_target = geometry_msgs.msg.Pose()
-        pose_target.orientation = geometry_msgs.msg.Quaternion(
-            *tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
-        pose_target.position.x = point.x
-        pose_target.position.y = point.y
-        pose_target.position.z = point.z + 0.03
+        tcp_pose = copy.deepcopy(pose)
+        # we want to grab the object from above
+
+        quat = [tcp_pose.orientation.x, tcp_pose.orientation.y, tcp_pose.orientation.z, tcp_pose.orientation.w]
+        object_rpy = tf.transformations.euler_from_quaternion(quat)
+
+        print(f"object has rpy = {object_rpy}")
+
+        tcp_pose.orientation = geometry_msgs.msg.Quaternion(
+            *tf.transformations.quaternion_multiply(
+                #quat,
+                tf.transformations.quaternion_from_euler(0.0,
+                                                         0.0,
+                                                         object_rpy[2]),
+                tf.transformations.quaternion_from_euler(0.0,
+                                                         math.pi/2,
+                                                         0.0)))
+
+        #tcp_pose.orientation = geometry_msgs.msg.Quaternion(*tf.transformations.quaternion_from_euler(0.0, math.pi/2, 0.0))
+
+        pose_target = copy.deepcopy(tcp_pose)
+        pose_target.position.z += 0.03
+
+        stamped_msg = geometry_msgs.msg.PoseStamped()
+        stamped_msg.header.frame_id = "arm_base_link"
+        stamped_msg.header.stamp = rospy.Time.now()
+        stamped_msg.pose = pose_target
+        self.pick_pose_pub.publish(stamped_msg)
+
         self.arm.clear_pose_targets()
         self.arm.set_pose_target(pose_target)
+        ok, _, _, _ = self.arm.plan(pose_target)
+        if not ok:
+            tcp_pose.orientation = geometry_msgs.msg.Quaternion(
+                *tf.transformations.quaternion_multiply(
+                    # quat,
+                    tf.transformations.quaternion_from_euler(0.0,
+                                                             0.0,
+                                                             object_rpy[2] + math.pi),
+                    tf.transformations.quaternion_from_euler(0.0,
+                                                             math.pi / 2,
+                                                             0.0)))
+            pose_target = copy.deepcopy(tcp_pose)
+            pose_target.position.z += 0.03
+
+            stamped_msg = geometry_msgs.msg.PoseStamped()
+            stamped_msg.header.frame_id = "arm_base_link"
+            stamped_msg.header.stamp = rospy.Time.now()
+            stamped_msg.pose = pose_target
+            self.pick_pose_pub.publish(stamped_msg)
+
+            self.arm.clear_pose_targets()
+            self.arm.set_pose_target(pose_target)
+
         self.go(self.arm)
 
         rospy.sleep(0.3)
 
+
         print("pick")
 
-        pose_target = geometry_msgs.msg.Pose()
-        pose_target.orientation = geometry_msgs.msg.Quaternion(
-            *tf_conversions.transformations.quaternion_from_euler(0.0, 1.57, 0))
-        pose_target.position.x = point.x
-        pose_target.position.y = point.y
-        pose_target.position.z = point.z
         self.arm.clear_pose_targets()
-        self.arm.set_pose_target(pose_target)
+        self.arm.set_pose_target(tcp_pose)
         self.go(self.arm)
 
         rospy.sleep(0.3)
@@ -163,7 +216,8 @@ class SceneIntentHandler(IntentHandler):
 
         self.close_gripper()
 
-        rospy.sleep(0.7)
+        rospy.sleep(6)
+
 
         """
         print("go drop")
