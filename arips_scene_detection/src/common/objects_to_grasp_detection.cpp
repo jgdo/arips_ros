@@ -1,10 +1,6 @@
 #include "objects_to_grasp_detection.h"
 
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <pcl/filters/extract_indices.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/centroid.h>
@@ -25,7 +21,7 @@ inline tf2::Vector3 eigen2tf(const Eigen::Vector3f& v)
 
 inline Eigen::Vector3f tf2eigen(const tf2::Vector3& v)
 {
-  return { v.x(), v.y(), v.z() };
+  return { float(v.x()), float(v.y()), float(v.z()) };
 }
 
 template <typename PointT>
@@ -80,10 +76,11 @@ static Eigen::Vector4f getPlaneCoefficientsToCamera(const std::vector<float>& co
   return coeff;
 }
 
-cv::Mat projectPointsOntoImage(const pcl::PointCloud<pcl::PointXYZ>& pointcloud,
-                               const pcl::Indices& indices, const tf2::Transform& transform,
-                               const cv::Rect2f& targetArea, float resolution,
-                               float heightResolution)
+std::pair<cv::Mat, cv::Mat> projectPointsOntoImage(const pcl::PointCloud<pcl::PointXYZ>& pointcloud,
+                                                   const pcl::Indices& indices,
+                                                   const tf2::Transform& transform,
+                                                   const cv::Rect2f& targetArea, float resolution,
+                                                   float heightResolution)
 {
   const auto resolutionInverse = 1.0 / resolution;
   const auto heightResolutionInverse = 1.0 / heightResolution;
@@ -91,20 +88,23 @@ cv::Mat projectPointsOntoImage(const pcl::PointCloud<pcl::PointXYZ>& pointcloud,
   const int imageHeight = std::ceil(targetArea.size().height * resolutionInverse);
 
   cv::Mat image(imageHeight, imageWidth, CV_8UC1, cv::Scalar::all(0));
+  cv::Mat indexImage(imageHeight, imageWidth, CV_32SC1, cv::Scalar::all(0));
+
   for (auto index : indices)
   {
     const auto& originalPoint = pointcloud[index];
     const auto transformedPoint =
         transform(tf2::Vector3(originalPoint.x, originalPoint.y, originalPoint.z));
 
-    const int xImg = (transformedPoint.x() - targetArea.x) * resolutionInverse;
-    const int yImg = (transformedPoint.y() - targetArea.y) * resolutionInverse;
+    const auto xImg = int((transformedPoint.x() - targetArea.x) * resolutionInverse);
+    const auto yImg = int((transformedPoint.y() - targetArea.y) * resolutionInverse);
 
     if (xImg >= 0 && xImg < imageWidth && yImg >= 0 && yImg < imageHeight)
     {
       const uint8_t valImg =
-          std::clamp<int>(transformedPoint.z() * heightResolutionInverse, 0, 255);
+          std::clamp<int>(int(transformedPoint.z() * heightResolutionInverse), 0, 255);
       image.at<uint8_t>(yImg, xImg) = valImg;
+      indexImage.at<int32_t>(yImg, xImg) = index;
     }
   }
 
@@ -117,7 +117,7 @@ cv::Mat projectPointsOntoImage(const pcl::PointCloud<pcl::PointXYZ>& pointcloud,
   cv::Mat element3 = cv::getStructuringElement(cv::MorphShapes::MORPH_ELLIPSE, { 5, 5 });
   cv::morphologyEx(image, image, cv::MorphTypes::MORPH_OPEN, element3);
 
-  return image;
+  return { std::move(image), std::move(indexImage) };
 }
 
 tf2::Transform calcTransformFloorToCamera(const tf2::Transform& baseToCamera,
@@ -139,6 +139,38 @@ tf2::Transform calcTransformFloorToCamera(const tf2::Transform& baseToCamera,
   // clang-format on
 
   return tf2::Transform{ floorRotationMatrix, floorOrigin };
+}
+
+// projectedImage: U8C1
+// indexImage: S32C1, same size as indexImage, values are indices to colorImage
+// colorImage: U8C3 rgb image
+// contour: inside projectedImage and indexImage
+static std_msgs::ColorRGBA extractObjectColor(const cv::Mat& projectedImage,
+                                              const cv::Mat& indexImage, const cv::Mat& colorImage,
+                                              const std::vector<cv::Point>& contour)
+{
+  const auto boundingBox = cv::boundingRect(contour);
+  pcl::CentroidPoint<pcl::RGB> colorCentroid;
+  for (int y = boundingBox.y; y < boundingBox.y + boundingBox.height; y++)
+  {
+    for (int x = boundingBox.x; x < boundingBox.x + boundingBox.width; x++)
+    {
+      if (projectedImage.at<uint8_t>(y, x) > 0)
+      {
+        const auto& pointColor = colorImage.at<cv::Vec3b>(indexImage.at<int32_t>(y, x));
+        colorCentroid.add(pcl::RGB(pointColor[2], pointColor[1], pointColor[0]));
+      }
+    }
+  }
+  pcl::RGB objectColor;
+  colorCentroid.get(objectColor);
+
+  std_msgs::ColorRGBA res;
+  res.a = 1.0;
+  res.r = objectColor.r / 255.f;
+  res.g = objectColor.g / 255.f;
+  res.b = objectColor.b / 255.f;
+  return res;
 }
 
 ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& input,
@@ -208,7 +240,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
   constexpr auto projectionResolution = 0.001;
   const auto projectionAreaXY = cv::Rect2f{ 0.05, -0.3, 0.3, 0.6 };
 
-  const auto projectedImage =
+  const auto [projectedImage, indexImage] =
       projectPointsOntoImage(*input.pointcloud, outsideGroundIndices, floorToCamera.inverse(),
                              projectionAreaXY, projectionResolution, projectionResolution);
 
@@ -228,7 +260,8 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
   for (auto& contour : contours)
   {
-    cv::Scalar color = { 0, 0, 255 };  // cv::Scalar( rand()%256, rand()%256, rand()%256 );
+    const cv::Scalar drawColor = { 0, 0,
+                                   255 };  // cv::Scalar( rand()%256, rand()%256, rand()%256 );
     // drawContours( labeledMask, contours, (int)i, color );
     // drawContours( labeledMask, hull, (int)i, color, 2 );
     const auto rect = cv::minAreaRect(contour);
@@ -252,7 +285,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
     // Convert them so we can use them in a fillConvexPoly
     std::vector<cv::Point> rectPoints(vertices2f, vertices2f + 4);
-    cv::polylines(labeledMask, rectPoints, true, color, 2);
+    cv::polylines(labeledMask, rectPoints, true, drawColor, 2);
 
     const auto objCenterXY = rect.center * projectionResolution + projectionAreaXY.tl();
     const auto objHeight = projectedImage.at<uint8_t>(rect.center) * projectionResolution;
@@ -277,9 +310,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
                       pcl_conversions::fromPCL(input.pointcloud->header.stamp),
                       input.pointcloud->header.frame_id };
     info.size = { realSize.width, realSize.height, objHeight };
-    info.meanColor.a = 0.3;
-    info.meanColor.r = 1;
-    // TODO other colors
+    info.meanColor = extractObjectColor(projectedImage, indexImage, input.colorImage, contour);
 
     result.detectedObjects.emplace_back(std::move(info));
   }
