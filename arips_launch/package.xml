@@ -57,10 +57,10 @@
       </capability_provider>
       
       <capability_interface>
-        capability/md25_interface.yaml
+        capability/teleop_interface.yaml
       </capability_interface>
       <capability_provider>
-        capability/md25_provider.yaml
+        capability/teleop_provider.yaml
       </capability_provider>
         
       <capability_interface>

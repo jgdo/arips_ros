@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="arips_navigation" type="collision_costs_service" respawn="false" name="collision_costs_service" output="screen" clear_params="true">
+    <rosparam file="$(find arips_navigation)/config/collision_costs.yaml" command="load" />
+  </node>
+</launch>

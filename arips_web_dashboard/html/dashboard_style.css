@@ -9,6 +9,13 @@ body {
     padding: 4pt;
 }
 
+.battery_status {
+    padding-top: 0;
+    padding-bottom: 8pt;
+    padding-right: 8pt;
+    display: inline-block;
+}
+
 #capabilities_board {
     background-color: white;
     width: 200pt;

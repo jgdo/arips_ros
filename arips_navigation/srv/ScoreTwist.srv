@@ -1,0 +1,5 @@
+geometry_msgs/Twist twist
+float32 sampleDuration
+float32 sampleDt
+---
+float64 cost  # smaller is better, negative means collision

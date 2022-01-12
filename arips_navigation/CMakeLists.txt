@@ -70,11 +70,10 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+   FILES
+        ScoreTwist.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -206,6 +205,13 @@ target_link_libraries(simulator_node
         ${PROJECT_NAME}
 )
 
+add_executable(collision_costs_service tools/collision_costs_service.cpp)
+add_dependencies(collision_costs_service ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(collision_costs_service
+    PUBLIC
+        ${PROJECT_NAME}
+)
+
 #############
 ## Install ##
 #############
@@ -223,7 +229,7 @@ catkin_install_python(PROGRAMS
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-install(TARGETS simulator_node ${PROJECT_NAME}_node demo_global_planning
+install(TARGETS simulator_node ${PROJECT_NAME}_node demo_global_planning collision_costs_service
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -17,7 +17,7 @@ public:
         return velocityScale * mMaxWheelSpeed;
     }
 
-    [[nodiscard]] bool isValidCellCost(uint8_t cellCost) const {
+    [[nodiscard]] static bool isValidCellCost(uint8_t cellCost) {
         return cellCost != costmap_2d::LETHAL_OBSTACLE &&
                cellCost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
                cellCost != costmap_2d::NO_INFORMATION;

@@ -2,9 +2,10 @@
 
 #include <dynamic_reconfigure/server.h>
 
-#include <arips_navigation/MotionControllerConfig.h>
 #include <arips_navigation/path_planning/MotionController.h>
 #include <arips_navigation/path_planning/PlanningMath.h>
+
+#include <visualization_msgs/MarkerArray.h>
 
 // See
 // https://stackoverflow.com/questions/16605967/set-precision-of-stdto-string-when-converting-floating-point-values

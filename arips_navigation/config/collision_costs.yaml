@@ -1,0 +1,23 @@
+local_costmap:
+  global_frame: odom
+  robot_base_frame: arips_base
+  robot_radius: 0.2
+  inflation_radius: 0.5
+  map_type: costmap
+  observation_sources: scan
+
+  static_map: false
+  rolling_window: true
+  width: 2.5
+  height: 2.5
+  resolution: 0.025
+
+  update_frequency: 22.0
+  publish_frequency: 22.0
+  transform_tolerance: 1.0
+
+  cost_scaling_factor: 5.0
+
+  always_send_full_costmap: true
+
+  scan: {data_type: LaserScan, topic: /scan, marking: true, clearing: true}

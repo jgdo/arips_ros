@@ -3,7 +3,12 @@
   </node>
   
    <node name="laptop_battery" pkg="laptop_battery_monitor" type="laptop_battery.py" output="screen">
-     <param name="acpi_path" type="string" value="/sys/class/power_supply/CMB0" /> 
+     <!--param name="acpi_path" type="string" value="/sys/class/power_supply/CMB0" /--> 
+  </node>
+  
+  <node name="arduino_base_rosserial" pkg="rosserial_python" type="serial_node.py" output="screen">
+    <param name="port" value="/dev/arduino_base"/>
+    <param name="baud" value="115200"/>
   </node>
     
   <include file="$(find arips_web_dashboard)/launch/dashboard.launch"/>

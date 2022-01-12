@@ -1,8 +1,0 @@
-name: md25_impl
-spec_version: 1
-spec_type: provider
-implements: arips_launch/md25
-launch_file: '../capability_launch/cap_md25_joy.launch'
-depends_on:
-  - arips_launch/BasePower
-

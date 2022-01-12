@@ -49,6 +49,10 @@ class SceneIntentHandler(IntentHandler):
 
     def describe_scene(self):
         objects = self.scene.get_objects([])
+        colors = self.scene.get_object_colors()
+
+        print(colors)
+
         if objects:
             self.ui.say("I see {} object{}".format(len(objects), "s" if len(objects) > 1 else ""))
         else:
