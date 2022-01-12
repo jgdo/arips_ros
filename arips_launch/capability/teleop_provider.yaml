@@ -1,0 +1,8 @@
+name: teleop_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/teleop
+launch_file: '../launch/joy_teleop.launch'
+depends_on:
+  - arips_launch/BasePower
+

@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import rospy
+
+from std_msgs.msg import UInt32
+
+
+
+def battery_loop():
+    rospy.init_node('battery_node')
+    pub = rospy.Publisher('base_battery_enable_for_sec', UInt32, queue_size=1, latch=True)
+
+    msg = UInt32()
+    msg.data = 2
+    rate = rospy.Rate(2) # 2Hz
+    
+    while not rospy.is_shutdown():
+        pub.publish(msg)
+        rate.sleep()
+    
+    msg = UInt32()
+    msg.data = 0
+    pub.publish(msg)
+    rate.sleep()
+
+
+if __name__ == '__main__':
+    try:
+        battery_loop()
+    except rospy.ROSInterruptException:
+        pass
