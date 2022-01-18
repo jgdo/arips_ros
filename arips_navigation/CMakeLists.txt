@@ -212,6 +212,13 @@ target_link_libraries(collision_costs_service
         ${PROJECT_NAME}
 )
 
+add_executable(costmap_test_publisher tools/costmap_test_publisher.cpp)
+add_dependencies(costmap_test_publisher ${catkin_EXPORTED_TARGETS})
+target_link_libraries(costmap_test_publisher
+    PUBLIC
+    ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

@@ -8,15 +8,17 @@
 
 #include "PlanningMath.h"
 
+#include "Costmap.h"
+
 // Stateless motion controller
 class MotionController {
 public:
-    explicit MotionController(PotentialMap& potentialMap);
+    explicit MotionController();
     ~MotionController();
 
     bool goalReached(const Pose2D& robotPose, const Pose2D& gaolPose);
 
-    std::optional<Twist2D> computeVelocity(const Odom2D& robotPose, const Pose2D& goalPose);
+    std::optional<Twist2D> computeVelocity(const NavMapView& costmap, const Odom2D& robotPose, const Pose2D& goalPose);
 
 private:
     struct Pimpl;

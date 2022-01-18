@@ -67,22 +67,15 @@ Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDist
     return traj;
 }
 
-std::optional<std::pair<double, uint8_t>>
-scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunction& costFunction) {
-    const auto& costmap = map.costmap();
-    const auto resolution = map.getCostmapRos().getCostmap()->getResolution();
+std::optional<std::pair<double, uint8_t>> scoreTrajectory(const NavMapView& costmap,
+                                                          const Trajectory& traj) {
+    const auto& costFunction = costmap.costFunction();
 
     if (traj.empty()) {
         return {};
     }
 
-    const auto frontPos = traj.back().pose.point;
-    unsigned int cx, cy;
-    if (!costmap.getCostmap()->worldToMap(frontPos.x(), frontPos.y(), cx, cy)) {
-        return {};
-    }
-
-    const auto costToGoal = map.getGoalDistance(cx, cy);
+    const auto costToGoal = costmap.goalDistance(traj.back().pose.point);
     if (!costToGoal) {
         return {};
     }
@@ -93,22 +86,18 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
         const auto& a = traj.at(i - 1);
         const auto& b = traj.at(i);
 
-        if (!costmap.getCostmap()->worldToMap(a.pose.point.x(), a.pose.point.y(), cx, cy)) {
-            return {};
-        }
-
-        const auto cellCost = costmap.getCostmap()->getCost(cx, cy);
-        if (!costFunction.isValidCellCost(cellCost)) {
+        const auto cellCost = costmap.cost(a.pose.point);
+        if (!cellCost) {
             return {};
         }
 
         const auto meterDist = (b.pose.point - a.pose.point).norm();
-        const auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(cellCost);
+        const auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(*cellCost);
         const auto rCost =
             0; // std::abs(angles::shortest_angular_distance(a.pose.theta, b.pose.theta));
         trajectoryCost += dCost + rCost;
 
-        worstCellCost = std::max(worstCellCost, cellCost);
+        worstCellCost = std::max(worstCellCost, *cellCost);
     }
 
     const auto totalCost = *costToGoal * 1.1 + trajectoryCost;
@@ -118,12 +107,11 @@ scoreTrajectory(const PotentialMap& map, const Trajectory& traj, const CostFunct
 struct MotionController::Pimpl {
     arips_navigation::MotionControllerConfig mConfig;
 
-    PotentialMap& mPotentialMap;
     ros::Publisher mVizPub;
     dynamic_reconfigure::Server<arips_navigation::MotionControllerConfig> mConfigServer{
         ros::NodeHandle{"~/MotionController"}};
 
-    explicit Pimpl(PotentialMap& potentialMap) : mPotentialMap{potentialMap} {
+    explicit Pimpl() {
         ros::NodeHandle nh;
         mVizPub = nh.advertise<visualization_msgs::MarkerArray>("sampled_trajectories", 10);
 
@@ -144,12 +132,12 @@ struct MotionController::Pimpl {
                angles::to_degrees(std::abs(angularDistance)) < mConfig.goal_tolerance_yaw_deg;
     }
 
-    void visualizeTrajectories(const Trajectories& trajectories,
+    void visualizeTrajectories(const NavMapView& costmap, const Trajectories& trajectories,
                                const std::vector<double>& allCosts, const Trajectory* bestTraj) {
         visualization_msgs::MarkerArray markerArray;
         visualization_msgs::Marker marker;
 
-        marker.header.frame_id = mPotentialMap.getCostmapRos().getGlobalFrameID();
+        marker.header.frame_id = costmap.frameId();
         marker.header.stamp = ros::Time::now();
         marker.ns = "trajectory";
         marker.id = 0;
@@ -205,25 +193,16 @@ struct MotionController::Pimpl {
             textMarker.text = to_string_with_precision(trajCosts, 3) + "=";
 
             const auto& frontPos = traj.back().pose.point;
-            unsigned int cx, cy;
-            if (mPotentialMap.getCostmapRos().getCostmap()->worldToMap(frontPos.x(), frontPos.y(),
-                                                                       cx, cy)) {
-
-                const auto goalDist = mPotentialMap.getGoalDistance(cx, cy);
-                if (goalDist) {
-
-                    const auto diff = trajCosts - *goalDist;
-                    textMarker.text += to_string_with_precision(diff, 5) + "+" +
-                                       to_string_with_precision(*goalDist, 3);
-                    //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
-                } else {
-                    textMarker.text += "NaN";
-                }
+            if (const auto goalDist = costmap.goalDistance(frontPos)) {
+                const auto diff = trajCosts - *goalDist;
+                textMarker.text += to_string_with_precision(diff, 5) + "+" +
+                                   to_string_with_precision(*goalDist, 3);
+                //  to_string_with_precision(mPotentialMap.getGoalDistance(cx, cy), 3);
             } else {
                 textMarker.text += "NaN";
             }
 
-            textMarker.header.frame_id = mPotentialMap.getCostmapRos().getGlobalFrameID();
+            textMarker.header.frame_id = costmap.frameId();
             textMarker.header.stamp = ros::Time::now();
             textMarker.ns = "trajectory_score";
             textMarker.id = index;
@@ -252,7 +231,8 @@ struct MotionController::Pimpl {
         return {vel.x() - velRot, vel.x() + velRot};
     }
 
-    Twist2D scaleAcceleration(const Twist2D& in, const Odom2D& current) const {
+    Twist2D scaleAcceleration(const Twist2D& in, const Odom2D& current,
+                              const NavMapView& costmap) const {
         const auto wheelIn = calcWheelSpeed(in);
         const auto wheelCurrent = calcWheelSpeed(current.vel);
 
@@ -272,24 +252,25 @@ struct MotionController::Pimpl {
             generateTrajectory(current.pose, newVel, mConfig.collision_lookahead_s,
                                mConfig.collision_lookahead_s / mConfig.traj_sampling_steps);
 
-        const auto optScore = scoreTrajectory(mPotentialMap, traj, mPotentialMap.costFunction());
-        if(optScore) {
+        const auto optScore = scoreTrajectory(costmap, traj);
+        if (optScore) {
             ROS_INFO("Scaling trajectory is safe");
             return newVel;
         }
 
-        ROS_INFO_STREAM("Scaling trajectory is not safe, using old velocity, scalingFactor: " << scalingFactor);
+        ROS_INFO_STREAM(
+            "Scaling trajectory is not safe, using old velocity, scalingFactor: " << scalingFactor);
 
         // new trajectory would collide, ignore acceleration limits
         return in;
     }
 
-    std::optional<Twist2D> computeVelocity(const Odom2D& odom, const Pose2D& goalPose) {
+    std::optional<Twist2D> computeVelocity(const NavMapView& costmap, const Odom2D& odom,
+                                           const Pose2D& goalPose) {
         const auto& robotPose = odom.pose;
-        const auto& costmap = mPotentialMap.costmap();
 
         if (goalReached(robotPose, goalPose)) {
-            visualizeTrajectories({}, {}, {});
+            visualizeTrajectories(costmap, {}, {}, {});
             return Pose2D{};
         }
 
@@ -306,44 +287,38 @@ struct MotionController::Pimpl {
 
                 const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
                 result.theta = sign * (0.1 + 0.8 * std::min(1.0, std::abs(rotationDiff) * 3.0));
-                visualizeTrajectories({}, {}, {});
+                visualizeTrajectories(costmap, {}, {}, {});
                 return result;
             }
         }
 
-        unsigned int robotCx, robotCy;
-        if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), robotCx, robotCy)) {
-            const auto optGrad = mPotentialMap.getGradient({robotCx, robotCy});
-            const auto optGrad2 = mPotentialMap.getGradient({robotCx, robotCy});
-            const auto optGrad3 = mPotentialMap.getGradient({robotCx, robotCy});
-            if (optGrad2) {
-                const auto rotationDiff =
-                    angles::shortest_angular_distance(robotPose.theta, *optGrad2);
+        if (const auto optGrad = costmap.gradient(robotPose.point)) {
+            const auto rotationDiff =
+                angles::shortest_angular_distance(robotPose.theta, *optGrad);
 
-                /*
-                ROS_INFO_STREAM("Rotational diff at("
-                                << robotCx << ", " << robotCy << ") to path is "
-                                << angles::to_degrees(rotationDiff) << ", robot grad: "
-                                << robotPose.theta << ", map grad: " << *optGrad << " -- " <<
-                *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<<
-                *optGrad << " * " << *optGrad3);
+            /*
+            ROS_INFO_STREAM("Rotational diff at("
+                            << robotCx << ", " << robotCy << ") to path is "
+                            << angles::to_degrees(rotationDiff) << ", robot grad: "
+                            << robotPose.theta << ", map grad: " << *optGrad << " -- " <<
+            *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<<
+            *optGrad << " * " << *optGrad3);
 
-                ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293
-                from viz is " << *mPotentialMap.getGradient({266, 293}));
-                 */
+            ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293
+            from viz is " << *mPotentialMap.getGradient({266, 293}));
+             */
 
-                if (std::abs(rotationDiff) >
-                    angles::from_degrees(mConfig.angle_diff_rotate_in_place_deg)) {
-                    const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
-                    result.theta = 0.5 * sign;
-                    visualizeTrajectories({}, {}, {});
-                    return result;
-                }
+            if (std::abs(rotationDiff) >
+                angles::from_degrees(mConfig.angle_diff_rotate_in_place_deg)) {
+                const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
+                result.theta = 0.5 * sign;
+                visualizeTrajectories(costmap, {}, {}, {});
+                return result;
             }
         }
 
         const auto trajectories =
-            sampleTrajectories(robotPose, goalDistXY, mPotentialMap.costFunction(), mConfig);
+            sampleTrajectories(robotPose, goalDistXY, costmap.costFunction(), mConfig);
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
@@ -351,7 +326,7 @@ struct MotionController::Pimpl {
         std::pair<double, uint8_t> bestCost{-1, 0};
 
         for (const auto& traj : trajectories) {
-            const auto cost = scoreTrajectory(mPotentialMap, traj, mPotentialMap.costFunction());
+            const auto cost = scoreTrajectory(costmap, traj);
             trajectoryCosts.push_back(cost ? cost->first : -1);
 
             if (!cost) {
@@ -364,7 +339,7 @@ struct MotionController::Pimpl {
             }
         }
 
-        visualizeTrajectories(trajectories, trajectoryCosts, bestTraj);
+        visualizeTrajectories(costmap, trajectories, trajectoryCosts, bestTraj);
 
         if (bestTraj == nullptr) {
             ROS_WARN_STREAM("Could not find any legal trajectory.");
@@ -376,7 +351,7 @@ struct MotionController::Pimpl {
         ROS_INFO_STREAM("best cell cost = " << int(bestCost.second)
                                             << ", velocityScale = " << velocityScale);
         const auto bestVel = bestTraj->at(0).velocity;
-        return scaleAcceleration(bestVel * velocityScale, odom);
+        return scaleAcceleration(bestVel * velocityScale, odom, costmap);
 
         /*
         unsigned int cx, cy;
@@ -459,8 +434,7 @@ struct MotionController::Pimpl {
     }
 };
 
-MotionController::MotionController(PotentialMap& potentialMap)
-    : mPimpl{std::make_unique<Pimpl>(potentialMap)} {}
+MotionController::MotionController() : mPimpl{std::make_unique<Pimpl>()} {}
 
 MotionController::~MotionController() = default;
 
@@ -468,7 +442,8 @@ bool MotionController::goalReached(const Pose2D& robotPose, const Pose2D& gaolPo
     return mPimpl->goalReached(robotPose, gaolPose);
 }
 
-std::optional<Twist2D> MotionController::computeVelocity(const Odom2D& robotPose,
+std::optional<Twist2D> MotionController::computeVelocity(const NavMapView& costmap,
+                                                         const Odom2D& robotPose,
                                                          const Pose2D& goalPose) {
-    return mPimpl->computeVelocity(robotPose, goalPose);
+    return mPimpl->computeVelocity(costmap, robotPose, goalPose);
 }

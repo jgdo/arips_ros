@@ -3,6 +3,8 @@
 #include <arips_navigation/path_planning/MotionController.h>
 #include <arips_navigation/path_planning/PotentialMap.h>
 
+#include <arips_navigation/path_planning/Costmap.h>
+
 struct Locomotion::Pimpl {
     CostFunction mCostFunction;
     PotentialMap mPotentialMap;
@@ -17,7 +19,7 @@ struct Locomotion::Pimpl {
         ros::NodeHandle{"~/locomotion"}};
 
     explicit Pimpl(costmap_2d::Costmap2DROS& costmap)
-        : mPotentialMap{costmap, mCostFunction}, mMotionController{mPotentialMap} {
+        : mPotentialMap{costmap, mCostFunction}, mMotionController{} {
 
         dynamic_reconfigure::Server<arips_navigation::LocomotionConfig>::CallbackType cb =
             [this](auto&& PH1, auto&& PH2) {
