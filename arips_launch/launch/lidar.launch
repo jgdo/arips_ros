@@ -1,5 +1,5 @@
 <launch>
-  <arg name="scan_matcher" default="true"/> 
+  <arg name="scan_matcher" default="false"/> 
 
 
   <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="false" >

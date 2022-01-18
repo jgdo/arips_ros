@@ -6,7 +6,7 @@
 
 using CellIndex = Eigen::Vector2i;
 
-struct GridCostmap {
+class CostmapView {
     const std::string& frameId() const;
 
     uint8_t operator[](CellIndex index) const;
