@@ -3,41 +3,66 @@
 #include "PlanningMath.h"
 
 #include <optional>
+#include <utility>
 
 using CellIndex = Eigen::Vector2i;
 
-template<class T>
-class GridMap {
+struct GridMapGeometry {
+    std::string frameId;
+    Vector2d offset;
+    double resolution;
+};
+
+template <class T> class GridMap {
 public:
+    [[nodiscard]] virtual int width() const = 0;
+
+    [[nodiscard]] virtual int height() const = 0;
+
     [[nodiscard]] virtual const std::string& frameId() const = 0;
+    [[nodiscard]] virtual double resolution() const = 0;
 
-    [[nodiscard]] virtual T at(CellIndex index) const = 0;
-
-    [[nodiscard]] virtual Vector2d toWorld(CellIndex index) const = 0;
-
+    [[nodiscard]] virtual Vector2d toWorld(const CellIndex& index) const = 0;
     [[nodiscard]] virtual std::optional<CellIndex> toMap(const Vector2d& point) const = 0;
 
-    [[nodiscard]] virtual double resolution() const = 0;
+    virtual GridMapGeometry geometry() const = 0;
+
+    [[nodiscard]] virtual std::optional<T> at(CellIndex index) const = 0;
 
     /*
     template <std::enable_if_t<std::is_floating_point<T>::value, bool> = true>
     T interpolate(const Vector2d& point) const {
         return T{}; // TODO
     }*/
-
 };
 
-class NavMapView {
-public:
-    [[nodiscard]] virtual const std::string& frameId() const = 0;
+using Costmap = GridMap<uint8_t>;
 
-    [[nodiscard]] std::optional<double> gradient(const Vector2d& point) const {
-        return {}; // TODO
+template <class T> class GridMapWithGeometry : public GridMap<T> {
+public:
+    explicit GridMapWithGeometry(GridMapGeometry  geo) : mGeometry{std::move(geo)} {}
+
+    const std::string& frameId() const override { return mGeometry.frameId; };
+    double resolution() const override { return mGeometry.resolution; }
+
+    [[nodiscard]] Vector2d toWorld(const CellIndex& index) const override {
+        return Vector2d{index.x(), index.y()} * mGeometry.resolution + mGeometry.offset;
     }
 
-    [[nodiscard]] virtual std::optional<double> goalDistance(const Vector2d& point) const = 0;
+    std::optional<CellIndex> toMap(const Vector2d& point) const override {
+        const CellIndex index{std::lround(point.x() / mGeometry.resolution),
+                              std::lround(point.y() / mGeometry.resolution)};
+        if (index.x() >= 0 && index.x() < GridMap<T>::width() && index.y() >= 0 &&
+            index.y() < GridMap<T>::height()) {
+            return index;
+        }
+        return {};
+    }
 
-    [[nodiscard]] virtual std::optional<uint8_t> cost(const Vector2d& index) const = 0;
+    GridMapGeometry geometry() const override {
+        return mGeometry;
+    }
 
-    [[nodiscard]] virtual const CostFunction& costFunction() const = 0;
+protected:
+    GridMapGeometry mGeometry;
 };

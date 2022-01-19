@@ -67,7 +67,7 @@ Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDist
     return traj;
 }
 
-std::optional<std::pair<double, uint8_t>> scoreTrajectory(const NavMapView& costmap,
+std::optional<std::pair<double, uint8_t>> scoreTrajectory(const NavMap& costmap,
                                                           const Trajectory& traj) {
     const auto& costFunction = costmap.costFunction();
 
@@ -132,7 +132,7 @@ struct MotionController::Pimpl {
                angles::to_degrees(std::abs(angularDistance)) < mConfig.goal_tolerance_yaw_deg;
     }
 
-    void visualizeTrajectories(const NavMapView& costmap, const Trajectories& trajectories,
+    void visualizeTrajectories(const NavMap& costmap, const Trajectories& trajectories,
                                const std::vector<double>& allCosts, const Trajectory* bestTraj) {
         visualization_msgs::MarkerArray markerArray;
         visualization_msgs::Marker marker;
@@ -232,7 +232,7 @@ struct MotionController::Pimpl {
     }
 
     Twist2D scaleAcceleration(const Twist2D& in, const Odom2D& current,
-                              const NavMapView& costmap) const {
+                              const NavMap& costmap) const {
         const auto wheelIn = calcWheelSpeed(in);
         const auto wheelCurrent = calcWheelSpeed(current.vel);
 
@@ -265,7 +265,7 @@ struct MotionController::Pimpl {
         return in;
     }
 
-    std::optional<Twist2D> computeVelocity(const NavMapView& costmap, const Odom2D& odom,
+    std::optional<Twist2D> computeVelocity(const NavMap& costmap, const Odom2D& odom,
                                            const Pose2D& goalPose) {
         const auto& robotPose = odom.pose;
 
@@ -442,7 +442,7 @@ bool MotionController::goalReached(const Pose2D& robotPose, const Pose2D& gaolPo
     return mPimpl->goalReached(robotPose, gaolPose);
 }
 
-std::optional<Twist2D> MotionController::computeVelocity(const NavMapView& costmap,
+std::optional<Twist2D> MotionController::computeVelocity(const NavMap& costmap,
                                                          const Odom2D& robotPose,
                                                          const Pose2D& goalPose) {
     return mPimpl->computeVelocity(costmap, robotPose, goalPose);

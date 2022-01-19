@@ -18,16 +18,14 @@ void PotentialMapVisualizer::showGradients(const PotentialMap& map, const Pose2D
         return;
     }
 
-    const auto* costmap = map.costmap().getCostmap();
-
-    unsigned int cx, cy;
-    if (!costmap->worldToMap(robotPose.x(), robotPose.y(), cx, cy)) {
+    const auto index = map.toMap(robotPose.point);
+    if(!index) {
         return;
     }
 
     visualization_msgs::MarkerArray markerArray;
     visualization_msgs::Marker marker;
-    marker.header.frame_id = map.costmap().getGlobalFrameID();
+    marker.header.frame_id = map.frameId();
     marker.header.stamp = ros::Time();
     marker.ns = "potential";
     marker.id = 0;
@@ -40,22 +38,21 @@ void PotentialMapVisualizer::showGradients(const PotentialMap& map, const Pose2D
     marker.color.g = 1.0;
     marker.color.b = 1.0;
 
-    for (int x = cx - 30; x < cx + 30; x++) {
-        for (int y = cy - 30; y < cy + 30; y++) {
+    for (int x = index->x() - 30; x < index->x() + 30; x++) {
+        for (int y = index->y() - 30; y < index->y() + 30; y++) {
             const auto optGrad = map.getGradient({x, y});
             if (!optGrad) {
                 continue;
             }
 
-            double wx, wy;
-            costmap->mapToWorld(x, y, wx, wy);
+            const auto v = map.toWorld({x, y});
             geometry_msgs::Point p;
-            p.x = wx;
-            p.y = wy;
+            p.x = v.x();
+            p.y = v.y();
             marker.points.push_back(p);
 
-            p.x += cos(*optGrad) * costmap->getResolution();
-            p.y += sin(*optGrad) * costmap->getResolution();
+            p.x += cos(*optGrad) * map.resolution();
+            p.y += sin(*optGrad) * map.resolution();
 
             marker.points.push_back(p);
         }
@@ -71,24 +68,22 @@ void PotentialMapVisualizer::showPotential(const PotentialMap& map) {
     }
 
     sensor_msgs::PointCloud2 cost_cloud;
-    cost_cloud.header.frame_id = map.getCostmapRos().getGlobalFrameID();
+    cost_cloud.header.frame_id = map.frameId();
     cost_cloud.header.stamp = ros::Time::now();
 
     sensor_msgs::PointCloud2Modifier cloud_mod(cost_cloud);
     // clang-format off
-    cloud_mod.setPointCloud2Fields(5,
+    cloud_mod.setPointCloud2Fields(4,
                                    "x", 1, sensor_msgs::PointField::FLOAT32,
                                    "y", 1, sensor_msgs::PointField::FLOAT32,
                                    "z", 1, sensor_msgs::PointField::FLOAT32,
-                                   "goal_cost", 1, sensor_msgs::PointField::FLOAT32,
-                                   "costmap", 1, sensor_msgs::PointField::FLOAT32);
+                                   "goal_cost", 1, sensor_msgs::PointField::FLOAT32 /* TODO,
+                                   "costmap", 1, sensor_msgs::PointField::FLOAT32 */);
     // clang-format on
 
-    const auto* costmap_p_ = map.getCostmapRos().getCostmap();
-    unsigned int x_size = costmap_p_->getSizeInCellsX();
-    unsigned int y_size = costmap_p_->getSizeInCellsY();
+    unsigned int x_size = map.width();
+    unsigned int y_size = map.height();
     double z_coord = 0.0;
-    double x_coord, y_coord;
 
     cloud_mod.resize(x_size * y_size);
     sensor_msgs::PointCloud2Iterator<float> iter_x(cost_cloud, "x");
@@ -96,14 +91,14 @@ void PotentialMapVisualizer::showPotential(const PotentialMap& map) {
     size_t pointCount = 0;
     for (unsigned int cx = 0; cx < x_size; cx++) {
         for (unsigned int cy = 0; cy < y_size; cy++) {
-            costmap_p_->mapToWorld(cx, cy, x_coord, y_coord);
-            const auto goalDist = map.getGoalDistance(cx, cy);
+            const auto w = map.toWorld({cx, cy});
+            const auto goalDist = map.at({cx, cy});
             if (goalDist) {
-                iter_x[0] = x_coord;
-                iter_x[1] = y_coord;
+                iter_x[0] = w.x();
+                iter_x[1] = w.y();
                 iter_x[2] = *goalDist;
                 iter_x[3] = *goalDist;
-                iter_x[4] = costmap_p_->getCost(cx, cy);
+                // TODOiter_x[4] = map.at->getCost(cx, cy);
                 ++iter_x;
                 pointCount++;
             }
@@ -125,10 +120,9 @@ void PotentialMapVisualizer::showPath(const PotentialMap& map, const Pose2D& rob
         return;
     }
 
-    const auto& costmap = map.costmap();
     nav_msgs::Path path;
     path.header.stamp = ros::Time::now();
-    path.header.frame_id = costmap.getGlobalFrameID();
+    path.header.frame_id = map.frameId();
 
     const auto path2d = map.traceCurrentPath(robotPose);
     geometry_msgs::PoseStamped pathPoint;

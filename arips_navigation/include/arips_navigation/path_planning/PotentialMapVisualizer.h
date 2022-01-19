@@ -13,7 +13,6 @@ public:
     void showPath(const PotentialMap& map, const Pose2D& robotPose);
     void showMap(const PotentialMap& map, const Pose2D& robotPose);
 
-
 private:
     ros::Publisher mPub;
     ros::Publisher mPotentialGradPub;

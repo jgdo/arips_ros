@@ -1,13 +1,13 @@
 #include <arips_navigation/LocomotionConfig.h>
 #include <arips_navigation/path_planning/Locomotion.h>
 #include <arips_navigation/path_planning/MotionController.h>
-#include <arips_navigation/path_planning/PotentialMap.h>
+#include <arips_navigation/path_planning/DijkstraPotentialComputation.h>
 
 #include <arips_navigation/path_planning/Costmap.h>
 
 struct Locomotion::Pimpl {
     CostFunction mCostFunction;
-    PotentialMap mPotentialMap;
+    DijkstraPotentialComputation mPotentialMap;
     MotionController mMotionController;
 
     std::optional<Pose2D> mCurrentGoal;
@@ -155,7 +155,7 @@ std::optional<Pose2D> Locomotion::computeVelocityCommands(const Odom2D& robotPos
 }
 void Locomotion::cancel() { mPimpl->cancel(); }
 std::optional<Pose2D> Locomotion::currentGoal() const { return mPimpl->mCurrentGoal; }
-const PotentialMap& Locomotion::potentialMap() const { return mPimpl->mPotentialMap; }
+const DijkstraPotentialComputation& Locomotion::potentialMap() const { return mPimpl->mPotentialMap; }
 
 std::optional<double> Locomotion::makePlan(const Pose2D& robotPose, const Pose2D& goal) {
     return mPimpl->makePlan(robotPose, goal);

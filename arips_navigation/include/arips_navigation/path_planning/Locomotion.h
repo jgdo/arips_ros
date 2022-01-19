@@ -5,7 +5,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 
 #include "PlanningMath.h"
-#include "PotentialMap.h"
+#include "DijkstraPotentialComputation.h"
 
 class Locomotion {
 public:
@@ -38,7 +38,7 @@ public:
     // cancel navigation
     void cancel();
 
-    [[nodiscard]] const PotentialMap& potentialMap() const;
+    [[nodiscard]] const DijkstraPotentialComputation& potentialMap() const;
 
 private:
     struct Pimpl;

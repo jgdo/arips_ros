@@ -2,7 +2,7 @@
 
 #include <ros/ros.h>
 
-#include <arips_navigation/path_planning/PotentialMap.h>
+#include <arips_navigation/path_planning/DijkstraPotentialComputation.h>
 
 #include <arips_navigation/MotionControllerConfig.h>
 
@@ -18,7 +18,7 @@ public:
 
     bool goalReached(const Pose2D& robotPose, const Pose2D& gaolPose);
 
-    std::optional<Twist2D> computeVelocity(const NavMapView& costmap, const Odom2D& robotPose, const Pose2D& goalPose);
+    std::optional<Twist2D> computeVelocity(const NavMap& costmap, const Odom2D& robotPose, const Pose2D& goalPose);
 
 private:
     struct Pimpl;
