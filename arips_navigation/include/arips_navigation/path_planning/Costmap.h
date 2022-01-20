@@ -19,7 +19,7 @@ public:
 
     [[nodiscard]] virtual int height() const = 0;
 
-    [[nodiscard]] virtual const std::string& frameId() const = 0;
+    [[nodiscard]] virtual std::string frameId() const = 0;
     [[nodiscard]] virtual double resolution() const = 0;
 
     [[nodiscard]] virtual Vector2d toWorld(const CellIndex& index) const = 0;
@@ -50,7 +50,7 @@ template <class T> class GridMapWithGeometry : public GridMap<T> {
 public:
     explicit GridMapWithGeometry(GridMapGeometry  geo) : mGeometry{std::move(geo)} {}
 
-    const std::string& frameId() const override { return mGeometry.frameId; };
+    std::string frameId() const override { return mGeometry.frameId; };
     double resolution() const override { return mGeometry.resolution; }
 
     [[nodiscard]] Vector2d toWorld(const CellIndex& index) const override {

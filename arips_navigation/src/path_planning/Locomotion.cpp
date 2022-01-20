@@ -67,7 +67,7 @@ struct Locomotion::Pimpl {
     }
 
     std::optional<double> getGoalDistance(const Pose2D& robotPose) const {
-        if(!mPotmap) {
+        if (!mPotmap) {
             return {};
         }
 
@@ -87,7 +87,8 @@ struct Locomotion::Pimpl {
             }
         }
 
-        return mMotionController.computeVelocity(ComposedNavMap{*mPotmap, costmap}, robotPose, goal);
+        return mMotionController.computeVelocity(ComposedNavMap{*mPotmap, costmap}, robotPose,
+                                                 goal);
     }
 
     std::optional<Pose2D> computeVelocityCommands(const Costmap& costmap, const Odom2D& robotPose) {
@@ -139,14 +140,15 @@ std::optional<Pose2D> Locomotion::computeVelocityCommands(const Costmap& costmap
 }
 void Locomotion::cancel() { mPimpl->cancel(); }
 std::optional<Pose2D> Locomotion::currentGoal() const {
-    if(mPimpl->mPotmap) {
+    if (mPimpl->mPotmap) {
         return mPimpl->mPotmap->goal();
     }
     return std::nullopt;
 }
 
-// const DijkstraPotentialComputation& Locomotion::potentialMap() const { return
-// mPimpl->mPathPlanning; }
+const PotentialMap* Locomotion::potentialMap() const {
+    return mPimpl->mPotmap? &*mPimpl->mPotmap : nullptr;
+}
 
 /*
 std::optional<double> Locomotion::makePlan(const Costmap& costmap, const Pose2D& robotPose, const

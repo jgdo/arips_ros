@@ -36,7 +36,7 @@ public:
     // cancel navigation
     void cancel();
 
-    // [[nodiscard]] const DijkstraPotentialComputation& potentialMap() const;
+    [[nodiscard]] const PotentialMap*  potentialMap() const;
 
 private:
     struct Pimpl;

@@ -18,9 +18,48 @@
 
 #include "simulator/Simulator.h"
 
-Pose2D fromStampedPose(geometry_msgs::PoseStamped const& msg) {
-    return {{msg.pose.position.x, msg.pose.position.y}, getYawFromQuaternion(msg.pose.orientation)};
-}
+struct Costmap2dView : public Costmap {
+    const costmap_2d::Costmap2DROS& mCostmap;
+    boost::unique_lock<boost::recursive_mutex> lock;
+
+    explicit Costmap2dView(costmap_2d::Costmap2DROS const& costmap)
+        : mCostmap{costmap}, lock{*mCostmap.getCostmap()->getMutex()} {}
+
+    int width() const override { return mCostmap.getCostmap()->getSizeInCellsX(); }
+    int height() const override { return mCostmap.getCostmap()->getSizeInCellsY(); }
+    std::string frameId() const override { return mCostmap.getGlobalFrameID(); }
+    double resolution() const override { return mCostmap.getCostmap()->getResolution(); }
+    Vector2d toWorld(const CellIndex& index) const override {
+        double x, y;
+        mCostmap.getCostmap()->mapToWorld(index.x(), index.y(), x, y);
+        return {x, y};
+    }
+    std::optional<CellIndex> toMap(const Vector2d& point) const override {
+        unsigned int x, y;
+        if (mCostmap.getCostmap()->worldToMap(point.x(), point.y(), x, y)) {
+            return CellIndex{x, y};
+        }
+        return {};
+    }
+    GridMapGeometry geometry() const override {
+        return GridMapGeometry{frameId(),
+                               {mCostmap.getCostmap()->getOriginX(),
+                                mCostmap.getCostmap()->getOriginY(), resolution()}};
+    }
+
+    std::optional<uint8_t> at(CellIndex index) const override {
+        if (index.x() < 0 || index.x() >= width() || index.y() < 0 || index.y() >= height()) {
+            return {};
+        }
+
+        const auto val = mCostmap.getCostmap()->getCost(index.x(), index.y());
+        if (!CostFunction::isValidCellCost(val)) {
+            return {};
+        }
+
+        return val;
+    }
+};
 
 struct DemoNode {
     ros::Subscriber mTwistSub;
@@ -28,9 +67,7 @@ struct DemoNode {
 
     explicit DemoNode(tf2_ros::Buffer& tfBuffer) : tfBuffer{tfBuffer} {
         ros::NodeHandle nh;
-        global_planner.initialize("global_planner", &costmap);
         sub = nh.subscribe("/topo_planner/nav_goal", 1, &DemoNode::poseCallback, this);
-        pathPub = nh.advertise<nav_msgs::Path>("/topo_planner/original_path", 1, true);
         cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         loopTimer = nh.createTimer(ros::Rate(10), &DemoNode::doLoop, this);
 
@@ -63,32 +100,12 @@ struct DemoNode {
             return;
         }
 
-        const auto robotPose = fromStampedPose(robotPoseMsg);
+        const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
-        locomotion.setGoal(robotPose, fromStampedPose(*goalPose));
+        locomotion.setGoal(Costmap2dView{costmap}, robotPose, Pose2D::fromMsg(goalPose->pose));
 
-        if(locomotion.hasGoal()) {
-            nav_msgs::Path path;
-            path.header.stamp = ros::Time::now();
-            path.header.frame_id = costmap.getGlobalFrameID();
-            auto pathPose = robotPoseMsg;
-            path.poses.push_back(robotPoseMsg);
-            unsigned int cx, cy;
-            if (costmap.getCostmap()->worldToMap(robotPose.x(), robotPose.y(), cx, cy)) {
-                const auto& potentialMap = locomotion.potentialMap();
-
-                CellIndex index{cx, cy};
-                while (potentialMap.findNeighborLowerCost(index)) {
-                    costmap.getCostmap()->mapToWorld(index.x(), index.y(), pathPose.pose.position.x,
-                                                     pathPose.pose.position.y);
-
-                    path.poses.push_back(pathPose);
-                }
-
-                pathPub.publish(path);
-            } else {
-                ROS_WARN_STREAM("robot coordinates not inside costmap");
-            }
+        if (locomotion.hasGoal()) {
+            mapViz.showPath(*locomotion.potentialMap(), robotPose);
         }
     }
 
@@ -103,7 +120,7 @@ struct DemoNode {
             locomotion.cancel();
             return;
         }
-        const auto robotPose = fromStampedPose(robotPoseMsg);
+        const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
         geometry_msgs::Twist cmdVel;
         if (locomotion.goalReached(robotPose)) {
@@ -114,7 +131,7 @@ struct DemoNode {
             // *locomotion.potentialMap().getGradient({266, 293}));
 
             const auto optTwist = locomotion.computeVelocityCommands(
-                {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
+                Costmap2dView{costmap}, {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
             if (optTwist) {
                 cmdVel.linear.x = optTwist->x();
                 cmdVel.linear.y = optTwist->y();
@@ -125,18 +142,16 @@ struct DemoNode {
         }
         cmdVelPub.publish(cmdVel);
 
-        mapViz.showMap(locomotion.potentialMap(), robotPose);
+        mapViz.showMap(*locomotion.potentialMap(), robotPose);
     }
 
     tf2_ros::Buffer& tfBuffer;
     costmap_2d::Costmap2DROS costmap{"global_costmap", tfBuffer};
     PotentialMapVisualizer mapViz;
     ros::Subscriber sub;
-    ros::Publisher pathPub;
-    global_planner::GlobalPlanner global_planner;
     ros::Publisher cmdVelPub;
 
-    Locomotion locomotion{costmap};
+    Locomotion locomotion;
 
     ros::Timer loopTimer;
 };
