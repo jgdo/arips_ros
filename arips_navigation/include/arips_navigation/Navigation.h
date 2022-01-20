@@ -51,7 +51,7 @@ private:
     ros::Timer mControlTimer;
 
     void poseCallbackNavGoal(const geometry_msgs::PoseStamped& msg);
-    void poseCallbackHpGoal(const geometry_msgs::PoseStamped& msg);
+    // void poseCallbackHpGoal(const geometry_msgs::PoseStamped& msg);
     void onClickedPoint(const geometry_msgs::PointStamped& point);
     void onDoorInfoReceived(const arips_navigation::CrossDoorInformation& doorInfo);
 

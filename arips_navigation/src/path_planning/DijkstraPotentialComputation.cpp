@@ -6,14 +6,20 @@ DijkstraPotentialComputation::DijkstraPotentialComputation(const CostFunction& c
     : mCostFunction{costFunction} {}
 
 PotentialMap DijkstraPotentialComputation::computeDijkstra(const Costmap& costmap,
-                                                           const CellIndex& goal) {
+                                                           const Pose2D& goalPose) {
     const auto begin = std::chrono::steady_clock::now();
 
     // TODO check if gaol index in cell
     // TODO check if goal index not in collision
 
-    PotentialMap potmap{costmap.width(), costmap.height(), costmap.geometry(), goal,
+    PotentialMap potmap{costmap.width(), costmap.height(), costmap.geometry(), goalPose,
                         costFunction()};
+
+    const auto goalIndex = costmap.toMap(goalPose.point);
+    if(!goalIndex) {
+        ROS_WARN_STREAM("Could not find goal pose on map.");
+        return potmap;
+    }
 
     mDistQueue = DistQueue{};
 
@@ -23,9 +29,9 @@ PotentialMap DijkstraPotentialComputation::computeDijkstra(const Costmap& costma
 
     ROS_INFO_STREAM("Global map dijkstra init took " << elapsedInitMs << " ms");
 
-    auto& startCell = potmap.cellAt(goal);
+    auto& startCell = potmap.cellAt(*goalIndex);
     startCell = {0.0, false};
-    insertCellIntoQueue(goal, potmap);
+    insertCellIntoQueue(*goalIndex, potmap);
 
     computeTargetDistance(costmap, potmap);
 

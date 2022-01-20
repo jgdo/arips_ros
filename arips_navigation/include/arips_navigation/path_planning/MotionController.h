@@ -7,8 +7,7 @@
 #include <arips_navigation/MotionControllerConfig.h>
 
 #include "PlanningMath.h"
-
-#include "Costmap.h"
+#include "NavMap.h"
 
 // Stateless motion controller
 class MotionController {

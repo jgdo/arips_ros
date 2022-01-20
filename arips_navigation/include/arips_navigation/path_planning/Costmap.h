@@ -29,6 +29,14 @@ public:
 
     [[nodiscard]] virtual std::optional<T> at(CellIndex index) const = 0;
 
+    std::optional<T> atPos(const Vector2d& pos) const {
+        const auto index = toMap(pos);
+        if(index) {
+            return at(*index);
+        }
+        return {};
+    }
+
     /*
     template <std::enable_if_t<std::is_floating_point<T>::value, bool> = true>
     T interpolate(const Vector2d& point) const {

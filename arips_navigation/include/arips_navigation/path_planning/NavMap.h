@@ -23,10 +23,16 @@ public:
     virtual double lowestResolution() const = 0;
 };
 
-class ComposedNavMap : NavMap {
+class ComposedNavMap : public NavMap {
 public:
-    ComposedNavMap(std::unique_ptr<PotentialMap> potmap, std::unique_ptr<Costmap> costmap)
-        : mPotentialMap{std::move(mPotentialMap)}, mCostmap{std::move(costmap)} {}
+    ComposedNavMap(const PotentialMap& potmap, const Costmap& costmap)
+        : mPotentialMap{mPotentialMap}, mCostmap{costmap} {
+        if (mPotentialMap.frameId() != mCostmap.frameId()) {
+            throw std::runtime_error(
+                "Cannot create ComposedNavMap: potmap frame id '" + mPotentialMap.frameId() +
+                "' is different from costmap frame id '" + mCostmap.frameId() + '\'');
+        }
+    }
 
     const std::string& frameId() const override;
 
@@ -36,6 +42,6 @@ public:
     double lowestResolution() const override;
 
 private:
-    std::unique_ptr<PotentialMap> mPotentialMap;
-    std::unique_ptr<Costmap> mCostmap;
+    const PotentialMap& mPotentialMap;
+    const Costmap& mCostmap;
 };

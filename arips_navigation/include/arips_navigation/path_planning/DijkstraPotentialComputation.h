@@ -23,7 +23,7 @@ public:
         }
     };
 
-    PotentialMap computeDijkstra(const Costmap& costmap, const CellIndex& goal);
+    PotentialMap computeDijkstra(const Costmap& costmap, const Pose2D& goal);
 
     const CostFunction& costFunction() const { return mCostFunction; }
 

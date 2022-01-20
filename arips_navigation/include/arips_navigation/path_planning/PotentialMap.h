@@ -10,7 +10,7 @@ class PotentialMap : public GridMapWithGeometry<double> {
     friend class DijkstraPotentialComputation;
 
 public:
-    PotentialMap(int width, int height, GridMapGeometry geo, CellIndex goal,
+    PotentialMap(int width, int height, GridMapGeometry geo, Pose2D goal,
                  CostFunction costFunction)
         : GridMapWithGeometry{std::move(geo)}, mMatrix{CellMatrix::Constant(width, height, Cell{})},
           mGoal{goal}, mCostFunction{std::move(costFunction)} {}
@@ -24,7 +24,7 @@ public:
     [[nodiscard]] std::optional<double> getGradient(const CellIndex& index) const;
     std::vector<Pose2D> traceCurrentPath(const Pose2D& robotPose) const;
 
-    CellIndex goal() const { return mGoal; }
+    Pose2D goal() const { return mGoal; }
 
     const CostFunction& costFunction() const {
         return mCostFunction;
@@ -40,7 +40,7 @@ private:
     typedef Eigen::Matrix<Cell, Eigen::Dynamic, Eigen::Dynamic> CellMatrix;
     CellMatrix mMatrix;
 
-    CellIndex mGoal;
+    Pose2D mGoal;
 
     CostFunction mCostFunction;
 

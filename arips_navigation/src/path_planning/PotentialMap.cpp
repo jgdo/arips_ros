@@ -36,14 +36,20 @@ std::optional<double> PotentialMap::calcGradientWithMatrix(const CellIndex& inde
 std::optional<double> PotentialMap::at(CellIndex index) const {
     if (index.x() >= 0 && index.x() < mMatrix.rows() && index.y() >= 0 &&
         index.y() < mMatrix.cols()) {
-        return mMatrix(index.x(), index.y()).goalDist;
+        const auto& cell = mMatrix(index.x(), index.y());
+        if(cell.visited) {
+            return {cell.goalDist};
+        }
     }
     return {};
 }
 
 std::optional<CellIndex> PotentialMap::findNeighborLowerCost(const CellIndex& index) const {
     const auto ownGoalDist = at(index);
-    auto lowestGoalDist = ownGoalDist;
+    if(!ownGoalDist) {
+        return {};
+    }
+    auto lowestGoalDist = *ownGoalDist;
     std::optional<CellIndex> lowestIndex = {};
 
     for (int x = std::max(0, index.x() - 1); x < std::min(index.x() + 2, (int)mMatrix.rows());
@@ -54,7 +60,7 @@ std::optional<CellIndex> PotentialMap::findNeighborLowerCost(const CellIndex& in
                 continue;
             }
 
-            const auto dist = *at({x, y});
+            const auto dist = *at({x, y}); // range checked by loop
             if (dist < 0) {
                 continue;
             }
@@ -67,11 +73,11 @@ std::optional<CellIndex> PotentialMap::findNeighborLowerCost(const CellIndex& in
             // Without this trick, the robot will prefer perpendicular movement along, sometimes
             // causing the robot to drive too close to a wall in narrow spaces instead of sticking
             // to the corridor middle.
-            auto distDiff = ownGoalDist - dist;
+            auto distDiff = *ownGoalDist - dist;
             if (std::abs((int)x - (int)index.x()) + std::abs((int)y - (int)index.y()) == 2) {
                 distDiff /= std::sqrt(2); // "interpolate" cost difference from 1.41 => 1.0 length
             }
-            const auto scaledDist = ownGoalDist - distDiff;
+            const auto scaledDist = *ownGoalDist - distDiff;
 
             if (scaledDist < lowestGoalDist) {
                 lowestGoalDist = scaledDist;
