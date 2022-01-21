@@ -80,10 +80,6 @@ struct DemoNode {
         if (locomotion.goalReached(robotPose)) {
             locomotion.cancel();
         } else {
-
-            // ROS_WARN_STREAM("From loop: gradient at 266,293 from viz is " <<
-            // *locomotion.potentialMap().getGradient({266, 293}));
-
             const auto optTwist = locomotion.computeVelocityCommands(
                 Costmap2dView{costmap}, {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
             if (optTwist) {

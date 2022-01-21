@@ -37,7 +37,7 @@ std::optional<double> PotentialMap::at(CellIndex index) const {
     if (index.x() >= 0 && index.x() < mMatrix.rows() && index.y() >= 0 &&
         index.y() < mMatrix.cols()) {
         const auto& cell = mMatrix(index.x(), index.y());
-        if(cell.visited) {
+        if(cell.goalDist >= 0.0) {
             return {cell.goalDist};
         }
     }
@@ -60,7 +60,7 @@ std::optional<CellIndex> PotentialMap::findNeighborLowerCost(const CellIndex& in
                 continue;
             }
 
-            const auto dist = *at({x, y}); // range checked by loop
+            const auto dist = mMatrix(x, y).goalDist; // range checked by loop
             if (dist < 0) {
                 continue;
             }

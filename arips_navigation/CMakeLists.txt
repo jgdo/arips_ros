@@ -7,6 +7,8 @@ add_compile_options(-std=c++17)
 find_package(PkgConfig)
 pkg_check_modules(NEW_YAMLCPP yaml-cpp>=0.5)
 
+# set(CMAKE_CXX_FLAGS "-O1")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
