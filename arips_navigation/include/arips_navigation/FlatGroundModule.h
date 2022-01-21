@@ -30,7 +30,7 @@ template <> struct BaseTraits<FlatGroundModule> {
     public:
         typedef std::shared_ptr<CostsPlanner> Ptr;
 
-        inline virtual ~CostsPlanner() {}
+        inline virtual ~CostsPlanner() = default;
 
         virtual std::optional<double>
         computeCosts(const geometry_msgs::PoseStamped& start, ApproachExit3DPtr const& goal,

@@ -1,13 +1,13 @@
 #include <arips_navigation/path_planning/NavMap.h>
 
-const std::string& ComposedNavMap::frameId() const { return mCostmap.frameId(); }
+std::string ComposedNavMap::frameId() const { return mCostmap.frameId(); }
 
 std::optional<double> ComposedNavMap::goalDistance(const Vector2d& point) const {
-    return mPotentialMap.at(point);
+    return mPotentialMap.atPos(point);
 }
 
 std::optional<uint8_t> ComposedNavMap::cost(const Vector2d& point) const {
-    return mCostmap.at(point);
+    return mCostmap.atPos(point);
 }
 
 const CostFunction& ComposedNavMap::costFunction() const { return mPotentialMap.costFunction(); }

@@ -1,10 +1,9 @@
-#include <utility>
-
 #include <arips_navigation/DriveTo.h>
 
 #include <arips_navigation/path_planning/Locomotion.h>
 #include <arips_navigation/path_planning/PotentialMapVisualizer.h>
 
+#include "arips_navigation/path_planning/Costmap2dView.h"
 #include <nav_msgs/Odometry.h>
 
 struct DriveTo::Pimpl {
@@ -33,13 +32,16 @@ struct DriveTo::Pimpl {
         try {
             const auto poseOnFloor = mParent.mContext.tf.transform(
                 goal, mParent.mContext.globalCostmap.getGlobalFrameID());
+
             const auto planOk =
-                mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
+                mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap},
+                                    Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
             if (!planOk) {
                 ROS_WARN("Could not plan path to goal, clearing global costmap...");
                 mParent.mContext.globalCostmap.resetLayers();
-                if (!mLocomotion.setGoal(Pose2D::fromMsg(robotPose.pose),
+                if (!mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap},
+                                         Pose2D::fromMsg(robotPose.pose),
                                          Pose2D::fromTf(poseOnFloor))) {
                     ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
                     return false;
@@ -58,12 +60,15 @@ struct DriveTo::Pimpl {
         if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
             const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
             const auto optTwist = mLocomotion.computeVelocityCommands(
+                Costmap2dView{mParent.mContext.globalCostmap},
                 {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
 
             if (optTwist) {
                 mParent.mContext.publishCmdVel(optTwist->toTwistMsg());
-                mMapViz.showMap(mLocomotion.potentialMap(), robotPose);
-                return;
+                const auto* potmap = mLocomotion.potentialMap();
+                if(potmap) {
+                    mMapViz.showMap(*potmap, robotPose);
+                }
             }
         }
 

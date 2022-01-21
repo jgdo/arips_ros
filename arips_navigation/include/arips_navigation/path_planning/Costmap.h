@@ -31,7 +31,7 @@ public:
 
     std::optional<T> atPos(const Vector2d& pos) const {
         const auto index = toMap(pos);
-        if(index) {
+        if (index) {
             return at(*index);
         }
         return {};
@@ -48,7 +48,10 @@ using Costmap = GridMap<uint8_t>;
 
 template <class T> class GridMapWithGeometry : public GridMap<T> {
 public:
-    explicit GridMapWithGeometry(GridMapGeometry  geo) : mGeometry{std::move(geo)} {}
+    explicit GridMapWithGeometry(GridMapGeometry geo) : mGeometry{std::move(geo)} {}
+
+    using GridMap<T>::width;
+    using GridMap<T>::height;
 
     std::string frameId() const override { return mGeometry.frameId; };
     double resolution() const override { return mGeometry.resolution; }
@@ -57,19 +60,17 @@ public:
         return Vector2d{index.x(), index.y()} * mGeometry.resolution + mGeometry.offset;
     }
 
-    std::optional<CellIndex> toMap(const Vector2d& point) const override {
+    std::optional<CellIndex> toMap(const Vector2d& originalPoint) const override {
+        const auto point = originalPoint - mGeometry.offset;
         const CellIndex index{std::lround(point.x() / mGeometry.resolution),
                               std::lround(point.y() / mGeometry.resolution)};
-        if (index.x() >= 0 && index.x() < GridMap<T>::width() && index.y() >= 0 &&
-            index.y() < GridMap<T>::height()) {
+        if (index.x() >= 0 && index.x() < width() && index.y() >= 0 && index.y() < height()) {
             return index;
         }
         return {};
     }
 
-    GridMapGeometry geometry() const override {
-        return mGeometry;
-    }
+    GridMapGeometry geometry() const override { return mGeometry; }
 
 protected:
     GridMapGeometry mGeometry;

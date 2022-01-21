@@ -5,9 +5,11 @@
 
 #include <arips_navigation/path_planning/Costmap.h>
 
+#include <dynamic_reconfigure/server.h>
+
 struct Locomotion::Pimpl {
     CostFunction mCostFunction;
-    DijkstraPotentialComputation mPathPlanning;
+    mutable DijkstraPotentialComputation mPathPlanning;
     MotionController mMotionController;
 
     std::optional<PotentialMap> mPotmap;
@@ -29,7 +31,7 @@ struct Locomotion::Pimpl {
     }
 
     std::optional<PotentialMap> makePlan(const Costmap& costmap, const Pose2D& robotPose,
-                                         const Pose2D& goal) {
+                                         const Pose2D& goal) const {
         // path.poses.push_back(robotPose);
 
         const auto robotIndex = costmap.toMap(robotPose.point);
@@ -118,7 +120,7 @@ struct Locomotion::Pimpl {
 
     void cancel() { mPotmap.reset(); }
 
-    void onDynamicReconfigure(arips_navigation::LocomotionConfig& config, uint32_t level) {
+    void onDynamicReconfigure(arips_navigation::LocomotionConfig& config, uint32_t) {
         mConfig = config;
     }
 
@@ -147,11 +149,10 @@ std::optional<Pose2D> Locomotion::currentGoal() const {
 }
 
 const PotentialMap* Locomotion::potentialMap() const {
-    return mPimpl->mPotmap? &*mPimpl->mPotmap : nullptr;
+    return mPimpl->mPotmap ? &*mPimpl->mPotmap : nullptr;
 }
 
-/*
-std::optional<double> Locomotion::makePlan(const Costmap& costmap, const Pose2D& robotPose, const
-Pose2D& goal) { return mPimpl->makePlan(costmap, robotPose, goal);
+std::optional<PotentialMap> Locomotion::makePlan(const Costmap& costmap, const Pose2D& robotPose,
+                                                 const Pose2D& goal) const {
+    return mPimpl->makePlan(costmap, robotPose, goal);
 }
-*/

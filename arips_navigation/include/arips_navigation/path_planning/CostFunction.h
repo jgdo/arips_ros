@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include <costmap_2d/costmap_2d_ros.h>
-
 class CostFunction {
 public:
     // having costmap cost of c compute the maximum speed of a wheel
@@ -15,12 +13,6 @@ public:
                                         mObstacleSpeedScalingLimit);
 
         return velocityScale * mMaxWheelSpeed;
-    }
-
-    [[nodiscard]] static bool isValidCellCost(uint8_t cellCost) {
-        return cellCost != costmap_2d::LETHAL_OBSTACLE &&
-               cellCost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
-               cellCost != costmap_2d::NO_INFORMATION;
     }
 
     double maxWheelSpeed() const {

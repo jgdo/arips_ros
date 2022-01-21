@@ -10,13 +10,13 @@ class PotentialMap : public GridMapWithGeometry<double> {
     friend class DijkstraPotentialComputation;
 
 public:
-    PotentialMap(int width, int height, GridMapGeometry geo, Pose2D goal,
+    PotentialMap(int width, int height, GridMapGeometry geo, const Pose2D& goal,
                  CostFunction costFunction)
         : GridMapWithGeometry{std::move(geo)}, mMatrix{CellMatrix::Constant(width, height, Cell{})},
-          mGoal{goal}, mCostFunction{std::move(costFunction)} {}
+          mGoal{goal}, mCostFunction{costFunction} {}
 
-    int width() const override { return mMatrix.rows(); };
-    int height() const override { return mMatrix.cols(); }
+    int width() const override { return (int) mMatrix.rows(); };
+    int height() const override { return (int) mMatrix.cols(); }
 
     std::optional<double> at(CellIndex index) const override;
 

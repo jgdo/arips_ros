@@ -28,9 +28,9 @@ public:
 private:
     NavigationContext mContext;
 
-    Locomotion mLocomotion {mContext.globalCostmap};
+    Locomotion mLocomotion;
 
-    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext.tf, mLocomotion};
+    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext, mLocomotion};
 
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 

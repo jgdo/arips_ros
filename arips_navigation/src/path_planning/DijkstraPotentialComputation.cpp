@@ -40,6 +40,8 @@ PotentialMap DijkstraPotentialComputation::computeDijkstra(const Costmap& costma
         std::chrono::duration_cast<std::chrono::milliseconds>(end - endInit).count();
 
     ROS_INFO_STREAM("Global map dijkstra potential took " << elapsedMs << " ms");
+
+    return potmap;
 }
 
 void DijkstraPotentialComputation::insertCellIntoQueue(const CellIndex& index,

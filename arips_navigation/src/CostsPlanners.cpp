@@ -3,6 +3,7 @@
 #include <arips_navigation/utils/FixedPosition.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include "arips_navigation/path_planning/Costmap2dView.h"
 
 using namespace toponav_ros;
 
@@ -11,7 +12,7 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
                                ApproachExit3DPtr const& goal,
                                tf2::Stamped<tf2::Transform>* actualApproachPose,
                                std::vector<geometry_msgs::PoseStamped>* path) {
-    const auto frame = mLocomotion.potentialMap().costmap().getGlobalFrameID();
+    const auto frame = mContext.globalCostmap.getGlobalFrameID();
     if (start.header.frame_id != frame) {
         ROS_ERROR_STREAM("Start passed to GridMapCostsPlanner must be in frame "
                          << frame << ", but is instead in frame " << start.header.frame_id);
@@ -20,36 +21,39 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
 
     geometry_msgs::PoseStamped goalMsg;
     tf2::toMsg(goal->getCenter(), goalMsg);
-    goalMsg = mTfBuffer.transform(goalMsg, frame);
+    goalMsg = mContext.tf.transform(goalMsg, frame);
 
     const auto start2d = Pose2D::fromMsg(start.pose);
-    const auto costs = mLocomotion.makePlan(start2d, Pose2D::fromMsg(goalMsg.pose));
+    const auto potmap = mLocomotion.makePlan(Costmap2dView{mContext.globalCostmap}, start2d, Pose2D::fromMsg(goalMsg.pose));
 
-    if (costs) {
-        if (actualApproachPose) {
-            tf2::fromMsg(goalMsg, *actualApproachPose);
-        }
+    if(!potmap) {
+        return {};
+    }
 
-        if (path) {
-            path->clear();
-            const auto path2d = mLocomotion.potentialMap().traceCurrentPath(start2d);
-            geometry_msgs::PoseStamped pathPoint;
-            pathPoint.header.frame_id = frame;
-            pathPoint.header.stamp = ros::Time::now();
+    if (actualApproachPose) {
+        tf2::fromMsg(goalMsg, *actualApproachPose);
+    }
 
-            for(const auto& p2d: path2d) {
-                pathPoint.pose = p2d.toPoseMsg();
-                // header stays same
-                path->emplace_back(pathPoint);
-            }
+    if (path) {
+        path->clear();
+        const auto path2d = potmap->traceCurrentPath(start2d);
+        geometry_msgs::PoseStamped pathPoint;
+        pathPoint.header.frame_id = frame;
+        pathPoint.header.stamp = ros::Time::now();
+
+        for(const auto& p2d: path2d) {
+            pathPoint.pose = p2d.toPoseMsg();
+            // header stays same
+            path->emplace_back(pathPoint);
         }
     }
 
-    return costs;
+    return potmap->atPos(potmap->goal().point);
 }
 
+
 const costmap_2d::Costmap2DROS& AripsFlatPlanner::getMap() {
-    return mLocomotion.potentialMap().costmap();
+    return mContext.globalCostmap;
 }
 
 #if 0

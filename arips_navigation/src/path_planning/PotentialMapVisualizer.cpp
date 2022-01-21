@@ -96,7 +96,7 @@ void PotentialMapVisualizer::showPotential(const PotentialMap& map) {
             if (goalDist) {
                 iter_x[0] = w.x();
                 iter_x[1] = w.y();
-                iter_x[2] = *goalDist;
+                iter_x[2] = 0;
                 iter_x[3] = *goalDist;
                 // TODOiter_x[4] = map.at->getCost(cx, cy);
                 ++iter_x;

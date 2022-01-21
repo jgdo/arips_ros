@@ -8,11 +8,9 @@
 
 class NavMap {
 public:
-    [[nodiscard]] virtual const std::string& frameId() const = 0;
+    [[nodiscard]] virtual std::string frameId() const = 0;
 
-    [[nodiscard]] std::optional<double> gradient(const Vector2d& point) const {
-        return {}; // TODO
-    }
+    [[nodiscard]] virtual std::optional<double> gradient(const Vector2d& point) const = 0;
 
     [[nodiscard]] virtual std::optional<double> goalDistance(const Vector2d& point) const = 0;
 
@@ -26,7 +24,7 @@ public:
 class ComposedNavMap : public NavMap {
 public:
     ComposedNavMap(const PotentialMap& potmap, const Costmap& costmap)
-        : mPotentialMap{mPotentialMap}, mCostmap{costmap} {
+        : mPotentialMap{potmap}, mCostmap{costmap} {
         if (mPotentialMap.frameId() != mCostmap.frameId()) {
             throw std::runtime_error(
                 "Cannot create ComposedNavMap: potmap frame id '" + mPotentialMap.frameId() +
@@ -34,12 +32,19 @@ public:
         }
     }
 
-    const std::string& frameId() const override;
+    std::string frameId() const override;
 
     std::optional<double> goalDistance(const Vector2d& point) const override;
     std::optional<uint8_t> cost(const Vector2d& point) const override;
     const CostFunction& costFunction() const override;
     double lowestResolution() const override;
+
+    std::optional<double> gradient(const Vector2d& point) const override {
+        if(const auto index = mPotentialMap.toMap(point)) {
+            return mPotentialMap.getGradient(*index);
+        }
+        return {};
+    }
 
 private:
     const PotentialMap& mPotentialMap;

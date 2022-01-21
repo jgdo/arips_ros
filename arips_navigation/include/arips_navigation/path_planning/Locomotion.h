@@ -13,7 +13,7 @@ public:
     ~Locomotion();
 
     // Return costs on success, otherwise nullopt
-    // std::optional<double> makePlan(const Costmap& costmap, const Pose2D& robotPose, const Pose2D& goal);
+    std::optional<PotentialMap> makePlan(const Costmap& costmap, const Pose2D& robotPose, const Pose2D& goal) const;
 
     // goal must be in costmaps global frame
     // will block until planning finished
