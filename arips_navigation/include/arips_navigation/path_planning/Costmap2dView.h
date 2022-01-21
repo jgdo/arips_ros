@@ -14,8 +14,17 @@ struct Costmap2dView : public Costmap {
                cellCost != costmap_2d::NO_INFORMATION;
     }
 
-    explicit Costmap2dView(costmap_2d::Costmap2DROS const& costmap)
-        : mCostmap{costmap}, lock{*mCostmap.getCostmap()->getMutex()} {}
+    explicit Costmap2dView(costmap_2d::Costmap2DROS const& costmap, std::optional<Pose2D> robotPose = {})
+        : mCostmap{costmap}, lock{*mCostmap.getCostmap()->getMutex()} {
+        if(robotPose) {
+            unsigned int x, y;
+            if (mCostmap.getCostmap()->worldToMap(robotPose->x(), robotPose->y(), x, y)) {
+                if(!isValidCellCost(mCostmap.getCostmap()->getCost(x, y))) {
+                    mCostmap.getCostmap()->setCost(x, y, 0);
+                }
+            }
+        }
+    }
 
     int width() const override { return (int)mCostmap.getCostmap()->getSizeInCellsX(); }
     int height() const override { return (int)mCostmap.getCostmap()->getSizeInCellsY(); }

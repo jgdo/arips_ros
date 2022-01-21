@@ -55,7 +55,7 @@ struct DemoNode {
 
         const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
-        locomotion.setGoal(Costmap2dView{costmap}, robotPose, Pose2D::fromMsg(goalPose->pose));
+        locomotion.setGoal(Costmap2dView{costmap, robotPose}, robotPose, Pose2D::fromMsg(goalPose->pose));
 
         if (locomotion.hasGoal()) {
             mapViz.showPath(*locomotion.potentialMap(), robotPose);
@@ -81,7 +81,7 @@ struct DemoNode {
             locomotion.cancel();
         } else {
             const auto optTwist = locomotion.computeVelocityCommands(
-                Costmap2dView{costmap}, {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
+                Costmap2dView{costmap, robotPose}, {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
             if (optTwist) {
                 cmdVel.linear.x = optTwist->x();
                 cmdVel.linear.y = optTwist->y();

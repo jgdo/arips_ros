@@ -6,6 +6,7 @@
 #include <arips_navigation/ScoreTwist.h>
 #include <arips_navigation/path_planning/MotionController.h>
 #include <arips_navigation/path_planning/PlanningMath.h>
+#include "arips_navigation/path_planning/Costmap2dView.h"
 
 class TwistScorer {
 public:
@@ -52,7 +53,7 @@ public:
             }
 
             const auto cellCost = costmap.getCostmap()->getCost(cx, cy);
-            if (!CostFunction::isValidCellCost(cellCost)) {
+            if (!Costmap2dView::isValidCellCost(cellCost)) {
                 return {};
             }
 

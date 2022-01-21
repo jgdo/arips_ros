@@ -2,8 +2,8 @@
 #include <arips_navigation/utils/ApproachLineArea.h>
 #include <arips_navigation/utils/FixedPosition.h>
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "arips_navigation/path_planning/Costmap2dView.h"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using namespace toponav_ros;
 
@@ -24,9 +24,10 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
     goalMsg = mContext.tf.transform(goalMsg, frame);
 
     const auto start2d = Pose2D::fromMsg(start.pose);
-    const auto potmap = mLocomotion.makePlan(Costmap2dView{mContext.globalCostmap}, start2d, Pose2D::fromMsg(goalMsg.pose));
+    const auto potmap = mLocomotion.makePlan(Costmap2dView{mContext.globalCostmap, start2d},
+                                             start2d, Pose2D::fromMsg(goalMsg.pose));
 
-    if(!potmap) {
+    if (!potmap) {
         return {};
     }
 
@@ -41,7 +42,7 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
         pathPoint.header.frame_id = frame;
         pathPoint.header.stamp = ros::Time::now();
 
-        for(const auto& p2d: path2d) {
+        for (const auto& p2d : path2d) {
             pathPoint.pose = p2d.toPoseMsg();
             // header stays same
             path->emplace_back(pathPoint);
@@ -51,10 +52,7 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
     return potmap->atPos(potmap->goal().point);
 }
 
-
-const costmap_2d::Costmap2DROS& AripsFlatPlanner::getMap() {
-    return mContext.globalCostmap;
-}
+const costmap_2d::Costmap2DROS& AripsFlatPlanner::getMap() { return mContext.globalCostmap; }
 
 #if 0
 /**

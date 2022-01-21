@@ -34,13 +34,13 @@ struct DriveTo::Pimpl {
                 goal, mParent.mContext.globalCostmap.getGlobalFrameID());
 
             const auto planOk =
-                mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap},
+                mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose)},
                                     Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
             if (!planOk) {
                 ROS_WARN("Could not plan path to goal, clearing global costmap...");
                 mParent.mContext.globalCostmap.resetLayers();
-                if (!mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap},
+                if (!mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose)},
                                          Pose2D::fromMsg(robotPose.pose),
                                          Pose2D::fromTf(poseOnFloor))) {
                     ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
@@ -60,7 +60,7 @@ struct DriveTo::Pimpl {
         if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
             const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
             const auto optTwist = mLocomotion.computeVelocityCommands(
-                Costmap2dView{mParent.mContext.globalCostmap},
+                Costmap2dView{mParent.mContext.globalCostmap, robotPose},
                 {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
 
             if (optTwist) {
