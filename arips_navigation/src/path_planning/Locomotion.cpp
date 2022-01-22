@@ -76,7 +76,8 @@ struct Locomotion::Pimpl {
         return mPotmap->atPos(robotPose.point);
     }
 
-    std::optional<Twist2D> computeVelNoRecovery(const Costmap& costmap, const Odom2D& robotPose) {
+    std::optional<Twist2D> computeVelNoRecovery(const Costmap& costmap, const Odom2D& robotPose,
+                                                double dt) {
         const auto goal = mPotmap->goal();
         if (mMotionController.goalReached(robotPose.pose, goal)) {
             mPotmap.reset();
@@ -89,16 +90,17 @@ struct Locomotion::Pimpl {
             }
         }
 
-        return mMotionController.computeVelocity(ComposedNavMap{*mPotmap, costmap}, robotPose,
-                                                 goal);
+        return mMotionController.computeVelocity(ComposedNavMap{*mPotmap, costmap}, robotPose, goal,
+                                                 dt);
     }
 
-    std::optional<Pose2D> computeVelocityCommands(const Costmap& costmap, const Odom2D& robotPose) {
+    std::optional<Pose2D> computeVelocityCommands(const Costmap& costmap, const Odom2D& robotPose,
+                                                  double dt) {
         if (!mPotmap) {
             return {};
         }
 
-        auto vel = computeVelNoRecovery(costmap, robotPose);
+        auto vel = computeVelNoRecovery(costmap, robotPose, dt);
         if (vel) {
             mLastControllerSuccessfulTime = ros::Time::now();
             return vel;
@@ -137,8 +139,8 @@ bool Locomotion::setGoal(const Costmap& costmap, const Pose2D& robotPose, const 
 }
 bool Locomotion::goalReached(const Pose2D& robotPose) { return mPimpl->goalReached(robotPose); }
 std::optional<Pose2D> Locomotion::computeVelocityCommands(const Costmap& costmap,
-                                                          const Odom2D& robotPose) {
-    return mPimpl->computeVelocityCommands(costmap, robotPose);
+                                                          const Odom2D& robotPose, double dt) {
+    return mPimpl->computeVelocityCommands(costmap, robotPose, dt);
 }
 void Locomotion::cancel() { mPimpl->cancel(); }
 std::optional<Pose2D> Locomotion::currentGoal() const {

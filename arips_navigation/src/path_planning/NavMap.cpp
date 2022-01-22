@@ -2,8 +2,8 @@
 
 std::string ComposedNavMap::frameId() const { return mCostmap.frameId(); }
 
-std::optional<double> ComposedNavMap::goalDistance(const Vector2d& point) const {
-    return mPotentialMap.atPos(point);
+std::optional<double> ComposedNavMap::interpolateGoalDistance(const Vector2d& point) const {
+    return mPotentialMap.interpolateAt(point);
 }
 
 std::optional<uint8_t> ComposedNavMap::cost(const Vector2d& point) const {

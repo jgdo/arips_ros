@@ -30,6 +30,8 @@ public:
         return mCostFunction;
     }
 
+    std::optional<double> interpolateAt(const Vector2d& pos) const;
+
 private:
     struct Cell {
         double goalDist = -1;

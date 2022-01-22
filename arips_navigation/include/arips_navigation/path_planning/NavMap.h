@@ -12,7 +12,7 @@ public:
 
     [[nodiscard]] virtual std::optional<double> gradient(const Vector2d& point) const = 0;
 
-    [[nodiscard]] virtual std::optional<double> goalDistance(const Vector2d& point) const = 0;
+    [[nodiscard]] virtual std::optional<double> interpolateGoalDistance(const Vector2d& point) const = 0;
 
     [[nodiscard]] virtual std::optional<uint8_t> cost(const Vector2d& index) const = 0;
 
@@ -34,7 +34,7 @@ public:
 
     std::string frameId() const override;
 
-    std::optional<double> goalDistance(const Vector2d& point) const override;
+    std::optional<double> interpolateGoalDistance(const Vector2d& point) const override;
     std::optional<uint8_t> cost(const Vector2d& point) const override;
     const CostFunction& costFunction() const override;
     double lowestResolution() const override;

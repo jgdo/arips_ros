@@ -37,7 +37,7 @@ std::optional<double> PotentialMap::at(CellIndex index) const {
     if (index.x() >= 0 && index.x() < mMatrix.rows() && index.y() >= 0 &&
         index.y() < mMatrix.cols()) {
         const auto& cell = mMatrix(index.x(), index.y());
-        if(cell.goalDist >= 0.0) {
+        if (cell.goalDist >= 0.0) {
             return {cell.goalDist};
         }
     }
@@ -46,7 +46,7 @@ std::optional<double> PotentialMap::at(CellIndex index) const {
 
 std::optional<CellIndex> PotentialMap::findNeighborLowerCost(const CellIndex& index) const {
     const auto ownGoalDist = at(index);
-    if(!ownGoalDist) {
+    if (!ownGoalDist) {
         return {};
     }
     auto lowestGoalDist = *ownGoalDist;
@@ -132,4 +132,32 @@ std::vector<Pose2D> PotentialMap::traceCurrentPath(const Pose2D& robotPose) cons
     }
 
     return path;
+}
+
+std::optional<double> PotentialMap::interpolateAt(const Vector2d& pos) const {
+    const auto gridPos = (pos - mGeometry.offset) / mGeometry.resolution;
+    const Vector2d p00{std::floor(gridPos.x()), std::floor(gridPos.y())};
+
+    const auto v00 = at({p00.x(), p00.y()});
+    const auto v10 = at({p00.x() + 1, p00.y()});
+    const auto v01 = at({p00.x(), p00.y() + 1});
+    const auto v11 = at({p00.x() + 1, p00.y() + 1});
+
+    if (!v00 || !v10 || !v01 || !v11) {
+        return atPos(pos); // TODO extrapolate from other direction
+    }
+
+    const Vector2d pIn = gridPos - p00;
+    const Vector2d pOut = Vector2d{1.0, 1.0} - pIn;
+
+    if(pIn.x() < 0 || pIn.y() < 0 || pOut.x() < 0 || pOut.y() < 0) {
+        throw std::runtime_error("interpolation error! " + std::to_string(p00.x()) + " " + std::to_string(p00.y())
+                                 + " " + std::to_string(gridPos.x()) + " " + std::to_string(gridPos.y())
+                                 + " " + std::to_string(pIn.x()) + " " + std::to_string(pIn.y())
+                                 + " " + std::to_string(pOut.x()) + " " + std::to_string(pOut.y()));
+    }
+
+    const auto val = *v00 * pOut.x() * pOut.y() + *v01 * pOut.x() * pIn.y() +
+                     *v10 * pIn.x() * pOut.y() + *v11 * pIn.x() * pIn.y();
+    return val;
 }

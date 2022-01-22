@@ -1,9 +1,9 @@
+#include <arips_navigation/path_planning/Locomotion.h>
+#include <arips_navigation/path_planning/PotentialMapVisualizer.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <global_planner/planner_core.h>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
-#include <arips_navigation/path_planning/Locomotion.h>
-#include <arips_navigation/path_planning/PotentialMapVisualizer.h>
 
 #include <arips_navigation/utils/transforms.h>
 #include <geometry_msgs/Twist.h>
@@ -11,18 +11,19 @@
 #include <angles/angles.h>
 #include <nav_msgs/Odometry.h>
 
-#include "simulator/Simulator.h"
 #include "arips_navigation/path_planning/Costmap2dView.h"
+#include "simulator/Simulator.h"
 
 struct DemoNode {
     ros::Subscriber mTwistSub;
     nav_msgs::Odometry mLastOdom;
+    const ros::Rate mControlRate{10};
 
     explicit DemoNode(tf2_ros::Buffer& tfBuffer) : tfBuffer{tfBuffer} {
         ros::NodeHandle nh;
         sub = nh.subscribe("/topo_planner/nav_goal", 1, &DemoNode::poseCallback, this);
         cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-        loopTimer = nh.createTimer(ros::Rate(10), &DemoNode::doLoop, this);
+        loopTimer = nh.createTimer(mControlRate, &DemoNode::doLoop, this);
 
         mTwistSub = ros::NodeHandle().subscribe<nav_msgs::Odometry>(
             "/odom", 1, [this](const nav_msgs::OdometryConstPtr& msg) { mLastOdom = *msg; });
@@ -55,7 +56,8 @@ struct DemoNode {
 
         const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
-        locomotion.setGoal(Costmap2dView{costmap, robotPose}, robotPose, Pose2D::fromMsg(goalPose->pose));
+        locomotion.setGoal(Costmap2dView{costmap, robotPose}, robotPose,
+                           Pose2D::fromMsg(goalPose->pose));
 
         if (locomotion.hasGoal()) {
             mapViz.showPath(*locomotion.potentialMap(), robotPose);
@@ -81,7 +83,9 @@ struct DemoNode {
             locomotion.cancel();
         } else {
             const auto optTwist = locomotion.computeVelocityCommands(
-                Costmap2dView{costmap, robotPose}, {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)});
+                Costmap2dView{costmap, robotPose},
+                {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)},
+                mControlRate.expectedCycleTime().toSec());
             if (optTwist) {
                 cmdVel.linear.x = optTwist->x();
                 cmdVel.linear.y = optTwist->y();
@@ -92,7 +96,7 @@ struct DemoNode {
         }
         cmdVelPub.publish(cmdVel);
 
-        if(const auto* potmap = locomotion.potentialMap()) {
+        if (const auto* potmap = locomotion.potentialMap()) {
             mapViz.showMap(*potmap, robotPose);
         }
     }
@@ -114,7 +118,7 @@ int main(int argc, char** argv) {
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener{tfBuffer};
 
-    Simulator simulator{tfBuffer};
+    // Simulator simulator{tfBuffer};
     DemoNode demo{tfBuffer};
 
     while (ros::ok()) {
