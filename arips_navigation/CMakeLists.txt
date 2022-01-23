@@ -13,24 +13,24 @@ pkg_check_modules(NEW_YAMLCPP yaml-cpp>=0.5)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  costmap_2d
-  dynamic_reconfigure
-  nav_core
-  navfn
-  nav_msgs
-  pluginlib
-  roscpp
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
-  toponav_core
-  toponav_ros
-  interactive_markers
-  base_local_planner
-  angles
-  geometry_msgs
-  global_planner
-)
+    costmap_2d
+    dynamic_reconfigure
+    nav_core
+    navfn
+    nav_msgs
+    pluginlib
+    roscpp
+    tf2
+    tf2_ros
+    tf2_geometry_msgs
+    toponav_core
+    toponav_ros
+    interactive_markers
+    base_local_planner
+    angles
+    geometry_msgs
+    global_planner
+    )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -67,14 +67,14 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-       CrossDoorInformation.msg
+    FILES
+    CrossDoorInformation.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
-   FILES
-        ScoreTwist.srv
+    FILES
+    ScoreTwist.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -87,7 +87,7 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
     DEPENDENCIES
-        geometry_msgs
+    geometry_msgs
 )
 
 ################################################
@@ -106,10 +106,10 @@ generate_messages(
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
-   cfg/AripsPlanner.cfg
-   cfg/OpenDoor.cfg
-   cfg/MotionController.cfg
-   cfg/Locomotion.cfg
+    cfg/AripsPlanner.cfg
+    cfg/OpenDoor.cfg
+    cfg/MotionController.cfg
+    cfg/Locomotion.cfg
 )
 
 ###################################
@@ -122,10 +122,10 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES arips_navigation
-#  CATKIN_DEPENDS costmap_2d dynamic_reconfigure nav_core nav_msgs pluginlib roscpp tf2 tf2_geometry_msgs tf2_ros
-#  DEPENDS system_lib
+    #  INCLUDE_DIRS include
+    #  LIBRARIES arips_navigation
+    #  CATKIN_DEPENDS costmap_2d dynamic_reconfigure nav_core nav_msgs pluginlib roscpp tf2 tf2_geometry_msgs tf2_ros
+    #  DEPENDS system_lib
 )
 
 ###########
@@ -135,8 +135,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
 )
 
 FILE(GLOB_RECURSE NAV_SRCS src/*.cpp)
@@ -145,8 +145,8 @@ FILE(GLOB_RECURSE NAV_INCS include/arips_navigation/*.h)
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-   ${NAV_SRCS} ${NAV_INCS}
-)
+    ${NAV_SRCS} ${NAV_INCS}
+    )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -155,9 +155,9 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        ${catkin_LIBRARIES}
-        yaml-cpp
-)
+    ${catkin_LIBRARIES}
+    yaml-cpp
+    )
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
@@ -177,49 +177,49 @@ add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
     PUBLIC
-        ${PROJECT_NAME}
-)
+    ${PROJECT_NAME}
+    )
 
 add_executable(odometry_forecast_node tools/odomety_forecast_node.cpp)
 add_dependencies(odometry_forecast_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(odometry_forecast_node
     PUBLIC
-        ${PROJECT_NAME}
-)
+    ${PROJECT_NAME}
+    )
 
 add_executable(demo_global_planning tools/demo_global_planning.cpp
-        tools/simulator/Simulator.cpp
-        tools/simulator/Simulator.h
-)
+    tools/simulator/Simulator.cpp
+    tools/simulator/Simulator.h
+    )
 add_dependencies(demo_global_planning ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(demo_global_planning
     PUBLIC
-        ${PROJECT_NAME}
-)
+    ${PROJECT_NAME}
+    )
 
 add_executable(simulator_node tools/simulator_node.cpp
-        tools/simulator/Simulator.cpp
-        tools/simulator/Simulator.h
-)
+    tools/simulator/Simulator.cpp
+    tools/simulator/Simulator.h
+    )
 add_dependencies(simulator_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(simulator_node
     PUBLIC
-        ${PROJECT_NAME}
-)
+    ${PROJECT_NAME}
+    )
 
 add_executable(collision_costs_service tools/collision_costs_service.cpp)
 add_dependencies(collision_costs_service ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(collision_costs_service
     PUBLIC
-        ${PROJECT_NAME}
-)
+    ${PROJECT_NAME}
+    )
 
 add_executable(costmap_test_publisher tools/costmap_test_publisher.cpp)
 add_dependencies(costmap_test_publisher ${catkin_EXPORTED_TARGETS})
 target_link_libraries(costmap_test_publisher
     PUBLIC
     ${catkin_LIBRARIES}
-)
+    )
 
 #############
 ## Install ##
@@ -234,40 +234,40 @@ catkin_install_python(PROGRAMS
     scripts/open_door_hook.py
     scripts/test_cross_door.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+    )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
 install(TARGETS simulator_node ${PROJECT_NAME}_node demo_global_planning collision_costs_service
-   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    )
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
 install(TARGETS ${PROJECT_NAME}
-   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+    )
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
-   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-   FILES_MATCHING PATTERN "*.h"
-   PATTERN ".svn" EXCLUDE
-)
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN ".svn" EXCLUDE
+    )
 
 install(DIRECTORY config
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+    )
 
 install(DIRECTORY launch
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+    )
 
 install(DIRECTORY maps
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+    )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -298,8 +298,14 @@ target_link_libraries(${PROJECT_NAME}-demo-test
 
 #]]
 
+catkin_add_gtest(${PROJECT_NAME}-test test/potential_map.test.cpp)
+target_link_libraries(${PROJECT_NAME}-test
+    ${PROJECT_NAME}
+    )
+
+
 add_rostest_gtest(global_planning_test test/global_planning.test test/test_global_navigation_sim.cpp tools/simulator/Simulator.cpp
-        tools/simulator/Simulator.h)
+    tools/simulator/Simulator.h)
 target_link_libraries(global_planning_test ${PROJECT_NAME})
 
 ## Add folders to be run by python nosetests

@@ -42,11 +42,14 @@ double computeSpeed(double goalDist, double duration, double maxSpeed) {
     return std::min(goalDist / duration, maxSpeed);
 }
 
+// TODO: rewrite such that sampling always happens with max speed, but trajectory
+// scoring allows trajectory collisions, if the collision would happen after traj_sampling_duration_s
+// when adjusted to maximum velocity given the robot start velocity from robot cell cost
 Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDistance,
-                                const CostFunction& costFunction,
-                                const arips_navigation::MotionControllerConfig& config) {
+                                const arips_navigation::MotionControllerConfig& config,
+                                double maxWheelSpeed) {
     const auto duration = config.traj_sampling_duration_s;
-    const auto transSpeed = computeSpeed(goalDistance, duration, costFunction.maxWheelSpeed());
+    const auto transSpeed = computeSpeed(goalDistance, duration, maxWheelSpeed);
     const auto rotSpeed = 1.0;
     const auto dt = duration / config.traj_sampling_steps;
 
@@ -67,8 +70,15 @@ Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDist
     return traj;
 }
 
-std::optional<std::pair<double, uint8_t>> scoreTrajectory(const NavMap& navmap,
-                                                          const Trajectory& traj) {
+/**
+ * @param navmap
+ * @param traj
+ * @param rotationScoreTimeFromStart score trajectory pose rotation <-> map gradient different at
+ * this trajectory time
+ * @return
+ */
+std::optional<std::pair<double, uint8_t>>
+scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationScoreTimeFromStart) {
     const auto& costFunction = navmap.costFunction();
 
     if (traj.empty()) {
@@ -94,10 +104,26 @@ std::optional<std::pair<double, uint8_t>> scoreTrajectory(const NavMap& navmap,
         const auto meterDist = (b.pose.point - a.pose.point).norm();
         const auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(*cellCost);
         const auto rCost =
-            0; // std::abs(angles::shortest_angular_distance(a.pose.theta, b.pose.theta));
+            0; // TODO rotation cost, needs to be added to dijkstra planning first
+               // std::abs(angles::shortest_angular_distance(a.pose.theta, b.pose.theta));
         trajectoryCost += dCost + rCost;
 
         worstCellCost = std::max(worstCellCost, *cellCost);
+    }
+
+    for (const auto& pose : traj) {
+        if (pose.timeFromStart >= rotationScoreTimeFromStart) {
+            if (const auto optGrad = navmap.gradient(pose.pose.point)) {
+                const auto rotationDiff =
+                    std::abs(angles::shortest_angular_distance(pose.pose.theta, *optGrad));
+                trajectoryCost += 0.2 * rotationDiff; // TODO assuming rotation speed of 1/s
+                break;
+            }
+            // try to get next gradient if gradient at rotationScoreTimeFromStart is not available
+        } else if (&pose == &traj.back()) {
+            trajectoryCost +=
+                1; // TODO if no gradient was found through entire traj, assume 1 radian deviation
+        }
     }
 
     const auto totalCost = *costToGoal * 1.1 + trajectoryCost;
@@ -212,7 +238,7 @@ struct MotionController::Pimpl {
             textMarker.pose.position.y = frontPos.y();
             textMarker.pose.position.z =
                 0.001; // place slightly above gradients for better visibility
-            textMarker.scale.z = 0.006;
+            textMarker.scale.z = 0.002;
             color.r = 0.8;
             color.g = 0.8;
             color.b = 0.8;
@@ -259,7 +285,7 @@ struct MotionController::Pimpl {
             generateTrajectory(current.pose, newVel, mConfig.collision_lookahead_s,
                                mConfig.collision_lookahead_s / mConfig.traj_sampling_steps);
 
-        const auto optScore = scoreTrajectory(navmap, traj);
+        const auto optScore = scoreTrajectory(navmap, traj, dt);
         if (optScore) {
             ROS_INFO("Scaling trajectory is safe");
             return newVel;
@@ -270,6 +296,14 @@ struct MotionController::Pimpl {
 
         // new trajectory would collide, ignore acceleration limits
         return desiredVel;
+    }
+
+    static double calcMaxVelocityScale(const NavMap& navmap, const Vector2d& robotPos) {
+        const auto cellCost = navmap.cost(robotPos);
+        if (cellCost) {
+            return navmap.costFunction().maxWheelSpeedFromCosts(*cellCost);
+        }
+        return 0.3; // if robot currently in collision
     }
 
     std::optional<Twist2D> computeVelocity(const NavMap& navmap, const Odom2D& odom,
@@ -299,32 +333,9 @@ struct MotionController::Pimpl {
             }
         }
 
-        if (const auto optGrad = navmap.gradient(robotPose.point)) {
-            const auto rotationDiff = angles::shortest_angular_distance(robotPose.theta, *optGrad);
-
-            /*
-            ROS_INFO_STREAM("Rotational diff at("
-                            << robotCx << ", " << robotCy << ") to path is "
-                            << angles::to_degrees(rotationDiff) << ", robot grad: "
-                            << robotPose.theta << ", map grad: " << *optGrad << " -- " <<
-            *mPotentialMap.getGradient({robotCx, robotCy}) << " " << *optGrad2 << " # "<<
-            *optGrad << " * " << *optGrad3);
-
-            ROS_WARN_STREAM("From motion controller " << __LINE__ << " : gradient at 266,293
-            from viz is " << *mPotentialMap.getGradient({266, 293}));
-             */
-
-            if (std::abs(rotationDiff) >
-                angles::from_degrees(mConfig.angle_diff_rotate_in_place_deg)) {
-                const auto sign = rotationDiff < 0 ? -1.0 : 1.0;
-                result.theta = 1.0 * sign;
-                visualizeTrajectories(navmap, {}, {}, {});
-                return scaleAcceleration(result, odom, navmap, dt);
-            }
-        }
-
+        const auto samplingVelocity = calcMaxVelocityScale(navmap, robotPose.point);
         const auto trajectories =
-            sampleTrajectories(robotPose, goalDistXY, navmap.costFunction(), mConfig);
+            sampleTrajectories(robotPose, goalDistXY, mConfig, samplingVelocity);
 
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
@@ -332,7 +343,7 @@ struct MotionController::Pimpl {
         std::pair<double, uint8_t> bestCost{-1, 0};
 
         for (const auto& traj : trajectories) {
-            const auto cost = scoreTrajectory(navmap, traj);
+            const auto cost = scoreTrajectory(navmap, traj, 0.5); // TODO
             trajectoryCosts.push_back(cost ? cost->first : -1);
 
             if (!cost) {
@@ -352,8 +363,10 @@ struct MotionController::Pimpl {
             return {};
         }
 
+        // TODO simplify
         const auto velocityScale =
-            0.5 + 0.5 * ((150.0 - std::min<double>(bestCost.second, 150)) / 150.0);
+            (0.5 + 0.5 * ((150.0 - std::min<double>(bestCost.second, 150)) / 150.0)) /
+            (samplingVelocity / navmap.costFunction().maxWheelSpeed());
         ROS_INFO_STREAM("best cell cost = " << int(bestCost.second)
                                             << ", velocityScale = " << velocityScale);
         const auto bestVel = bestTraj->at(0).velocity;

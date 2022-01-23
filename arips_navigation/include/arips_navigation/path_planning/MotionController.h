@@ -6,8 +6,8 @@
 
 #include <arips_navigation/MotionControllerConfig.h>
 
-#include "PlanningMath.h"
 #include "NavMap.h"
+#include "PlanningMath.h"
 
 // Stateless motion controller
 class MotionController {
@@ -17,7 +17,8 @@ public:
 
     bool goalReached(const Pose2D& robotPose, const Pose2D& gaolPose);
 
-    std::optional<Twist2D> computeVelocity(const NavMap& costmap, const Odom2D& robotPose, const Pose2D& goalPose, double dt);
+    std::optional<Twist2D> computeVelocity(const NavMap& costmap, const Odom2D& robotPose,
+                                           const Pose2D& goalPose, double dt);
 
 private:
     struct Pimpl;
@@ -27,5 +28,5 @@ private:
 Trajectory generateTrajectory(Pose2D currentPose, const Pose2D& vel, double duration, double dt);
 
 Trajectories sampleTrajectories(const Pose2D& currentPose, double goalDistance,
-                                const CostFunction& costFunction,
-                                const arips_navigation::MotionControllerConfig& config);
+                                const arips_navigation::MotionControllerConfig& config,
+                                double maxWheelSpeed);

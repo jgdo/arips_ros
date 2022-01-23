@@ -14,7 +14,7 @@ public:
 
     [[nodiscard]] virtual std::optional<double> interpolateGoalDistance(const Vector2d& point) const = 0;
 
-    [[nodiscard]] virtual std::optional<uint8_t> cost(const Vector2d& index) const = 0;
+    [[nodiscard]] virtual std::optional<uint8_t> cost(const Vector2d& point) const = 0;
 
     [[nodiscard]] virtual const CostFunction& costFunction() const = 0;
 

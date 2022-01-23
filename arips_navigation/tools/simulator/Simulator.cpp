@@ -81,8 +81,8 @@ struct Simulator::Pimpl {
             visualization_msgs::Marker box_marker;
             box_marker.type = visualization_msgs::Marker::ARROW;
             box_marker.scale.x = 0.2;
-            box_marker.scale.y = 0.02;
-            box_marker.scale.z = 0.02;
+            box_marker.scale.y = 0.005;
+            box_marker.scale.z = 0.005;
             box_marker.color.r = 1.0;
             box_marker.color.g = 0.0;
             box_marker.color.b = 0.0;

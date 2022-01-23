@@ -16,6 +16,9 @@
 
 struct DemoNode {
     ros::Subscriber mTwistSub;
+    ros::Subscriber mClickedPointSub;
+
+
     nav_msgs::Odometry mLastOdom;
     const ros::Rate mControlRate{10};
 
@@ -25,8 +28,10 @@ struct DemoNode {
         cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         loopTimer = nh.createTimer(mControlRate, &DemoNode::doLoop, this);
 
-        mTwistSub = ros::NodeHandle().subscribe<nav_msgs::Odometry>(
+        mTwistSub = nh.subscribe<nav_msgs::Odometry>(
             "/odom", 1, [this](const nav_msgs::OdometryConstPtr& msg) { mLastOdom = *msg; });
+
+        mClickedPointSub = nh.subscribe("/clicked_point", 1, &DemoNode::onPointClicked, this);
     }
 
     void poseCallback(const geometry_msgs::PoseStamped& msg) {
@@ -61,6 +66,17 @@ struct DemoNode {
 
         if (locomotion.hasGoal()) {
             mapViz.showPath(*locomotion.potentialMap(), robotPose);
+        }
+    }
+
+    void onPointClicked(const geometry_msgs::PointStamped& msg) {
+        if (const auto* potmap = locomotion.potentialMap()) {
+            if(const auto index = potmap->toMap({msg.point.x, msg.point.y})) {
+                const auto grad = potmap->getGradient(*index);
+                if(grad) {
+                    ROS_INFO_STREAM("GRADIENT is " << *grad);
+                }
+            }
         }
     }
 
@@ -118,7 +134,14 @@ int main(int argc, char** argv) {
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener{tfBuffer};
 
-    // Simulator simulator{tfBuffer};
+    std::unique_ptr<Simulator> simulator;
+    if(ros::NodeHandle{"~"}.param("start_simulator", false)) {
+        ROS_INFO("Starting global planning demo with simulator");
+        simulator = std::make_unique<Simulator>(tfBuffer);
+    } else {
+        ROS_INFO("Starting global planning demo without simulator");
+    }
+
     DemoNode demo{tfBuffer};
 
     while (ros::ok()) {

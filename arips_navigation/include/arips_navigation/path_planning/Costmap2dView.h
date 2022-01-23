@@ -20,7 +20,7 @@ struct Costmap2dView : public Costmap {
             unsigned int x, y;
             if (mCostmap.getCostmap()->worldToMap(robotPose->x(), robotPose->y(), x, y)) {
                 if(!isValidCellCost(mCostmap.getCostmap()->getCost(x, y))) {
-                    mCostmap.getCostmap()->setCost(x, y, 0);
+                    mCostmap.getCostmap()->setCost(x, y, 252);
                 }
             }
         }

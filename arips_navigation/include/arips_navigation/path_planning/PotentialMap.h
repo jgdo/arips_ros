@@ -10,6 +10,15 @@ class PotentialMap : public GridMapWithGeometry<double> {
     friend class DijkstraPotentialComputation;
 
 public:
+    struct Cell {
+        double goalDist = -1;
+        bool visited = false; // whether already visited, e.g. costs cannot change
+    };
+
+    // index is (x, y), not (y, x) !!! Corresponds to costmap(x, y)
+    typedef Eigen::Matrix<Cell, Eigen::Dynamic, Eigen::Dynamic> CellMatrix;
+    CellMatrix mMatrix;
+
     PotentialMap(int width, int height, GridMapGeometry geo, const Pose2D& goal,
                  CostFunction costFunction)
         : GridMapWithGeometry{std::move(geo)}, mMatrix{CellMatrix::Constant(width, height, Cell{})},
@@ -32,21 +41,12 @@ public:
 
     std::optional<double> interpolateAt(const Vector2d& pos) const;
 
+    Cell& cellAt(CellIndex index) { return mMatrix(index.x(), index.y()); }
+
 private:
-    struct Cell {
-        double goalDist = -1;
-        bool visited = false; // whether already visited, e.g. costs cannot change
-    };
-
-    // index is (x, y), not (y, x) !!! Corresponds to costmap(x, y)
-    typedef Eigen::Matrix<Cell, Eigen::Dynamic, Eigen::Dynamic> CellMatrix;
-    CellMatrix mMatrix;
-
     Pose2D mGoal;
 
     CostFunction mCostFunction;
-
-    Cell& cellAt(CellIndex index) { return mMatrix(index.x(), index.y()); }
 
     template <class M>
     std::optional<double> calcGradientWithMatrix(const CellIndex& index, const M& conv) const;
