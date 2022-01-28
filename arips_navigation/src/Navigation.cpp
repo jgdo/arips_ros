@@ -47,7 +47,7 @@ Navigation::Navigation() {
         nodeContainer->addVisualizationModule(
             "flat", std::make_shared<FlatNodeVisualizer>(m_TopoPlanner.getContext(), "flat"));
         nodeContainer->addStorageModule(
-            "flat", std::make_shared<FlatParser>(m_TopoPlanner.getContext(), &mAripsPlanner));
+            "flat", std::make_shared<FlatParser>(m_TopoPlanner.getContext(), mContext, &mAripsPlanner));
     }
 
     factory->addModule<NodeStorageInterface>(nodeContainer);
@@ -59,13 +59,13 @@ Navigation::Navigation() {
     factory->addModule<MapPoseInterface>(nodeContainer);
     factory->addModule<CostsProfileInterface>(costsModules);
 
-    m_TopoPlanner.init("topo_planner", factory, &mContext.tf);
+    m_TopoPlanner.init("topo_planner", factory, &mContext->tf);
 
-    mDriveTo = std::make_unique<DriveTo>(mContext, mLocomotion);
+    mDriveTo = std::make_unique<DriveTo>(*mContext, mLocomotion);
 
-    mCrossDoor = std::make_unique<CrossDoor>(mContext, *mDriveTo, mOpenDoor);
+    mCrossDoor = std::make_unique<CrossDoor>(*mContext, *mDriveTo, mOpenDoor);
 
-    m_TopoExec = std::make_unique<TopoExecuter>(mContext, *mDriveTo, m_TopoPlanner, *mCrossDoor);
+    m_TopoExec = std::make_unique<TopoExecuter>(*mContext, *mDriveTo, m_TopoPlanner, *mCrossDoor);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
     // hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);

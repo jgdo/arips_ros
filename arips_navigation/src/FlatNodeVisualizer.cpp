@@ -71,15 +71,16 @@ void FlatNodeVisualizer::appendRegionEdgeToPlan(nav_msgs::Path* pathPtr, std::st
 void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node* node) {
     if (m_nodeMarkerPub.getNumSubscribers() == 0)
         return;
-
     // Visualize flat costmap segments with different colors
 
     const auto& data = FlatGroundModule::getMapData(node->getParentMap());
-    const float res = data.planner->getMap().getCostmap()->getResolution();
+    const auto& costmap = data.mNavContext->globalCostmap;
+
+    const float res = costmap.getCostmap()->getResolution();
 
     visualization_msgs::Marker nodeMarkers;
     nodeMarkers.header.stamp = ros::Time::now();
-    nodeMarkers.header.frame_id = data.planner->getMap().getGlobalFrameID();
+    nodeMarkers.header.frame_id = costmap.getGlobalFrameID();
     nodeMarkers.type = visualization_msgs::Marker::POINTS;
     nodeMarkers.action = visualization_msgs::Marker::DELETEALL;
     nodeMarkers.ns = "topo_node";
@@ -96,8 +97,8 @@ void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node* node) {
 
     std::map<const TopoMap::Node*, Color> nodeColors;
 
-    const double x_off = data.planner->getMap().getCostmap()->getOriginX();
-    const double y_off = data.planner->getMap().getCostmap()->getOriginY();
+    const double x_off = costmap.getCostmap()->getOriginX();
+    const double y_off = costmap.getCostmap()->getOriginY();
 
     const FlatGroundModule::NodeMatrix& mat = data.nodeMatrix;
     for (int x = 0; x < mat.rows(); x++) { // rows = x coordinate, see regionGrow() impl
@@ -169,7 +170,7 @@ void FlatNodeVisualizer::poseCallback(const geometry_msgs::PoseStamped& msg) {
     auto map = mapEditor->getMap();
 
     auto& mapData = NodeModuleHelperBase<FlatGroundModule>::getMapData(map);
-    const auto& costmap_ros = mapData.planner->getMap();
+    const auto& costmap_ros = mapData.mNavContext->globalCostmap;
 
     tf2::Stamped<tf2::Transform> localPose;
     try {

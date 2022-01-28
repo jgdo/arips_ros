@@ -16,7 +16,6 @@ public:
                                        ApproachExit3DPtr const& goal,
                                        tf2::Stamped<tf2::Transform>* actualApproachPose, std::vector<geometry_msgs::PoseStamped>* path) override;
 
-    const costmap_2d::Costmap2DROS& getMap() override;
 
 protected:
     NavigationContext& mContext;

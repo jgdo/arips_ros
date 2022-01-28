@@ -52,8 +52,6 @@ AripsFlatPlanner::computeCosts(const geometry_msgs::PoseStamped& start,
     return potmap->atPos(potmap->goal().point);
 }
 
-const costmap_2d::Costmap2DROS& AripsFlatPlanner::getMap() { return mContext.globalCostmap; }
-
 #if 0
 /**
  *

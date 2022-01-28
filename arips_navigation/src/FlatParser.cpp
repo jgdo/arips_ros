@@ -30,7 +30,8 @@ void FlatParser::beginParsing(TopoMap* map, YAML::Node const& parserConfig) {
                  "default costs");
 
     mapData.planner = mPlanner;
-    auto* costmap = &mPlanner->getMap();
+    mapData.mNavContext = mNavContext;
+    auto* costmap = &mapData.mNavContext->globalCostmap;
     // FIXME: big hack for costmap init waiting
     auto last = ros::Time::now();
     while (!costmap->getCostmap() || costmap->getCostmap()->getSizeInCellsX() == 0) {
@@ -64,7 +65,7 @@ void FlatParser::parseNodeData(YAML::Node const& config, TopoMap::Node* node) {
     for (int i = 30; i > 0; i--) {
         // FIXME: what if layer not present?
         const size_t cells =
-            FlatGroundModule::regionGrow(node, mapData.planner->getMap().getCostmap(),
+            FlatGroundModule::regionGrow(node, mapData.mNavContext->globalCostmap.getCostmap(),
                                          nodeX, nodeY, &mapData.nodeMatrix);
         if (cells > 0) {
             ROS_DEBUG_STREAM("FlatGroundModule: segmented " << cells << " cells for node "

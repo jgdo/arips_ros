@@ -12,8 +12,9 @@ namespace toponav_ros {
 
 class FlatParser : public NodeStorageInterface, public PlanningContextHolder {
 public:
-    FlatParser(PlanningContext& context, FlatGroundModule::CostsPlanner* planner)
-        : PlanningContextHolder{context}, mPlanner{planner} {}
+    FlatParser(PlanningContext& context, std::shared_ptr<NavigationContext> navContext,
+               FlatGroundModule::CostsPlanner* planner)
+        : PlanningContextHolder{context}, mPlanner{planner}, mNavContext{std::move(navContext)} {}
 
     typedef std::shared_ptr<FlatParser> Ptr;
 
@@ -30,6 +31,7 @@ public:
 
 private:
     FlatGroundModule::CostsPlanner* mPlanner;
+    std::shared_ptr<NavigationContext> mNavContext;
     toponav_core::TopoMap* currentMap = nullptr;
 };
 

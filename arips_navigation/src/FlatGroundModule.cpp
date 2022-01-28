@@ -85,7 +85,7 @@ FlatGroundModule::findGlobalPose(const tf2::Stamped<tf2::Transform>& pose, const
     TopoMap::Node const* realNode = nullptr;
 
     const auto& mapData = getMapData(&map);
-    const auto& costmap_ros = mapData.planner->getMap();
+    const auto& costmap_ros = mapData.mNavContext->globalCostmap;
 
     try {
         localPose = _context.tfBuffer->transform(pose, costmap_ros.getGlobalFrameID());
@@ -120,7 +120,7 @@ void FlatGroundModule::combineNodeMatrix(FlatGroundModule::NodeMatrix& mat,
 void FlatGroundModule::segmentAllNodes(TopoMap* map, std::string const& nodeType,
                                        size_t minNumCells) {
     auto& mapData = getMapData(map);
-    const auto& costmap_ros = mapData.planner->getMap();
+    const auto& costmap_ros = mapData.mNavContext->globalCostmap;
 
     // FIXME: what if layer not present?
     const auto occupancy = costmap_ros.getCostmap();
@@ -165,8 +165,8 @@ FlatGroundModule::computeCostsOnRegion(const TopoMap::Node* node, LocalPosition 
     const PositionData& srcData = *dynamic_cast<const PositionData*>(&currentPos);
     auto& mapData = getMapData(node->getParentMap());
 
-    tf2::Stamped<tf2::Transform> startTransformed =
-        _context.tfBuffer->transform(srcData.pose, mapData.planner->getMap().getGlobalFrameID());
+    tf2::Stamped<tf2::Transform> startTransformed = _context.tfBuffer->transform(
+        srcData.pose, mapData.mNavContext->globalCostmap.getGlobalFrameID());
 
     geometry_msgs::PoseStamped startMsg;
     tf2::toMsg(startTransformed, startMsg);

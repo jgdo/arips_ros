@@ -17,7 +17,7 @@
 #include <arips_navigation/utils/NodeModuleHelperBase.h>
 #include <toponav_ros/utils/CostsProfileHolderBase.h>
 
-#include <costmap_2d/costmap_2d_ros.h>
+#include <arips_navigation/NavigationContext.h>
 
 #include <optional>
 
@@ -34,9 +34,8 @@ template <> struct BaseTraits<FlatGroundModule> {
 
         virtual std::optional<double>
         computeCosts(const geometry_msgs::PoseStamped& start, ApproachExit3DPtr const& goal,
-                     tf2::Stamped<tf2::Transform>* actualApproachPose, std::vector<geometry_msgs::PoseStamped>* path) = 0;
-
-        virtual const costmap_2d::Costmap2DROS& getMap() = 0;
+                     tf2::Stamped<tf2::Transform>* actualApproachPose,
+                     std::vector<geometry_msgs::PoseStamped>* path) = 0;
     };
 
     typedef CostsPlanner::Ptr CostsPlannerPtr;
@@ -50,6 +49,8 @@ template <> struct BaseTraits<FlatGroundModule> {
 
         CostsPlanner* planner;
         NodeMatrix nodeMatrix;
+
+        std::shared_ptr<NavigationContext> mNavContext;
     };
 
     struct NodeData {
@@ -69,7 +70,7 @@ public:
     typedef std::shared_ptr<FlatGroundModule> Ptr;
 
     struct PositionData : public toponav_core::LocalPosition {
-        PositionData(tf2::Stamped<tf2::Transform> const& pose) : pose(pose) {}
+        explicit PositionData(tf2::Stamped<tf2::Transform> const& pose) : pose(pose) {}
         tf2::Stamped<tf2::Transform> pose;
 
         MoveGoalProperties goal_properties;
@@ -79,7 +80,7 @@ public:
 
     template <typename... Arg> Ptr static create(Arg&&... arg) {
         struct EnableMakeShared : public FlatGroundModule {
-            EnableMakeShared(Arg&&... arg) : FlatGroundModule(std::forward<Arg>(arg)...) {}
+            explicit EnableMakeShared(Arg&&... arg) : FlatGroundModule(std::forward<Arg>(arg)...) {}
         };
 
         return std::make_shared<EnableMakeShared>(std::forward<Arg>(arg)...);
@@ -107,10 +108,11 @@ public:
      * @param map
      * @return empty global pos if not found
      */
-    virtual std::pair<toponav_core::GlobalPosition, tf2::Stamped<tf2::Transform>>
-    findGlobalPose(tf2::Stamped<tf2::Transform> const& pose, const toponav_core::TopoMap& map);
+    std::pair<toponav_core::GlobalPosition, tf2::Stamped<tf2::Transform>>
+    findGlobalPose(tf2::Stamped<tf2::Transform> const& pose,
+                   const toponav_core::TopoMap& map) override;
 
-    virtual tf2::Stamped<tf2::Transform>
+    tf2::Stamped<tf2::Transform>
     getMapPoseFromPosition(toponav_core::GlobalPosition const& pos) override;
 
     /**
@@ -142,6 +144,10 @@ public:
     std::string getModuleType(const toponav_core::TopoMap::Node* node) override;
 
 protected:
+    // std::shared_ptr<NavigationContext> mNavContext;
+
+    //explicit FlatGroundModule(RosContext& rosContext, std::shared_ptr<NavigationContext> navContext)
+     //   : RosContextHolder(rosContext), mNavContext{std::move(navContext)} {}
     using RosContextHolder::RosContextHolder;
 
     double getCosts(MapData const& data, double distance);

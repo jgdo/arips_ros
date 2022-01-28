@@ -26,11 +26,11 @@ public:
     Navigation();
 
 private:
-    NavigationContext mContext;
+    std::shared_ptr<NavigationContext> mContext = std::make_shared<NavigationContext>();
 
     Locomotion mLocomotion;
 
-    toponav_ros::AripsFlatPlanner mAripsPlanner{mContext, mLocomotion};
+    toponav_ros::AripsFlatPlanner mAripsPlanner{*mContext, mLocomotion};
 
     toponav_ros::TopoPlannerROS m_TopoPlanner;
 
@@ -41,8 +41,8 @@ private:
     std::unique_ptr<TopoExecuter> m_TopoExec;
     // AutoDocker mAutoDocker{m_LocalCostmap, mCmdVelPub};
     //  HPNav mHPNav{&m_tfBuffer, mCmdVelPub};
-    DriveUntilCollision mDriveUntilCollision {mContext};
-    OpenDoor mOpenDoor{mContext, mDriveUntilCollision};
+    DriveUntilCollision mDriveUntilCollision {*mContext};
+    OpenDoor mOpenDoor{*mContext, mDriveUntilCollision};
     std::unique_ptr<DriveTo> mDriveTo;
     std::unique_ptr<CrossDoor> mCrossDoor;
 
