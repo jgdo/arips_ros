@@ -2,6 +2,8 @@
 
 #include <ros/ros.h>
 
+#include <opencv2/highgui/highgui.hpp>
+
 // see https://answers.opencv.org/question/11788/is-there-a-meshgrid-function-in-opencv/?sort=votes
 static void meshgrid(const cv::Mat &xgv, const cv::Mat &ygv,
                      cv::Mat1f &X, cv::Mat1f &Y) {
@@ -35,11 +37,24 @@ static int denormalizeCoords(float n, int size) {
 }
 
 
-DoorHandleDetector::DoorHandleDetector()
-    : ModelPath {"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/pytorch/models/heatmap.onnx"}
+DoorHandleDetector::DoorHandleDetector(const std::string& modelPath)
 {
-    mDetectionNet = cv::dnn::readNetFromONNX(ModelPath);
-    createMeshgrid(mGridXX, mGridYY, {320, 240});
+    mDetectionNet = cv::dnn::readNetFromONNX(modelPath);
+    // createMeshgrid(mGridXX, mGridYY, {320, 240});
+}
+
+void non_maxima_suppression(const cv::Mat& image, cv::Mat& mask, bool remove_plateaus) {
+  // find pixels that are equal to the local neighborhood not maximum (including 'plateaus')
+  cv::dilate(image, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, {35, 35}));
+  cv::compare(image, mask, mask, cv::CMP_GE);
+
+  // optionally filter out pixels that are equal to the local minimum ('plateaus')
+  if (remove_plateaus) {
+    cv::Mat non_plateau_mask;
+    cv::erode(image, non_plateau_mask, cv::Mat());
+    cv::compare(image, non_plateau_mask, non_plateau_mask, cv::CMP_GT);
+    cv::bitwise_and(mask, non_plateau_mask, mask);
+  }
 }
 
 std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &image) {
@@ -47,10 +62,10 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
     image.convertTo(floatImage, CV_32F);
     floatImage /= 255.0F;
 
-    cv::Mat dnnInput({3, 240, 320}, CV_32F);
+    cv::Mat dnnInput({3, image.rows, image.cols}, CV_32F);
 
-    for (int y = 0; y < 240; y++) {
-        for (int x = 0; x < 320; x++) {
+    for (int y = 0; y < image.rows; y++) {
+        for (int x = 0; x < image.cols; x++) {
             dnnInput.at<float>(0, y, x) = floatImage.at<cv::Vec3f>(y, x)[0];
             dnnInput.at<float>(1, y, x) = floatImage.at<cv::Vec3f>(y, x)[1];
             dnnInput.at<float>(2, y, x) = floatImage.at<cv::Vec3f>(y, x)[2];
@@ -59,7 +74,7 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
         }
     }
 
-    dnnInput = dnnInput.reshape(0, {1, 3, 240, 320});
+    dnnInput = dnnInput.reshape(0, {1, 3, image.rows, image.cols});
 
     mDetectionNet.setInput(dnnInput);
     const cv::Mat labels = mDetectionNet.forward();
@@ -72,17 +87,49 @@ std::optional<DoorHandleLocation> DoorHandleDetector::detect(const cv::Mat &imag
     const cv::Mat& output = outputs.at(0);
     std::vector<cv::Mat> heatmaps;
     cv::split(output, heatmaps);
-    assert(heatmaps.size() == 2);
 
-    double handleStartMax, handleEndMax;
-    cv::Point2i handleStart, handleEnd;
-    cv::minMaxLoc(heatmaps.at(0), NULL, &handleStartMax, NULL, &handleStart );
-    cv::minMaxLoc(heatmaps.at(1), NULL, &handleEndMax, NULL, &handleEnd );
+    if(heatmaps.size() == 1) {
+      const auto& heatmap = heatmaps.at(0);
 
-    if(handleStartMax > 0.5 && handleEndMax > 0.5) {
-        return DoorHandleLocation {handleStart, handleEnd};
-    } else {
+      cv::Mat mask = heatmap.clone();
+      non_maxima_suppression(heatmap, mask, false);
+
+
+      cv::imshow("mask", mask);
+      cv::imshow("heatmap", heatmap);
+      cv::waitKey(1);
+
+
+      std::vector<cv::Point2i> points;
+
+      for(int y = 0; y < mask.rows; y++) {
+        for(int x = 0; x < mask.cols; x++) {
+          if(mask.at<uint8_t>(y, x) > 127 && heatmap.at<float>(y,x) > 0.4) {
+            points.emplace_back(x, y);
+          }
+        }
+      }
+
+      if(points.size() == 2) {
+        return DoorHandleLocation{points.at(0), points.at(1)};
+      } else {
         return std::nullopt;
+      }
+    }
+    else if(heatmaps.size() == 2) {
+      double handleStartMax, handleEndMax;
+      cv::Point2i handleStart, handleEnd;
+      cv::minMaxLoc(heatmaps.at(0), NULL, &handleStartMax, NULL, &handleStart);
+      cv::minMaxLoc(heatmaps.at(1), NULL, &handleEndMax, NULL, &handleEnd);
+
+      if (handleStartMax > 0.5 && handleEndMax > 0.5) {
+        return DoorHandleLocation{handleStart, handleEnd};
+      } else {
+        return std::nullopt;
+      }
+    } else {
+      assert(false);
+      return std::nullopt;
     }
 }
 

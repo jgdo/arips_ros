@@ -50,7 +50,7 @@ size_t FlatGroundModule::regionGrow(TopoMap::Node* node, const costmap_2d::Costm
 
         if (!(*mat)(p.first, p.second) &&
             cost != costmap_2d::LETHAL_OBSTACLE
-            //            && cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE
+    //             && cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE
             && cost != costmap_2d::NO_INFORMATION) {
             (*mat)(p.first, p.second) = node;
             counter++;

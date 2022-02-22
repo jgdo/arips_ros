@@ -17,6 +17,8 @@
 
 #include <memory>
 
+#include "arips_navigation/utils/StepModuleFromTracker.h"
+#include "arips_navigation/utils/StepCostmapLayer.h"
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using namespace toponav_ros;
@@ -37,6 +39,10 @@ Navigation::Navigation() {
         edgeContainer->addStorageModule("step", stepModule);
         edgeContainer->addVisualizationModule("step", stepModule);
         costsModules->addModule(stepModule);
+
+        auto stepFromTracker = std::make_shared<StepModuleFromTracker>(
+            m_TopoPlanner.getContext(), mContext.floorStepTracker, *stepModule);
+        edgeContainer->addVisualizationModule("__stepFromTracker__", stepFromTracker);
     }
 
     NodeModuleContainerPtr nodeContainer = std::make_shared<NodeModuleContainer>();
@@ -60,6 +66,15 @@ Navigation::Navigation() {
     factory->addModule<CostsProfileInterface>(costsModules);
 
     m_TopoPlanner.init("topo_planner", factory, &mContext->tf);
+    {
+        auto layerPlugin = boost::make_shared<StepCostmapLayer>(m_TopoPlanner.getContext().topoMap);
+        auto& plugins = *mContext.globalCostmap.getLayeredCostmap()->getPlugins();
+        plugins.insert(plugins.begin() + plugins.size()-1, layerPlugin);
+    }
+
+    ros::Duration(0.5).sleep();
+    FlatParser::segmentKnownNodes(m_TopoPlanner.getContext().topoMap.get());
+    m_TopoPlanner.getContext().mapChanged();
 
     mDriveTo = std::make_unique<DriveTo>(*mContext, mLocomotion);
 

@@ -34,16 +34,18 @@ struct DriveTo::Pimpl {
                 goal, mParent.mContext.globalCostmap.getGlobalFrameID());
 
             const auto planOk = mLocomotion.setGoal(
-                Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose)},
+                Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose),
+                              mParent.mContext.floorStepTracker.allSteps()},
                 Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
             if (!planOk) {
                 ROS_WARN("Could not plan path to goal, clearing global costmap...");
                 mParent.mContext.globalCostmap.resetLayers();
-                if (!mLocomotion.setGoal(Costmap2dView{mParent.mContext.globalCostmap,
-                                                       Pose2D::fromMsg(robotPose.pose)},
-                                         Pose2D::fromMsg(robotPose.pose),
-                                         Pose2D::fromTf(poseOnFloor))) {
+                if (!mLocomotion.setGoal(
+                        Costmap2dView{mParent.mContext.globalCostmap,
+                                      Pose2D::fromMsg(robotPose.pose),
+                                      mParent.mContext.floorStepTracker.allSteps()},
+                        Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor))) {
                     ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
                     return false;
                 }
@@ -61,7 +63,8 @@ struct DriveTo::Pimpl {
         if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
             const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
             const auto optTwist = mLocomotion.computeVelocityCommands(
-                Costmap2dView{mParent.mContext.globalCostmap, robotPose},
+                Costmap2dView{mParent.mContext.globalCostmap, robotPose,
+                              mParent.mContext.floorStepTracker.allSteps()},
                 {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)}, 0.1); // TODO hardcoded time
 
             if (optTwist) {
@@ -70,10 +73,14 @@ struct DriveTo::Pimpl {
                 if (potmap) {
                     mMapViz.showMap(*potmap, robotPose);
                 }
+                return;
+            } else {
+                ROS_WARN("Robot is stuck, cancelling");
             }
+        } else {
+            ROS_WARN("Could not get robot pose, cancelling");
         }
 
-        ROS_WARN("Could not get robot pose or robot stuck, cancelling");
         mLocomotion.cancel();
         mParent.mContext.publishCmdVel({});
     }

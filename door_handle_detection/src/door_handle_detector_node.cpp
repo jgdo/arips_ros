@@ -121,7 +121,7 @@ private:
     ros::Publisher mHandlePub;
     image_geometry::PinholeCameraModel mCamModel;
 
-    DoorHandleDetector mDetector;
+    DoorHandleDetector mDetector {"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/pytorch/models/heatmap.onnx"};
 };
 
 int main(int argc, char **argv) {

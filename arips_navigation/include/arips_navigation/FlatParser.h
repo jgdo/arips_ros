@@ -29,6 +29,8 @@ public:
 
     virtual YAML::Node saveNodeData(toponav_core::TopoMap::Node const* node) override;
 
+    static void segmentKnownNodes(toponav_core::TopoMap* map);
+
 private:
     FlatGroundModule::CostsPlanner* mPlanner;
     std::shared_ptr<NavigationContext> mNavContext;

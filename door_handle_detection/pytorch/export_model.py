@@ -36,11 +36,11 @@ def get_pytorch_onnx_model(model, onnx_model_name, input_shape):
     return full_model_path
 
 if __name__ == "__main__":
-    model = HeatmapModel()
+    model = HeatmapModel(output_channels=1, intermediate_channels=[12, 24, 32, 40])
     num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Number of trained parameters: {}".format(num_params))
 
-    checkpoint = torch.load('models/my.pt')
+    checkpoint = torch.load('models/floor_door_edge_e150_c[12, 24, 32, 40]_loss3.2971648075049e-05.pt')
     model.load_state_dict(checkpoint['model'])
     model.eval()
-    full_model_path = get_pytorch_onnx_model(model, "heatmap.onnx", (1, 3, 240, 320))
+    full_model_path = get_pytorch_onnx_model(model, "floor_door_edge.onnx", (1, 3, 288, 384))

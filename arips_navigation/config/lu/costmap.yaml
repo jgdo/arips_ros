@@ -11,30 +11,27 @@ global_costmap:
   update_frequency: 2.0
 
   plugins:
-      # - {name: slam_map,       type: "costmap_2d::StaticLayer"}
-      - {name: door_overlay,   type: "costmap_2d::StaticLayer"}
-      - {name: obstacles,   type: "costmap_2d::VoxelLayer"}
-      - {name: inflaton,       type: "costmap_2d::InflationLayer"}
-  door_overlay:
-      map_topic: /flat_layer_map1_overlay
-      use_maximum: true
+      - {name: slam_map,    type: "costmap_2d::StaticLayer"}
+      - {name: obstacles,   type: "costmap_2d::ObstacleLayer"}
+      - {name: inflaton,    type: "costmap_2d::InflationLayer"}
   obstacles:
       observation_sources: scan
       scan: {data_type: LaserScan, clearing: true, marking: true, topic: /scan}
       map: /map
 
-  #slam_map:
-  #    map_topic: /flat_layer_map1_fake
-  #    lethal_cost_threshold: 50
-  #    # track_unknown_space: false
-  #    #unknown_cost_value: 100
-  #    #use_maximum: true
+  slam_map:
+      map_topic: /map
+      #lethal_cost_threshold: 50
+      track_unknown_space: true
+      unknown_cost_value: 254
+      # use_maximum: true
   inflaton:
       inflation_radius: 0.5
+      # inflate_unknown: true
         
 
 local_costmap:
-  map_topic: /flat_layer_map1
+  map_topic: /map
   global_frame: odom
   robot_base_frame: arips_base
   robot_radius: 0.2

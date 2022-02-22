@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from annot_utils import *
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 def normalizeCoords(x, size):
@@ -26,7 +26,11 @@ def unison_shuffled_copies(a, b):
     return a[p], b[p]
 
 
-def loadDataFromFolder(folder):
+def identity_transform(img, label):
+    return img, label
+
+
+def load_data_from_folder(folder, data_transformer=identity_transform):
     jpgs = glob.glob(folder + "*.jpg")
 
     imgs = []
@@ -43,7 +47,7 @@ def loadDataFromFolder(folder):
 
         img = cv2.imread(img_path).astype(np.float32) / 255.0
 
-        label = np.zeros((240, 320, 2), dtype=np.float32)
+        label = np.zeros((img.shape[0], img.shape[1], 2), dtype=np.float32)
         if data[2] > 0.5:
             label[data[0][1], data[0][0], 0] = 1
             label[data[1][1], data[1][0], 1] = 1
@@ -52,7 +56,7 @@ def loadDataFromFolder(folder):
             label[:, :, 0] = cv2.dilate(label[:, :, 0], kernel, iterations=1)
             label[:, :, 1] = cv2.dilate(label[:, :, 1], kernel, iterations=1)
 
-            ksize = 21
+            ksize = 27
             label[:, :, 0] = cv2.GaussianBlur(label[:, :, 0], (ksize, ksize), 0)
             label[:, :, 0] /= label[:, :, 0].max()
             label[:, :, 1] = cv2.GaussianBlur(label[:, :, 1], (ksize, ksize), 0)
@@ -61,6 +65,8 @@ def loadDataFromFolder(folder):
             # kernel = np.ones((7, 7), np.uint8)
             # label[:,:,0] = cv2.dilate(label[:,:,0], kernel, iterations=1)
             # label[:, :, 1] = cv2.dilate(label[:, :, 1], kernel, iterations=1)
+
+        img, label = data_transformer(img, label)
 
         imgs.append(img)
         labels.append(np.asarray(label))
@@ -71,17 +77,23 @@ def loadDataFromFolder(folder):
     return imgs, labels
 
 
-def loadAllData():
+def load_all_data(all_folders, data_transformer=identity_transform):
+    print("Loading images into dataset ...")
+
     all_images = []
     all_labels = []
 
+    """
     all_folders = [
-        "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/",
-        "/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/",
+        #"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/with_handle/",
+        #"/home/jgdo/catkin_ws/src/arips_ros/door_handle_detection/data/no_handle/",
+        "/home/jgdo/catkin_ws/src/arips_data/datasets/floor/annotated_scaled_pos/",
+        "/home/jgdo/catkin_ws/src/arips_data/datasets/floor/annotated_scaled_neg/",
     ]
+    """
 
     for folder in all_folders:
-        images, labels = loadDataFromFolder(folder)
+        images, labels = load_data_from_folder(folder, data_transformer)
         all_images.append(images)
         all_labels.append(labels)
 
@@ -92,9 +104,29 @@ def loadAllData():
 
     return all_images, all_labels
 
+def floor_step_conv_func(img, label):
+    label = np.sum(label, axis=2, keepdims=True)
+    return img, label
+
+def create_floor_step_loaders(batch_size=32):
+    print("Loading compressed dataset ...")
+    data = np.load("/home/jgdo/catkin_ws/src/arips_data/datasets/floor/dataset.npz")
+    all_images, all_labels = data["all_images"], data["all_labels"]
+
+    #    load_all_data(["/home/jgdo/catkin_ws/src/arips_data/datasets/floor/annotated_scaled_pos/",
+    #                     "/home/jgdo/catkin_ws/src/arips_data/datasets/floor/annotated_scaled_neg/"], floor_step_conv_func)
+
+    train_dataset = DoorDataGenerator(all_images, all_labels, train=True)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+
+    test_dataset = DoorDataGenerator(all_images, all_labels, train=False)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
+
+    return train_loader, test_loader
+
 
 class DoorDataGenerator(Dataset):
-    def __init__(self, all_images, all_labels, train, shuffle=False):
+    def __init__(self, all_images, all_labels, train):
         assert len(all_images) == len(all_labels)
 
         train_ratio = 0.8
@@ -107,22 +139,16 @@ class DoorDataGenerator(Dataset):
             self.images = all_images[split_index:-1]
             self.labels = all_labels[split_index:-1]
 
-        self.shuffle = shuffle
         self.get_with_indices = False
-        self.on_epoch_end()
+        self.indexes = np.arange(len(self.images))
 
         print("Loaded {} {} images".format(len(self.images), "train" if train else "test"))
 
     def __len__(self):
         return len(self.images)
 
-    def on_epoch_end(self):
-        'Updates indexes after each epoch'
-        self.indexes = np.arange(len(self.images))
-        if self.shuffle == True:
-            np.random.shuffle(self.indexes)
 
-    def arugment_brightness(self, img, label):
+    def augment_brightness(self, img, label):
         brightness_center = random.uniform(0.0, 1.0)
         brightness_factor = random.uniform(0.5, 1.3)
 
@@ -202,9 +228,9 @@ class DoorDataGenerator(Dataset):
 
         batch_images, batch_labels = self.augment(batch_images, batch_labels,
                                                   [
-                                                    self.arugment_brightness,
-                                                   # self.augment_pos,
-                                                   self.augment_noise,
+                                                      self.augment_brightness,
+                                                      # self.augment_pos,
+                                                      self.augment_noise,
                                                   ])
 
         if self.get_with_indices:
@@ -219,26 +245,35 @@ def showImageLabels(img_float_5, labels):
     if type(labels) == torch.Tensor:
         labels = labels.detach().cpu().numpy()
 
+    if len(img_float_5.shape) == 4:
+        assert img_float_5.shape[0] == 1
+        img_float_5 = img_float_5[0]
+
+    if len(labels.shape) == 4:
+        assert labels.shape[0] == 1
+        labels = labels[0]
+
     if img_float_5.shape[0] == 3:
         img_float_5 = img_float_5.transpose(1, 2, 0)
 
-    if labels.shape[0] == 2:
+    if labels.shape[0] == 2 or labels.shape[0] == 1:
         labels = labels.transpose(1, 2, 0)
 
     img = (img_float_5[:, :, 0:3] * 255).astype(np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    color1 = np.stack([labels[:, :, 0] * 255, labels[:, :, 0] * 0, labels[:, :, 0] * 0], axis=2).astype(np.uint8)
-    color2 = np.stack([labels[:, :, 1] * 0, labels[:, :, 1] * 255, labels[:, :, 1] * 0], axis=2).astype(np.uint8)
-    img = np.maximum(img, color1)
-    img = np.maximum(img, color2)
+    color_weights = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
+    for c in range(labels.shape[2]):
+        color = np.stack([labels[:, :, c] * color_weights[c][0], labels[:, :, c] * color_weights[c][1],
+                          labels[:, :, c] * color_weights[c][2]], axis=2).astype(np.uint8)
+        img = np.maximum(img, np.clip(color, 0, 255))
 
     plt.imshow(img)
     plt.show()
 
 
 def test_dataset():
-    all_images, all_labels = loadAllData()
+    all_images, all_labels = load_all_data()
     dataset = DoorDataGenerator(all_images, all_labels, train=True)
 
     for i in range(10):

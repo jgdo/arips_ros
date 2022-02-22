@@ -6,6 +6,7 @@
 #include <utility>
 
 using CellIndex = Eigen::Vector2i;
+using FloorStep = std::array<Point2d, 2>;
 
 struct GridMapGeometry {
     std::string frameId;
@@ -44,7 +45,10 @@ public:
     }*/
 };
 
-using Costmap = GridMap<uint8_t>;
+class Costmap: public GridMap<uint8_t> {
+public:
+    [[nodiscard]] virtual std::vector<FloorStep> floorSteps() const  = 0;
+};
 
 template <class T> class GridMapWithGeometry : public GridMap<T> {
 public:

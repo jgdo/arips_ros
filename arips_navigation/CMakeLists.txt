@@ -197,6 +197,16 @@ target_link_libraries(demo_global_planning
     ${PROJECT_NAME}
     )
 
+
+add_executable(demo_floor_step_tracking tools/demo_floor_step_tracking.cpp)
+add_dependencies(demo_floor_step_tracking ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_floor_step_tracking PUBLIC ${PROJECT_NAME})
+
+
+add_executable(demo_cross_step tools/demo_cross_step.cpp)
+add_dependencies(demo_cross_step ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_cross_step PUBLIC ${PROJECT_NAME})
+
 add_executable(simulator_node tools/simulator_node.cpp
     tools/simulator/Simulator.cpp
     tools/simulator/Simulator.h
@@ -221,6 +231,7 @@ target_link_libraries(costmap_test_publisher
     ${catkin_LIBRARIES}
     )
 
+
 #############
 ## Install ##
 #############
@@ -238,7 +249,7 @@ catkin_install_python(PROGRAMS
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-install(TARGETS simulator_node ${PROJECT_NAME}_node demo_global_planning collision_costs_service
+install(TARGETS simulator_node ${PROJECT_NAME}_node demo_global_planning collision_costs_service demo_floor_step_tracking demo_cross_step
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     )
 

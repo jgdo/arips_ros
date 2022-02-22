@@ -15,6 +15,7 @@
 #include <arips_navigation/DriveTo.h>
 #include <arips_navigation/DrivingState.h>
 #include <toponav_ros/TopoPlannerROS.h>
+#include "CrossFloorStep.h"
 
 /**
  * Responsible for executing a planned topo path
@@ -22,7 +23,7 @@
 class TopoExecuter : public DrivingStateProto, private toponav_core::TopoPath::PathVisitor {
 public:
     TopoExecuter(NavigationContext& context, DriveTo& driveTo,
-                 toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor);
+                 toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor, CrossFloorStep& crossStep);
 
     void activate(const geometry_msgs::PoseStamped& goalMsg);
 
@@ -75,4 +76,5 @@ private:
     toponav_ros::TopoPlannerROS& mTopoPlanner;
 
     CrossDoor& mCrossDoor;
+    CrossFloorStep& mCrossStep;
 };

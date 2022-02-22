@@ -41,7 +41,7 @@ void FlatParser::beginParsing(TopoMap* map, YAML::Node const& parserConfig) {
         }
 
         ros::spinOnce();
-        ros::Duration(0.1).sleep();
+        ros::Duration(0.2).sleep();
     }
 
     mapData.nodeMatrix =
@@ -60,27 +60,7 @@ void FlatParser::parseNodeData(YAML::Node const& config, TopoMap::Node* node) {
     auto& mapData = FlatGroundModule::getMapData(currentMap);
 
     FlatGroundModule::initNodeData(node, nodeX, nodeY);
-
-    // retry segmenting region, wait in between
-    for (int i = 30; i > 0; i--) {
-        // FIXME: what if layer not present?
-        const size_t cells =
-            FlatGroundModule::regionGrow(node, mapData.mNavContext->globalCostmap.getCostmap(),
-                                         nodeX, nodeY, &mapData.nodeMatrix);
-        if (cells > 0) {
-            ROS_DEBUG_STREAM("FlatGroundModule: segmented " << cells << " cells for node "
-                                                            << node->getName());
-            break;
-        }
-
-        if (i > 1) {
-            ros::Duration(0.3).sleep();
-            ros::spinOnce();
-        } else {
-            ROS_ERROR_STREAM("FlatGroundModule: Failed to segments cells for node '"
-                             << node->getName() << "'. Planning with this node will likely fail!");
-        }
-    }
+            FlatGroundModule::regionGrow(node, mapData.planner->getMap().getCostmap(),
 }
 
 YAML::Node FlatParser::beginSaving(TopoMap* map) {
@@ -99,6 +79,25 @@ YAML::Node FlatParser::saveNodeData(TopoMap::Node const* node) {
     yaml["x"] = data.x;
     yaml["y"] = data.y;
     return yaml;
+}
+
+void FlatParser::segmentKnownNodes(TopoMap* map) {
+    auto& mapData = FlatGroundModule::getMapData(map);
+    map->foreachNode([&](TopoMap::Node* node) {
+        const auto& nodeData = FlatGroundModule::getNodeData(node);
+
+        // FIXME: what if layer not present?
+        const size_t cells =
+            FlatGroundModule::regionGrow(node, mapData.planner->getMap().getCostmap(), nodeData.x,
+                                         nodeData.y, &mapData.nodeMatrix);
+        if (cells > 0) {
+            ROS_DEBUG_STREAM("FlatGroundModule: segmented " << cells << " cells for node "
+                                                            << node->getName());
+        } else {
+            ROS_ERROR_STREAM("FlatGroundModule: Failed to segments cells for node '"
+                             << node->getName() << "'. Planning with this node will likely fail!");
+        }
+    });
 }
 
 } // namespace toponav_ros

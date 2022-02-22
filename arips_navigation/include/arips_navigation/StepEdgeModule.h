@@ -8,10 +8,10 @@
 #include <toponav_ros/interfaces/MapEditorModule.h>
 
 #include <tf/transform_listener.h>
-#include <toponav_ros/PlanningContext.h>
 #include <toponav_ros/utils/CostsProfileHolderBase.h>
 
 #include "utils/ApproachExitVisualizer.h"
+
 
 namespace toponav_ros {
 
@@ -165,6 +165,9 @@ class StepEdgeModule : public ApproachExit3DEdgeModuleBase<StepEdgeModule, FlatG
                           StepInfo *stepInfo, int type);
 
     void deleteStepCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
+                      StepInfo *stepInfo);
+
+    void createBothStepEdgesCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
                       StepInfo *stepInfo);
 
     tf2::Stamped<tf2::Transform>

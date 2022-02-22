@@ -12,11 +12,14 @@ public:
 
     [[nodiscard]] virtual std::optional<double> gradient(const Vector2d& point) const = 0;
 
-    [[nodiscard]] virtual std::optional<double> interpolateGoalDistance(const Vector2d& point) const = 0;
+    [[nodiscard]] virtual std::optional<double>
+    interpolateGoalDistance(const Vector2d& point) const = 0;
 
     [[nodiscard]] virtual std::optional<uint8_t> cost(const Vector2d& point) const = 0;
 
     [[nodiscard]] virtual const CostFunction& costFunction() const = 0;
+
+    [[nodiscard]] virtual std::vector<FloorStep> floorSteps() const { return {}; }
 
     virtual double lowestResolution() const = 0;
 };
@@ -40,11 +43,13 @@ public:
     double lowestResolution() const override;
 
     std::optional<double> gradient(const Vector2d& point) const override {
-        if(const auto index = mPotentialMap.toMap(point)) {
+        if (const auto index = mPotentialMap.toMap(point)) {
             return mPotentialMap.getGradient(*index);
         }
         return {};
     }
+
+    [[nodiscard]] std::vector<FloorStep> floorSteps() const override { return mCostmap.floorSteps(); }
 
 private:
     const PotentialMap& mPotentialMap;

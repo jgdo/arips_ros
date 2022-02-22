@@ -34,17 +34,14 @@ Trajectory generateTrajectory(Pose2D currentPose, const Pose2D& vel, double dura
     return traj;
 }
 
-double computeDuration(double speed, double goalDist, double maxDuration) {
-    return std::min(goalDist / speed, maxDuration);
-}
-
 double computeSpeed(double goalDist, double duration, double maxSpeed) {
     return std::min(goalDist / duration, maxSpeed);
 }
 
 // TODO: rewrite such that sampling always happens with max speed, but trajectory
-// scoring allows trajectory collisions, if the collision would happen after traj_sampling_duration_s
-// when adjusted to maximum velocity given the robot start velocity from robot cell cost
+// scoring allows trajectory collisions, if the collision would happen after
+// traj_sampling_duration_s when adjusted to maximum velocity given the robot start velocity from
+// robot cell cost
 Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDistance,
                                 const arips_navigation::MotionControllerConfig& config,
                                 double maxWheelSpeed) {
@@ -75,10 +72,11 @@ Trajectories sampleTrajectories(const Pose2D& currentPose, const double goalDist
  * @param traj
  * @param rotationScoreTimeFromStart score trajectory pose rotation <-> map gradient different at
  * this trajectory time
- * @return
+ * @return <cost, max_speed>
  */
-std::optional<std::pair<double, uint8_t>>
-scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationScoreTimeFromStart) {
+std::optional<std::pair<double, double>>
+scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationScoreTimeFromStart /*,
+                const std::optional<FloorStepRect>& floorRect */) {
     const auto& costFunction = navmap.costFunction();
 
     if (traj.empty()) {
@@ -89,6 +87,8 @@ scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationSco
     if (!costToGoal) {
         return {};
     }
+
+    bool crossing = false;
 
     double trajectoryCost = 0;
     uint8_t worstCellCost = 0;
@@ -101,8 +101,24 @@ scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationSco
             return {};
         }
 
-        const auto meterDist = (b.pose.point - a.pose.point).norm();
-        const auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(*cellCost);
+        const auto trajDir = b.pose.point - a.pose.point;
+        const auto meterDist = trajDir.norm();
+        auto dCost = meterDist / costFunction.maxWheelSpeedFromCosts(*cellCost);
+
+        /*
+        if (floorRect) {
+            if(floorRect->contains(b.pose.point)) {
+                const auto stepFactor = floorRect->costFactor(b.pose.theta);
+                if (!stepFactor) {
+                    return {};
+                }
+
+                dCost *= *stepFactor;
+                crossing = true;
+            }
+        }
+         */
+
         const auto rCost =
             0; // TODO rotation cost, needs to be added to dijkstra planning first
                // std::abs(angles::shortest_angular_distance(a.pose.theta, b.pose.theta));
@@ -127,7 +143,8 @@ scoreTrajectory(const NavMap& navmap, const Trajectory& traj, double rotationSco
     }
 
     const auto totalCost = *costToGoal * 1.1 + trajectoryCost;
-    return std::pair<double, uint8_t>{totalCost, worstCellCost};
+
+    return std::pair<double, double>{totalCost, crossing? 0.1 : (0.5 + 0.5 * ((150.0 - std::min<double>(worstCellCost, 150)) / 150.0))};
 }
 
 struct MotionController::Pimpl {
@@ -150,7 +167,7 @@ struct MotionController::Pimpl {
     }
 
     [[nodiscard]] bool goalReached(const Pose2D& robotPose, const Pose2D& goalPose) const {
-        const auto goalDistance = robotPose.distance(goalPose);
+        const auto goalDistance = robotPose.distance(goalPose.point);
         const auto angularDistance =
             angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
 
@@ -317,7 +334,7 @@ struct MotionController::Pimpl {
 
         Twist2D result;
 
-        const auto goalDistXY = robotPose.distance(goalPose);
+        const auto goalDistXY = robotPose.distance(goalPose.point);
         if (goalDistXY < mConfig.goal_tolerance_xy_m * 0.8) {
             const auto rotationDiff =
                 angles::shortest_angular_distance(robotPose.theta, goalPose.theta);
@@ -333,6 +350,17 @@ struct MotionController::Pimpl {
             }
         }
 
+        // retrieve close-by floor step if any
+        std::optional<FloorStep> optStep;
+        constexpr auto closebyFloorStepDist = 1.0;
+        for (const auto& s : navmap.floorSteps()) {
+            if (robotPose.distance(s[0]) < closebyFloorStepDist ||
+                robotPose.distance(s[1]) < closebyFloorStepDist) {
+                optStep = s;
+                break;
+            }
+        }
+
         const auto samplingVelocity = calcMaxVelocityScale(navmap, robotPose.point);
         const auto trajectories =
             sampleTrajectories(robotPose, goalDistXY, mConfig, samplingVelocity);
@@ -340,10 +368,15 @@ struct MotionController::Pimpl {
         std::vector<double> trajectoryCosts;
         trajectoryCosts.reserve(trajectories.size());
         const Trajectory* bestTraj = nullptr;
-        std::pair<double, uint8_t> bestCost{-1, 0};
+        std::pair<double, double> bestCost{-1, 0};
+
+
+        //const std::optional<FloorStepRect> stepRect =
+        //    optStep ? std::optional<FloorStepRect>{*optStep} : std::nullopt;
+
 
         for (const auto& traj : trajectories) {
-            const auto cost = scoreTrajectory(navmap, traj, 0.5); // TODO
+            const auto cost = scoreTrajectory(navmap, traj, 0.5);
             trajectoryCosts.push_back(cost ? cost->first : -1);
 
             if (!cost) {
@@ -365,7 +398,7 @@ struct MotionController::Pimpl {
 
         // TODO simplify
         const auto velocityScale =
-            (0.5 + 0.5 * ((150.0 - std::min<double>(bestCost.second, 150)) / 150.0)) /
+            bestCost.second /
             (samplingVelocity / navmap.costFunction().maxWheelSpeed());
         ROS_INFO_STREAM("best cell cost = " << int(bestCost.second)
                                             << ", velocityScale = " << velocityScale);

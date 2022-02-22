@@ -1,5 +1,5 @@
 topo_planner:
-  global_frame_id: global
+  global_frame_id: map
   planner_type: PathRepairTopoPlanner
   
 DijkstraTopoPlanner:

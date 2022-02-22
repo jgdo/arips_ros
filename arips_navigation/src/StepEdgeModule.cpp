@@ -25,7 +25,7 @@ const std::string StepEdgeModule::className = "topo_nav::StepEdgeModule";
 
 static std::string edgeType = "step";
 
-void StepEdgeModule::beginParsing(TopoMap *map, YAML::Node const &parserConfig) {
+void StepEdgeModule::beginParsing(TopoMap* map, YAML::Node const& parserConfig) {
     currentMap = map;
     currentStepData = MapStepData();
 
@@ -87,7 +87,7 @@ void StepEdgeModule::endParsing() {
     currentMap = nullptr;
 }
 
-void StepEdgeModule::parseEdgeData(YAML::Node const &config, TopoMap::Edge *edge) {
+void StepEdgeModule::parseEdgeData(YAML::Node const& config, TopoMap::Edge* edge) {
     std::string stepName = config["step_name"].as<std::string>();
     auto type_str = config["step_type"].as<std::string>();
     EdgeStepData::StepType type = EdgeStepData::UP;
@@ -113,14 +113,14 @@ void StepEdgeModule::parseEdgeData(YAML::Node const &config, TopoMap::Edge *edge
 }
 
 std::pair<double, LocalPositionConstPtr>
-StepEdgeModule::computeTransitionCost(const TopoMap::Edge *edge, const LocalPosition &approachPose,
-                                      boost::any *pathData) {
-    const MapStepData &mapData = getMapData(_context.topoMap.get());
-    auto &data = getEdgeData(edge);
-    auto &entry = mapData.steps.at(data.stepName);
+StepEdgeModule::computeTransitionCost(const TopoMap::Edge* edge, const LocalPosition& approachPose,
+                                      boost::any* pathData) {
+    const MapStepData& mapData = getMapData(_context.topoMap.get());
+    auto& data = getEdgeData(edge);
+    auto& entry = mapData.steps.at(data.stepName);
     double costs = getCosts(selectCosts(entry, data.type));
 
-    const PositionData &approach = *dynamic_cast<const PositionData *>(&approachPose);
+    const PositionData& approach = *dynamic_cast<const PositionData*>(&approachPose);
     return std::make_pair(
         costs, PositionDataPtr(new PositionData(getExitPoseFromApproach(entry, approach.pose))));
 
@@ -139,17 +139,17 @@ StepEdgeModule::computeTransitionCost(const TopoMap::Edge *edge, const LocalPosi
     } */
 }
 
-void StepEdgeModule::visualizeEdge(const TopoMap::Edge *edge) {
-    auto const &approachData = getApproachData(edge);
-    auto const &exitData = getExitData(edge);
+void StepEdgeModule::visualizeEdge(const TopoMap::Edge* edge) {
+    auto const& approachData = getApproachData(edge);
+    auto const& exitData = getExitData(edge);
 
     auto markerNames = createEdgeMarkers(edge, approachData, exitData,
                                          visualization_msgs::InteractiveMarkerControl::MENU);
 
     if (!markerNames.empty()) {
-        EdgeStepData &data = getEdgeData((TopoMap::Edge *)edge);
+        EdgeStepData& data = getEdgeData((TopoMap::Edge*)edge);
 
-        EdgeStepData::MenuHandlerPtr &menu_handler = data.menu_handler;
+        EdgeStepData::MenuHandlerPtr& menu_handler = data.menu_handler;
         if (!menu_handler) {
             menu_handler = std::make_shared<interactive_markers::MenuHandler>();
             menu_handler->insert("Up", boost::bind(&StepEdgeModule::setEdgeUpDown, this, _1, edge));
@@ -177,7 +177,7 @@ void StepEdgeModule::visualizeEdge(const TopoMap::Edge *edge) {
                                            ? interactive_markers::MenuHandler::CHECKED
                                            : interactive_markers::MenuHandler::UNCHECKED);
 
-        for (auto const &name : markerNames) {
+        for (auto const& name : markerNames) {
             menu_handler->apply(mapEditor->getMarkerServer(), name);
             // mapEditor->getMarkerServer().setCallback(name,
             // boost::bind(&StepEdgeModule::setEdgeUpDown, this, _1, &data),
@@ -186,25 +186,25 @@ void StepEdgeModule::visualizeEdge(const TopoMap::Edge *edge) {
     }
 }
 
-void StepEdgeModule::appendTransitionToPlan(nav_msgs::Path *pathPtr, std::string transitionType,
-                                            boost::any const &pathData) {
+void StepEdgeModule::appendTransitionToPlan(nav_msgs::Path* pathPtr, std::string transitionType,
+                                            boost::any const& pathData) {
     // leave empty for now
 }
 
 void StepEdgeModule::beginMapVisualization() {
-    MapStepData &stepData = getMapData(mapEditor->getMap());
+    MapStepData& stepData = getMapData(mapEditor->getMap());
 
-    for (auto &entry : stepData.steps) {
+    for (auto& entry : stepData.steps) {
         visualizeMapStep(&entry.second);
     }
 }
 
 void StepEdgeModule::endMapVisualization() {}
 
-void StepEdgeModule::createNewMapStep(TopoMap *map, std::string name,
-                                      tf2::Stamped<tf2::Vector3> const &start,
-                                      const tf2::Stamped<tf2::Vector3> &end) {
-    MapStepData &stepData = getMapData(map);
+void StepEdgeModule::createNewMapStep(TopoMap* map, std::string name,
+                                      tf2::Stamped<tf2::Vector3> const& start,
+                                      const tf2::Stamped<tf2::Vector3>& end) {
+    MapStepData& stepData = getMapData(map);
     stepData.steps[name] = StepInfo{start,
                                     end,
                                     name,
@@ -214,13 +214,13 @@ void StepEdgeModule::createNewMapStep(TopoMap *map, std::string name,
                                     stepData.defaultCrossGravelCosts};
 }
 
-void StepEdgeModule::initEdgeData(TopoMap::Edge *edge, std::string stepName,
+void StepEdgeModule::initEdgeData(TopoMap::Edge* edge, std::string stepName,
                                   EdgeStepData::StepType stepType) {
     edge->edgeData() = EdgeStepData{stepName, stepType};
     edge->propertyMap()[TopoMap::ENTRY_DOT_COLOR] = std::string("orange");
 }
 
-void StepEdgeModule::initializeVisualization(MapEditor *editor) {
+void StepEdgeModule::initializeVisualization(MapEditor* editor) {
     EdgeVisualizationInterface::initializeVisualization(editor);
     markerColor = tf2::Vector3(1, 0.5, 0);
 
@@ -231,7 +231,7 @@ void StepEdgeModule::initializeVisualization(MapEditor *editor) {
 }
 
 void StepEdgeModule::selectMapStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback) {
     if (vizState == WAITING_STEP_SELECTION) {
         selectedStepName = feedback->control_name;
         vizState = CREATING_EDGE_APPROACH;
@@ -244,7 +244,7 @@ void StepEdgeModule::activate() {}
 
 void StepEdgeModule::deactivate() { vizState = IDLE; }
 
-std::string findFreeStepName(StepEdgeModule::MapStepData const &stepsData) {
+std::string findFreeStepName(StepEdgeModule::MapStepData const& stepsData) {
     size_t i = stepsData.steps.size();
     std::string name;
     do {
@@ -254,7 +254,7 @@ std::string findFreeStepName(StepEdgeModule::MapStepData const &stepsData) {
     return name;
 }
 
-void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const &msg) {
+void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const& msg) {
     if (vizState == CREATING_MAP_STEP) {
         // tf2::Vector3 scale(0.2, 1, 0.1);
 
@@ -268,7 +268,7 @@ void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const &msg) {
         tf2::Stamped<tf2::Vector3> end(newPose(tf2::Vector3(0, 0.5, 0.0)), newPose.stamp_,
                                        newPose.frame_id_);
 
-        auto &stepsData = getMapData(mapEditor->getMap());
+        auto& stepsData = getMapData(mapEditor->getMap());
         StepEdgeModule::createNewMapStep(mapEditor->getMap(), findFreeStepName(stepsData), start,
                                          end);
 
@@ -288,7 +288,7 @@ void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const &msg) {
         ROS_WARN("Could not find node for given pose, ignoring");
         return;
     }
-    TopoMap::Node *node = mapEditor->getMap()->getNode(gp.node->getName());
+    TopoMap::Node* node = mapEditor->getMap()->getNode(gp.node->getName());
 
     if (vizState == CREATING_EDGE_APPROACH) {
         lastApproachPose = pose;
@@ -327,7 +327,7 @@ void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const &msg) {
 }
 
 void StepEdgeModule::createEdgeCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback) {
     vizState = WAITING_STEP_SELECTION;
     ROS_INFO_STREAM("Creating edge type " << edgeType << ", waiting step selection");
 
@@ -335,15 +335,15 @@ void StepEdgeModule::createEdgeCB(
 }
 
 void StepEdgeModule::createMapStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback) {
     vizState = CREATING_MAP_STEP;
     ROS_INFO_STREAM("Creating Map Step, waiting pose");
 
     mapEditor->activateEditorModule(this);
 }
 
-YAML::Node StepEdgeModule::beginSaving(TopoMap *map) {
-    const MapStepData &stepData = getMapData(mapEditor->getMap());
+YAML::Node StepEdgeModule::beginSaving(TopoMap* map) {
+    const MapStepData& stepData = getMapData(mapEditor->getMap());
 
     YAML::Node root;
 
@@ -354,12 +354,12 @@ YAML::Node StepEdgeModule::beginSaving(TopoMap *map) {
     root["default_costs_cross_gravel"] = parser.storeAll(stepData.defaultCrossGravelCosts);
 
     YAML::Node steps(YAML::NodeType::Sequence);
-    for (auto &e : stepData.steps) {
+    for (auto& e : stepData.steps) {
         YAML::Node step;
 
         step["name"] = e.second.name;
-        step["start"] = (tf2::Vector3 &)e.second.start;
-        step["end"] = (tf2::Vector3 &)e.second.end;
+        step["start"] = (tf2::Vector3&)e.second.start;
+        step["end"] = (tf2::Vector3&)e.second.end;
         step["frame_id"] = e.second.start.frame_id_;
 
         parser.storeDiff(step, "costs_up", e.second.upCosts, stepData.defaultUpCosts);
@@ -376,8 +376,8 @@ YAML::Node StepEdgeModule::beginSaving(TopoMap *map) {
     return root;
 }
 
-YAML::Node StepEdgeModule::saveEdgeData(TopoMap::Edge const *edge) {
-    EdgeStepData const &data = getEdgeData(edge);
+YAML::Node StepEdgeModule::saveEdgeData(TopoMap::Edge const* edge) {
+    EdgeStepData const& data = getEdgeData(edge);
 
     YAML::Node root;
 
@@ -395,13 +395,13 @@ YAML::Node StepEdgeModule::saveEdgeData(TopoMap::Edge const *edge) {
 }
 
 void StepEdgeModule::setEdgeUpDown(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
-    const TopoMap::Edge *constEdge) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
+    const TopoMap::Edge* constEdge) {
     ROS_INFO_STREAM("Setting step type of edge " << constEdge->getName());
 
-    TopoMap::Edge *edge = mapEditor->getMap()->getEdge(constEdge->getName());
+    TopoMap::Edge* edge = mapEditor->getMap()->getEdge(constEdge->getName());
     if (edge) {
-        EdgeStepData &data = getEdgeData(edge);
+        EdgeStepData& data = getEdgeData(edge);
         if (feedback->menu_entry_id == 1) { // UP, FIXME
             data.type = EdgeStepData::UP;
         } else if (feedback->menu_entry_id == 2) // down
@@ -415,12 +415,12 @@ void StepEdgeModule::setEdgeUpDown(
     }
 }
 
-bool StepEdgeModule::areEdgesCoupled(const TopoMap::Edge *edgeA, const TopoMap::Edge *edgeB) {
+bool StepEdgeModule::areEdgesCoupled(const TopoMap::Edge* edgeA, const TopoMap::Edge* edgeB) {
     if (edgeA->getTransitionType() != edgeType || edgeB->getTransitionType() != edgeType)
         return false;
 
-    EdgeStepData const &dataA = getEdgeData(edgeA);
-    EdgeStepData const &dataB = getEdgeData(edgeB);
+    EdgeStepData const& dataA = getEdgeData(edgeA);
+    EdgeStepData const& dataB = getEdgeData(edgeB);
 
     return dataA.stepName == dataB.stepName;
 }
@@ -467,7 +467,7 @@ createEdgeTipMarker(tf2::Stamped<tf2::Vector3> pos, std::string name, std::strin
 }
 
 static visualization_msgs::InteractiveMarker
-createStepConnectionMarker(StepEdgeModule::StepInfo *step, std::string name) {
+createStepConnectionMarker(StepEdgeModule::StepInfo* step, std::string name) {
     visualization_msgs::InteractiveMarker int_marker;
 
     int_marker.header.frame_id = step->start.frame_id_;
@@ -492,7 +492,7 @@ createStepConnectionMarker(StepEdgeModule::StepInfo *step, std::string name) {
     marker.color.a = 1;
     marker.scale.x = 0.05; // shaft diameter
     marker.scale.y = 0.1;  // head diameter
-    marker.scale.z = 0.15;  // head length
+    marker.scale.z = 0.15; // head length
     marker.points.resize(2);
     tf2::toMsg(step->start, marker.points[0]);
     tf2::toMsg(step->end, marker.points[1]);
@@ -503,7 +503,7 @@ createStepConnectionMarker(StepEdgeModule::StepInfo *step, std::string name) {
     return int_marker;
 }
 
-void StepEdgeModule::visualizeMapStep(StepEdgeModule::StepInfo *stepInfo) {
+void StepEdgeModule::visualizeMapStep(StepEdgeModule::StepInfo* stepInfo) {
     auto start = createEdgeTipMarker(stepInfo->start, stepInfo->name, "_start");
     auto end = createEdgeTipMarker(stepInfo->end, stepInfo->name, "_end");
 
@@ -528,14 +528,17 @@ void StepEdgeModule::visualizeMapStep(StepEdgeModule::StepInfo *stepInfo) {
         stepInfo->menuHandler = std::make_shared<interactive_markers::MenuHandler>();
         stepInfo->menuHandler->insert(
             "Delete this step", boost::bind(&StepEdgeModule::deleteStepCB, this, _1, stepInfo));
+        stepInfo->menuHandler->insert(
+            "Create both step edges",
+            boost::bind(&StepEdgeModule::createBothStepEdgesCB, this, _1, stepInfo));
     }
 
     stepInfo->menuHandler->apply(mapEditor->getMarkerServer(), stepMarker.name);
 }
 
 void StepEdgeModule::processMapStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
-    StepEdgeModule::StepInfo *stepInfo, int spot) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
+    StepEdgeModule::StepInfo* stepInfo, int spot) {
     if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::BUTTON_CLICK)
         return selectMapStepCB(feedback);
     else if (feedback->event_type != visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP)
@@ -567,19 +570,20 @@ auto static createQuaternionFromYaw(double yaw) {
 }
 
 void StepEdgeModule::setApproachFromStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
-    const TopoMap::Edge *constEdge) {
-    TopoMap::Edge *edge = _context.topoMap->getEdge(constEdge->getName());
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
+    const TopoMap::Edge* constEdge) {
+    TopoMap::Edge* edge = _context.topoMap->getEdge(constEdge->getName());
 
-    auto const &approach = getApproachData(edge);
-    EdgeStepData const &edgeData = getEdgeData(edge);
-    MapStepData &stepData = getMapData(mapEditor->getMap());
-    StepInfo const &stepInfo = stepData.steps.at(edgeData.stepName);
+    auto const& approach = getApproachData(edge);
+    EdgeStepData const& edgeData = getEdgeData(edge);
+    MapStepData& stepData = getMapData(mapEditor->getMap());
+    StepInfo const& stepInfo = stepData.steps.at(edgeData.stepName);
 
     const double robotWidth2 = 0.4; // FIXME
     const double robotLength2 = 1.0;
 
-    const auto diff = tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
+    const auto diff =
+        tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
     const double yaw = atan2(diff.y(), diff.x());
 
     tf2::Transform startTrans(createQuaternionFromYaw(yaw), stepInfo.start);
@@ -605,31 +609,31 @@ void StepEdgeModule::setApproachFromStepCB(
     _context.mapChanged();
 }
 
-double StepEdgeModule::getHeuristics(TopoMap::Edge const *edge) {
-    const MapStepData &mapData = getMapData(_context.topoMap.get());
-    auto &data = getEdgeData(edge);
-    auto &entry = mapData.steps.at(data.stepName);
+double StepEdgeModule::getHeuristics(TopoMap::Edge const* edge) {
+    const MapStepData& mapData = getMapData(_context.topoMap.get());
+    auto& data = getEdgeData(edge);
+    auto& entry = mapData.steps.at(data.stepName);
 
     return getCosts(selectCosts(entry, data.type));
 }
 
-std::string StepEdgeModule::getModuleType(const TopoMap::Edge *edge) {
+std::string StepEdgeModule::getModuleType(const TopoMap::Edge* edge) {
     return className;
     return className;
 }
 
-void StepEdgeModule::parseEdgeInData(YAML::Node const &config, TopoMap::Edge *edge) {
-    auto const &approach = getApproachData(edge);
+void StepEdgeModule::parseEdgeInData(YAML::Node const& config, TopoMap::Edge* edge) {
+    auto const& approach = getApproachData(edge);
     approach->getCenter();
-    auto &data = getEdgeData(edge);
+    auto& data = getEdgeData(edge);
     auto exitPose =
         getExitPoseFromApproach(currentStepData.steps.at(data.stepName), approach->getCenter());
     setExitData(edge, std::make_shared<FixedPosition>(exitPose));
 }
 
 tf2::Stamped<tf2::Transform>
-StepEdgeModule::getExitPoseFromApproach(StepInfo const &stepInfo,
-                                        tf2::Stamped<tf2::Transform> const &approachPose) {
+StepEdgeModule::getExitPoseFromApproach(StepInfo const& stepInfo,
+                                        tf2::Stamped<tf2::Transform> const& approachPose) {
     tf2::Stamped<tf2::Transform> approachTransformed =
         _context.tfBuffer->transform(approachPose, stepInfo.start.frame_id_);
 
@@ -643,14 +647,14 @@ StepEdgeModule::getExitPoseFromApproach(StepInfo const &stepInfo,
     return approachTransformed;
 }
 
-YAML::Node StepEdgeModule::saveEdgeInData(TopoMap::Edge const *edge) {
+YAML::Node StepEdgeModule::saveEdgeInData(TopoMap::Edge const* edge) {
     YAML::Node root; // exit data is determined by approach only
     return root;
 }
 
-void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge *constEdge) {
-    TopoMap::Edge *edge = _context.topoMap->getEdge(constEdge->getName());
-    auto const &approach = getApproachData(edge);
+void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge* constEdge) {
+    TopoMap::Edge* edge = _context.topoMap->getEdge(constEdge->getName());
+    auto const& approach = getApproachData(edge);
 
     {
         GlobalPosition aproachPosition =
@@ -663,9 +667,9 @@ void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge *constEdge) {
         }
     }
 
-    EdgeStepData const &edgeData = getEdgeData(edge);
-    MapStepData &stepData = getMapData(mapEditor->getMap());
-    StepInfo const &stepInfo = stepData.steps.at(edgeData.stepName);
+    EdgeStepData const& edgeData = getEdgeData(edge);
+    MapStepData& stepData = getMapData(mapEditor->getMap());
+    StepInfo const& stepInfo = stepData.steps.at(edgeData.stepName);
 
     auto exitPose = getExitPoseFromApproach(stepInfo, approach->getCenter());
     setExitData(edge, std::make_shared<FixedPosition>(exitPose));
@@ -683,15 +687,15 @@ void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge *constEdge) {
 }
 
 void StepEdgeModule::deleteStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback,
-    BaseTraits<StepEdgeModule>::StepInfo *stepInfo) {
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
+    BaseTraits<StepEdgeModule>::StepInfo* stepInfo) {
     ROS_INFO_STREAM("StepEdgeModule: deleting step '" << stepInfo->name << "' and all its edges");
 
     // collect edges of this step
-    std::vector<TopoMap::Edge *> edges;
-    mapEditor->getMap()->foreachEdge([&](TopoMap::Edge *edge) {
+    std::vector<TopoMap::Edge*> edges;
+    mapEditor->getMap()->foreachEdge([&](TopoMap::Edge* edge) {
         if (_context.isModuleType<StepEdgeModule>(edge)) {
-            auto &edgeData = getEdgeData(edge);
+            auto& edgeData = getEdgeData(edge);
             if (edgeData.stepName == stepInfo->name) {
                 edges.push_back(edge);
             }
@@ -704,15 +708,82 @@ void StepEdgeModule::deleteStepCB(
     }
 
     // delete step
-    auto &data = getMapData(mapEditor->getMap());
+    auto& data = getMapData(mapEditor->getMap());
     data.steps.erase(stepInfo->name);
 
     _context.mapChanged();
 }
 
-double StepEdgeModule::getCosts(const BaseTraits<StepEdgeModule>::CostSettings &settings) {
+void StepEdgeModule::createBothStepEdgesCB(
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, StepInfo* stepInfo) {
+
+    static constexpr auto distFromStep = 0.4;
+
+    // get approach and exit points based on map step
+    const auto centerOffset =
+        tf2::quatRotate(createQuaternionFromYaw(M_PI_2), stepInfo->end - stepInfo->start)
+            .normalized() *
+        distFromStep;
+
+    const auto center = (stepInfo->start + stepInfo->end) * 0.5;
+    const auto posA = center + centerOffset;
+    const auto posB = center - centerOffset;
+
+    const double yaw = atan2(centerOffset.y(), centerOffset.x());
+    const auto rotBA = tf2::Stamped<tf2::Quaternion>{createQuaternionFromYaw(yaw), ros::Time::now(),
+                                                     _context.globalFrame};
+    const auto rotAB = tf2::Stamped<tf2::Quaternion>{createQuaternionFromYaw(yaw + M_PI),
+                                                     ros::Time::now(), _context.globalFrame};
+
+    // get nodes of A and B
+    tf2::Stamped<tf2::Transform> stampedPoseA;
+    GlobalPosition gpA;
+    std::tie(gpA, stampedPoseA) = _context.poseService->findGlobalPose(
+        tf2::Stamped<tf2::Transform>{tf2::Transform{rotAB, posA}, ros::Time::now(),
+                                     _context.globalFrame},
+        *mapEditor->getMap());
+    if (!gpA.node) {
+        ROS_WARN("Could not find node pose A for creating edge from map step, returning.");
+        return;
+    }
+    TopoMap::Node* nodeA = mapEditor->getMap()->getNode(gpA.node->getName());
+
+    tf2::Stamped<tf2::Transform> stampedPoseB;
+    GlobalPosition gpB;
+    std::tie(gpB, stampedPoseB) = _context.poseService->findGlobalPose(
+        tf2::Stamped<tf2::Transform>{tf2::Transform{rotBA, posB}, ros::Time::now(),
+                                     _context.globalFrame},
+        *mapEditor->getMap());
+    if (!gpB.node) {
+        ROS_WARN("Could not find node pose B for creating edge from map step, returning.");
+        return;
+    }
+    TopoMap::Node* nodeB = mapEditor->getMap()->getNode(gpB.node->getName());
+
+    {
+        const auto nameAB = edgeType + "_" + std::to_string(mapEditor->getMap()->getNumEdges()) + "_" +
+                            gpA.node->getName() + "_" + gpB.node->getName();
+        auto edgeAB = mapEditor->getMap()->addEdge(nodeA, nodeB, nameAB, edgeType);
+        setApproachData(edgeAB, ApproachLineArea::create(posA, posA, rotAB));
+        setExitData(edgeAB, ApproachLineArea::create(posB, posB, rotAB));
+        initEdgeData(edgeAB, stepInfo->name, EdgeStepData::StepType::CROSS_OVER);
+    }
+
+    {
+        const auto nameBA = edgeType + "_" + std::to_string(mapEditor->getMap()->getNumEdges()) +
+                            "_" + gpB.node->getName() + "_" + gpA.node->getName();
+        auto edgeBA = mapEditor->getMap()->addEdge(nodeB, nodeA, nameBA, edgeType);
+        setApproachData(edgeBA, ApproachLineArea::create(posB, posB, rotBA));
+        setExitData(edgeBA, ApproachLineArea::create(posA, posA, rotBA));
+        initEdgeData(edgeBA, stepInfo->name, EdgeStepData::StepType::CROSS_OVER);
+    }
+
+    _context.mapChanged();
+}
+
+double StepEdgeModule::getCosts(const BaseTraits<StepEdgeModule>::CostSettings& settings) {
     std::map<std::string, double> costs;
-    for (auto &varname : costs_comp_.getVariables()) {
+    for (auto& varname : costs_comp_.getVariables()) {
         double cost;
         if (varname == CommonCostProfiles::TIME_COSTS ||
             varname == CommonCostProfiles::DEFAULT_PROFILE) {

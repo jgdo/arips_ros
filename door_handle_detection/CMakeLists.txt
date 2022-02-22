@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
     image_geometry
     image_transport
     cv_bridge
+    OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
@@ -141,7 +142,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/detector_node.cpp)
+add_executable(${PROJECT_NAME}_node src/door_handle_detector_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,6 +160,16 @@ target_link_libraries(${PROJECT_NAME}_node
      ${PROJECT_NAME}
 )
 
+add_executable(step_detection_node src/step_detector_node.cpp)
+add_dependencies(step_detection_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(step_detection_node
+    ${catkin_LIBRARIES}
+    ${PROJECT_NAME}
+    ${OpenCV_LIBRARIES}
+ )
+
 #############
 ## Install ##
 #############
@@ -175,9 +186,9 @@ target_link_libraries(${PROJECT_NAME}_node
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-# install(TARGETS ${PROJECT_NAME}_node
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node step_detection_node
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html

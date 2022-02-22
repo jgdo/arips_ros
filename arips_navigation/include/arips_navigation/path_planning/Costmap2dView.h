@@ -2,6 +2,8 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 
+#include <utility>
+
 #include "Costmap.h"
 
 struct Costmap2dView : public Costmap {
@@ -14,12 +16,15 @@ struct Costmap2dView : public Costmap {
                cellCost != costmap_2d::NO_INFORMATION;
     }
 
-    explicit Costmap2dView(costmap_2d::Costmap2DROS const& costmap, std::optional<Pose2D> robotPose = {})
-        : mCostmap{costmap}, lock{*mCostmap.getCostmap()->getMutex()} {
-        if(robotPose) {
+    explicit Costmap2dView(costmap_2d::Costmap2DROS const& costmap,
+                           std::optional<Pose2D> robotPose = {},
+                           std::vector<FloorStep> floorSteps = {})
+        : mCostmap{costmap}, lock{*mCostmap.getCostmap()->getMutex()}, mFloorSteps{
+                                                                           std::move(floorSteps)} {
+        if (robotPose) {
             unsigned int x, y;
             if (mCostmap.getCostmap()->worldToMap(robotPose->x(), robotPose->y(), x, y)) {
-                if(!isValidCellCost(mCostmap.getCostmap()->getCost(x, y))) {
+                if (!isValidCellCost(mCostmap.getCostmap()->getCost(x, y))) {
                     mCostmap.getCostmap()->setCost(x, y, 252);
                 }
             }
@@ -61,4 +66,9 @@ struct Costmap2dView : public Costmap {
 
         return val;
     }
+
+    [[nodiscard]] std::vector<FloorStep> floorSteps() const override { return mFloorSteps; }
+
+private:
+    std::vector<FloorStep> mFloorSteps;
 };

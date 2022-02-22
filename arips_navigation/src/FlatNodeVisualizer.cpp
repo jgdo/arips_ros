@@ -129,7 +129,7 @@ void FlatNodeVisualizer::vizualizeNode(const TopoMap::Node* node) {
             colorMsg.r = color[0] / 255.0;
             colorMsg.g = color[1] / 255.0;
             colorMsg.b = color[2] / 255.0;
-            colorMsg.a = 1;
+            colorMsg.a = 0.1;
 
             nodeMarkers.points.push_back(p);
             nodeMarkers.colors.push_back(colorMsg);

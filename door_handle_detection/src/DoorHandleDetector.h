@@ -14,9 +14,7 @@ struct DoorHandleLocation {
 
 class DoorHandleDetector {
 public:
-    const std::string ModelPath;
-
-    DoorHandleDetector();
+    explicit DoorHandleDetector(const std::string& modelPath);
 
     std::optional<DoorHandleLocation> detect(const cv::Mat& image);
 
@@ -25,7 +23,7 @@ public:
 private:
 
     cv::dnn::Net mDetectionNet;
-    cv::Mat1f mGridXX, mGridYY;
+    // cv::Mat1f mGridXX, mGridYY;
 };
 
 

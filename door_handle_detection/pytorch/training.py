@@ -7,14 +7,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from heatmap_model import HeatmapModel
-from dataset import loadAllData, DoorDataGenerator
+from dataset import load_all_data, DoorDataGenerator
 from export_model import get_pytorch_onnx_model
 
 num_epochs = 150
 batch_size = 32
 learning_rate = 0.0005
 
-model = HeatmapModel().cuda()
+
+door_handle_channels = [12, 24, 32, 40]
+step_floor_channels = [16, 32, 40, 48, 64]
+
+model = HeatmapModel(intermediate_channels=door_handle_channels,output_channels=1).cuda()
 
 num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print("Number of trainable parameters: {}".format(num_params))
@@ -26,7 +30,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 # optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 
-all_images, all_labels = loadAllData()
+all_images, all_labels = load_all_data(sum_last=True)
 train_dataset = DoorDataGenerator(all_images, all_labels, train=True, shuffle=False)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
@@ -75,9 +79,12 @@ try:
         train_dataset.on_epoch_end()
 
 except KeyboardInterrupt:
+    print("Training stopped early by user")
     pass
 
 # full_model_path = get_pytorch_onnx_model(model, "heatmap.onnx", (1, 3, 240, 320))
+
+torch.save({"model": model.state_dict(), "loss_history": loss_history}, 'models/floor_door_edge.pt')
 
 plt.plot(loss_history, label='loss')
 plt.xlabel('Epoch')
@@ -85,4 +92,4 @@ plt.ylabel('Loss')
 plt.legend(loc='upper right')
 plt.show()
 
-torch.save({"model": model.state_dict(), "loss_history": loss_history}, 'models/my.pt')
+

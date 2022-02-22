@@ -10,6 +10,7 @@
 #include <arips_navigation/utils/transforms.h>
 
 using Vector2d = Eigen::Vector2d;
+using Point2d = Eigen::Vector2d;
 
 struct Pose2D;
 using Twist2D = Pose2D;
@@ -57,8 +58,8 @@ struct Pose2D {
 
     Pose2D operator*(double scale) const { return {point * scale, theta * scale}; }
 
-    [[nodiscard]] double distance(const Pose2D& other) const {
-        return (point - other.point).norm();
+    [[nodiscard]] double distance(const Point2d & other) const {
+        return (point - other).norm();
     }
 
     geometry_msgs::Twist toTwistMsg() const {

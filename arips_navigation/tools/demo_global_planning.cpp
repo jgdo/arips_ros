@@ -12,12 +12,12 @@
 #include <nav_msgs/Odometry.h>
 
 #include "arips_navigation/path_planning/Costmap2dView.h"
+#include "arips_navigation/utils/FloorStepTracker.h"
 #include "simulator/Simulator.h"
 
 struct DemoNode {
     ros::Subscriber mTwistSub;
     ros::Subscriber mClickedPointSub;
-
 
     nav_msgs::Odometry mLastOdom;
     const ros::Rate mControlRate{10};
@@ -61,7 +61,7 @@ struct DemoNode {
 
         const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
-        locomotion.setGoal(Costmap2dView{costmap, robotPose}, robotPose,
+        locomotion.setGoal(Costmap2dView{costmap, robotPose, mStepTracker.allSteps()}, robotPose,
                            Pose2D::fromMsg(goalPose->pose));
 
         if (locomotion.hasGoal()) {
@@ -69,11 +69,11 @@ struct DemoNode {
         }
     }
 
-    void onPointClicked(const geometry_msgs::PointStamped& msg) {
+    void onPointClicked(const geometry_msgs::PointStamped& msg) const {
         if (const auto* potmap = locomotion.potentialMap()) {
-            if(const auto index = potmap->toMap({msg.point.x, msg.point.y})) {
+            if (const auto index = potmap->toMap({msg.point.x, msg.point.y})) {
                 const auto grad = potmap->getGradient(*index);
-                if(grad) {
+                if (grad) {
                     ROS_INFO_STREAM("GRADIENT is " << *grad);
                 }
             }
@@ -82,6 +82,8 @@ struct DemoNode {
 
     void doLoop(const ros::TimerEvent& ev) {
         ROS_INFO("############################ loop");
+        mStepTracker.visualizeSteps();
+
         if (!locomotion.hasGoal()) {
             return;
         }
@@ -99,7 +101,7 @@ struct DemoNode {
             locomotion.cancel();
         } else {
             const auto optTwist = locomotion.computeVelocityCommands(
-                Costmap2dView{costmap, robotPose},
+                Costmap2dView{costmap, robotPose, mStepTracker.allSteps()},
                 {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)},
                 mControlRate.expectedCycleTime().toSec());
             if (optTwist) {
@@ -123,6 +125,9 @@ struct DemoNode {
     ros::Subscriber sub;
     ros::Publisher cmdVelPub;
 
+    FloorStepTracker mStepTracker{
+        tfBuffer, costmap.getGlobalFrameID(), {{{{2.74, -1.281}, {3.15, -2.2}}}}};
+
     Locomotion locomotion;
 
     ros::Timer loopTimer;
@@ -135,7 +140,7 @@ int main(int argc, char** argv) {
     tf2_ros::TransformListener tfListener{tfBuffer};
 
     std::unique_ptr<Simulator> simulator;
-    if(ros::NodeHandle{"~"}.param("start_simulator", false)) {
+    if (ros::NodeHandle{"~"}.param("start_simulator", false)) {
         ROS_INFO("Starting global planning demo with simulator");
         simulator = std::make_unique<Simulator>(tfBuffer);
     } else {

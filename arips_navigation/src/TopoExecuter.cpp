@@ -36,9 +36,9 @@ static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
 }
 
 TopoExecuter::TopoExecuter(NavigationContext& context, DriveTo& driveTo,
-                           toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor)
+                           toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor, CrossFloorStep& crossStep)
     : DrivingStateProto{context}, mDriveTo{driveTo},
-      mTopoPlanner(topoPlanner), mCrossDoor{crossDoor} {}
+      mTopoPlanner(topoPlanner), mCrossDoor{crossDoor},  mCrossStep{crossStep} {}
 
 void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
     tf2::Stamped<tf2::Transform> pose;
@@ -132,7 +132,7 @@ void TopoExecuter::runCycle() {
     }
 }
 
-bool TopoExecuter::isActive() { return !!mCurrentPlan; }
+bool TopoExecuter::isActive() { return mCurrentPlan.operator bool(); }
 
 void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement* mov) {
     assert(mov->start.node->getRegionType() == "flat");
@@ -151,6 +151,8 @@ void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* tra
     const auto& stepData = toponav_ros::StepEdgeModule::getMapData(transition->topoEdge->getParentMap());
     const auto& stepInfo = stepData.steps.at(edgeData.stepName);
 
+
+    /*
     const auto diff = stepInfo.end - stepInfo.start;
     const double yaw = atan2(diff.y(), diff.x());
 
@@ -165,6 +167,18 @@ void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* tra
     tf2::toMsg(closeApproach, doorInfo.approachPose);
 
     mCrossDoor.activate(doorInfo);
+     */
+
+    const auto trans = tryLookupTransform(tf(), localCostmap().getGlobalFrameID(), globalCostmap().getGlobalFrameID());
+    if(!trans) {
+        ROS_WARN_STREAM("TopoExecuter::visitTransition cannot transform global to local frame");
+        return;
+    }
+
+    const auto stepA = (*trans)(stepInfo.start);
+    const auto stepB = (*trans)(stepInfo.end);
+
+    mCrossStep.activate({Point2d {stepA.x(), stepA.y()}, Point2d{stepB.x(), stepB.y()}});
 
     mSegmentExec = std::make_unique<TransitionExecuter>();
 }
@@ -175,6 +189,7 @@ bool TopoExecuter::MovementExecuter::runCycle(TopoExecuter* parent) {
 }
 
 bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
+    /*
     if(parent->mCrossDoor.isActive()) {
         parent->mCrossDoor.runCycle();
         return false;
@@ -194,5 +209,15 @@ bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
 
         parent->publishCmdVel(cmd_vel);
         return finished;
+    }
+     */
+
+
+    if(parent->mCrossStep.isActive()) {
+        parent->mCrossStep.runCycle();
+        return false;
+    } else {
+        parent->publishCmdVel({});
+        return true;
     }
 }

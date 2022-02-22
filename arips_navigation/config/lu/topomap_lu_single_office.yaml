@@ -1,0 +1,98 @@
+parser_data:
+  node_parser:
+    module_flat:
+      default_costs:
+        distance_factor: 1
+        energy_factor: 1
+        time_factor: 1
+  edge_parser:
+    module_step:
+      default_costs_down:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_up:
+        distance: 1
+        energy: 2.5
+        time: 15
+      default_costs_cross_over:
+        distance: 1
+        energy: 3
+        time: 15
+      default_costs_cross_gravel:
+        distance: 1
+        energy: 1
+        time: 10
+      step:
+        - name: Step_0
+          start:
+            x: 0.163602050598409
+            y: -1.756497103981465
+            z: 0
+          end:
+            x: 0.9962241222963727
+            y: -1.738218887150927
+            z: 0
+          frame_id: map
+nodes:
+  - name: flat_node_0
+    type: flat
+    node_data:
+      x: 21
+      y: 221
+  - name: flat_node_1
+    type: flat
+    node_data:
+      x: 57
+      y: 20
+edges:
+  - name: step_0_flat_node_0_flat_node_1
+    type: step
+    source: flat_node_0
+    target: flat_node_1
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 0.5711341627288729
+          y: -1.347454344047053
+          z: 0
+        end:
+          x: 0.5711341627288729
+          y: -1.347454344047053
+          z: 0
+        orientation:
+          x: -0
+          y: 0
+          z: 0.699304186568229
+          w: -0.7148242124103992
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over
+  - name: step_1_flat_node_1_flat_node_0
+    type: step
+    source: flat_node_1
+    target: flat_node_0
+    approach_data:
+      approach:
+        type: LineArea
+        start:
+          x: 0.5886920101659088
+          y: -2.147261647085339
+          z: 0
+        end:
+          x: 0.5886920101659088
+          y: -2.147261647085339
+          z: 0
+        orientation:
+          x: 0
+          y: 0
+          z: 0.7148242124103991
+          w: 0.6993041865682291
+        frame_id: map
+    exit_data: ~
+    edge_data:
+      step_name: Step_0
+      step_type: cross_over
