@@ -98,11 +98,19 @@
         capability/lidar_provider.yaml
       </capability_provider>
       
-       <capability_interface>
+      <capability_interface>
         capability/localization_interface.yaml
       </capability_interface>
       <capability_provider>
         capability/localization_provider.yaml
+      </capability_provider>
+      
+      
+      <capability_interface>
+        capability/back_camera_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/back_camera_provider.yaml
       </capability_provider>
   </export>
 </package>

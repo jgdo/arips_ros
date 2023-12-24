@@ -1,5 +1,5 @@
 <launch>
-	<arg name="marker_size" default="6" />
+	<arg name="marker_size" default="12" />
 	<arg name="max_new_marker_error" default="0.05" />
 	<arg name="max_track_error" default="0.15" />
 	<arg name="cam_image_topic" default="/kinect/rgb/image_raw" />

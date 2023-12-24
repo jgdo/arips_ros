@@ -20,7 +20,7 @@ global_costmap:
       map: /map
 
   slam_map:
-      map_topic: /map
+      map_topic: /flat_layer_map1_overlay
       #lethal_cost_threshold: 50
       track_unknown_space: true
       unknown_cost_value: 254

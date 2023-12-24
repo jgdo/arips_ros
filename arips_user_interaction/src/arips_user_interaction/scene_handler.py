@@ -36,6 +36,8 @@ class SceneIntentHandler(IntentHandler):
             self.handle_drop(msg)
         elif msg.intent == 'place_on_object':
             self.handle_place_on_object(msg)
+        elif msg.intent == 'retract_arm':
+            self.goto_idle_pose()
         else:
             self.ui.say("Cannot handle {}".format(msg.intent))
 
@@ -60,6 +62,7 @@ class SceneIntentHandler(IntentHandler):
     
     def select_object_pose(self, msg) -> Tuple[geometry_msgs.msg.Pose, str]:
         slots = dict(zip(msg.slots, msg.values))
+        print(f"pickup {slots}")
         objects = list(self.scene.get_objects([]).values())
 
         color_filter = slots['color'] if 'color' in slots else ''

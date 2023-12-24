@@ -46,7 +46,7 @@ private:
     std::unique_ptr<DriveTo> mDriveTo;
     std::unique_ptr<CrossDoor> mCrossDoor;
 
-    CrossFloorStep mCrossStep {mContext};
+    CrossFloorStep mCrossStep {*mContext};
 
     ros::Subscriber psub_nav, hp_sub, clicked_sub, door_info_sub;
 

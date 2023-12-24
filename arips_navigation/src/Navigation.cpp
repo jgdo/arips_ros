@@ -41,7 +41,7 @@ Navigation::Navigation() {
         costsModules->addModule(stepModule);
 
         auto stepFromTracker = std::make_shared<StepModuleFromTracker>(
-            m_TopoPlanner.getContext(), mContext.floorStepTracker, *stepModule);
+            m_TopoPlanner.getContext(), mContext->floorStepTracker, *stepModule);
         edgeContainer->addVisualizationModule("__stepFromTracker__", stepFromTracker);
     }
 
@@ -68,7 +68,7 @@ Navigation::Navigation() {
     m_TopoPlanner.init("topo_planner", factory, &mContext->tf);
     {
         auto layerPlugin = boost::make_shared<StepCostmapLayer>(m_TopoPlanner.getContext().topoMap);
-        auto& plugins = *mContext.globalCostmap.getLayeredCostmap()->getPlugins();
+        auto& plugins = *mContext->globalCostmap.getLayeredCostmap()->getPlugins();
         plugins.insert(plugins.begin() + plugins.size()-1, layerPlugin);
     }
 
@@ -80,7 +80,7 @@ Navigation::Navigation() {
 
     mCrossDoor = std::make_unique<CrossDoor>(*mContext, *mDriveTo, mOpenDoor);
 
-    m_TopoExec = std::make_unique<TopoExecuter>(*mContext, *mDriveTo, m_TopoPlanner, *mCrossDoor);
+    m_TopoExec = std::make_unique<TopoExecuter>(*mContext, *mDriveTo, m_TopoPlanner, *mCrossDoor, mCrossStep);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
     // hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);

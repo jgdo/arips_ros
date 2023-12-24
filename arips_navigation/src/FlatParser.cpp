@@ -60,7 +60,8 @@ void FlatParser::parseNodeData(YAML::Node const& config, TopoMap::Node* node) {
     auto& mapData = FlatGroundModule::getMapData(currentMap);
 
     FlatGroundModule::initNodeData(node, nodeX, nodeY);
-            FlatGroundModule::regionGrow(node, mapData.planner->getMap().getCostmap(),
+            FlatGroundModule::regionGrow(node, mapData.mNavContext->globalCostmap.getCostmap(), nodeX, nodeY, &mapData.nodeMatrix);
+
 }
 
 YAML::Node FlatParser::beginSaving(TopoMap* map) {
@@ -88,7 +89,7 @@ void FlatParser::segmentKnownNodes(TopoMap* map) {
 
         // FIXME: what if layer not present?
         const size_t cells =
-            FlatGroundModule::regionGrow(node, mapData.planner->getMap().getCostmap(), nodeData.x,
+            FlatGroundModule::regionGrow(node,  mapData.mNavContext->globalCostmap.getCostmap(), nodeData.x,
                                          nodeData.y, &mapData.nodeMatrix);
         if (cells > 0) {
             ROS_DEBUG_STREAM("FlatGroundModule: segmented " << cells << " cells for node "

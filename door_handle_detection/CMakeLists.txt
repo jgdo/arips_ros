@@ -7,6 +7,8 @@ add_compile_options(-std=c++17)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+
+
 find_package(catkin REQUIRED COMPONENTS
     rospy
     roscpp
@@ -18,11 +20,10 @@ find_package(catkin REQUIRED COMPONENTS
     image_geometry
     image_transport
     cv_bridge
-    OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED core highgui)
 # find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
@@ -134,6 +135,12 @@ add_library(${PROJECT_NAME}
      src/DoorHandleDetector.cpp src/DoorHandleDetector.h
 )
 
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        opencv_core
+        opencv_highgui
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -167,8 +174,17 @@ add_dependencies(step_detection_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 target_link_libraries(step_detection_node
     ${catkin_LIBRARIES}
     ${PROJECT_NAME}
-    ${OpenCV_LIBRARIES}
  )
+
+
+add_executable(docking_line_detector_node src/docking_line_detector_node.cpp)
+add_dependencies(docking_line_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(docking_line_detector_node
+    ${catkin_LIBRARIES}
+    ${PROJECT_NAME}
+)
 
 #############
 ## Install ##
@@ -186,7 +202,7 @@ target_link_libraries(step_detection_node
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node step_detection_node
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node step_detection_node docking_line_detector_node
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
