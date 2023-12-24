@@ -160,6 +160,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
  install(PROGRAMS
    scripts/get_robot_marker_pose.py
+   scripts/calibrate_kinect_to_robot_base.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

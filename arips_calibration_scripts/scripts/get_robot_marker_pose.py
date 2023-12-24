@@ -27,41 +27,12 @@ class kinect_calibrator:
         pos, quat = self.tf_listener.lookupTransform(dst, src, rospy.Time(0))
         return tf.TransformerROS().fromTranslationRotation(pos, quat)
 
-    def check_transform(self, event):   
-        try: 
-            self.check_transform_robot()
-        
-            """
-            (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_10', rospy.Time(0))
-            (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_11', rospy.Time(0))
-            (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_12', rospy.Time(0))
-            (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_13', rospy.Time(0))
-            
-            v0 = np.zeros((3, 4))
-            v0[:, 0] = trans1
-            v0[:, 1] = trans2
-            v0[:, 2] = trans3
-            v0[:, 3] = trans4
-                        
-            v1 = np.zeros((3, 4))
-            v1[:, 0] = [0.28, -0.2, 0.0]
-            v1[:, 1] = [0.28, 0.2, 0.0]
-            v1[:, 2] = [0.0, 0.2, 0.0]
-            v1[:, 3] = [0.0, -0.2, 0.0]
-            
-            M = tf.transformations.superimposition_matrix(v1, v0)
-            
-            #print(M
-            rospy.logdebug("publishing marker_floor")
-            
-            self.tf_br.sendTransform(tf.transformations.translation_from_matrix(M),
-                         tf.transformations.quaternion_from_matrix(M),
-                         rospy.Time.now(),
-                         "marker_floor",
-                         "kinect_link")
-            """
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            pass
+    def check_transform(self, event):  
+        for func in [self.check_transform_robot, self.check_transform_groundplate]:
+            try: 
+                func() 
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                pass
                      
     def check_transform_robot(self):
         latest_times = [
@@ -91,10 +62,10 @@ class kinect_calibrator:
         v0[:, 3] = trans4
                     
         v1 = np.zeros((3, 4))
-        v1[:, 0] = [0.08, -0.1, 0.0]
-        v1[:, 1] = [0.08, 0.1, 0.0]
-        v1[:, 2] = [0.0, 0.1, 0.0]
-        v1[:, 3] = [0.0, -0.1, 0.0]
+        v1[:, 2] = [0.08, -0.1, 0.0]
+        v1[:, 3] = [0.08, 0.1, 0.0]
+        v1[:, 0] = [0.0, 0.1, 0.0]
+        v1[:, 1] = [0.0, -0.1, 0.0]
         
         M = tf.transformations.superimposition_matrix(v1, v0)
         
@@ -106,6 +77,35 @@ class kinect_calibrator:
                      rospy.Time.now(),
                      "marker_robot",
                      "kinect_link")
+    
+    def check_transform_groundplate(self):
+        (trans1,rot1) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_42', rospy.Time(0))
+        (trans2,rot2) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_43', rospy.Time(0))
+        (trans3,rot3) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_44', rospy.Time(0))
+        (trans4,rot4) = self.tf_listener.lookupTransform('/kinect_link', '/ar_marker_45', rospy.Time(0))
+        
+        v0 = np.zeros((3, 4))
+        v0[:, 0] = trans1
+        v0[:, 1] = trans2
+        v0[:, 2] = trans3
+        v0[:, 3] = trans4
+                    
+        v1 = np.zeros((3, 4))
+        v1[:, 0] = [0.28, -0.2, 0.0]
+        v1[:, 1] = [0.28, 0.2, 0.0]
+        v1[:, 2] = [0.0, 0.2, 0.0]
+        v1[:, 3] = [0.0, -0.2, 0.0]
+        
+        M = tf.transformations.superimposition_matrix(v1, v0)
+        
+        #print(M
+        rospy.logdebug("publishing marker_floor")
+        
+        self.tf_br.sendTransform(tf.transformations.translation_from_matrix(M),
+                    tf.transformations.quaternion_from_matrix(M),
+                    rospy.Time.now(),
+                    "marker_floor",
+                    "kinect_link")
 
 def main(args):
     '''Initializes and cleanup ros node'''

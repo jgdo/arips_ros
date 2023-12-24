@@ -42,8 +42,8 @@ class kinect_calibrator:
 
             print("transform")
             print(trans, tf.transformations.euler_from_quaternion(quat))
-
-            print
+            print()
+            
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
 

@@ -254,7 +254,7 @@
             var y = Math.floor((this.max - value) / (this.max - this.min) * yRange);
             this.thumb.style.top = y - shift + 'px';
             this.value = value;
-            this.onChange();
+            //this.onChange();
         };
 
         Slider.prototype.getValue = function () {
@@ -277,6 +277,9 @@
         kinectTiltAngleListener.subscribe(function (message) {
             if(tiltAngleTimer == null) {
                 kinectSlider.setValue(-message.data);
+
+                const currentAngle = message.data;
+                document.getElementById("demo-value").innerHTML = currentAngle.toFixed(0);
             }
         });
 
@@ -310,7 +313,7 @@
         window.onload = function () {
             createJoystick();
 
-            kinectSlider = new Slider(-60, 90, document.getElementById("demo-slider"),
+            kinectSlider = new Slider(-70, 90, document.getElementById("demo-slider"),
                 document.getElementById("demo-thumb"));
             kinectSlider.onChange = onSliderChange;
         }
