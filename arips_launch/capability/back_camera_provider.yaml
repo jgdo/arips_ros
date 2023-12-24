@@ -1,0 +1,7 @@
+name: back_camera_markers_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/back_camera_markers
+launch_file: '../launch/alvar_back_cam.launch'
+depends_on: []
+

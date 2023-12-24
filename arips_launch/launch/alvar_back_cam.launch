@@ -1,0 +1,32 @@
+<launch>
+	<arg name="marker_size" default="10" />
+	<arg name="max_new_marker_error" default="0.05" />
+	<arg name="max_track_error" default="0.15" />
+	<arg name="cam_image_topic" default="/back_camera/image_raw" />
+	<arg name="cam_info_topic" default="/back_camera/camera_info" />
+	<arg name="output_frame" default="back_camera" />
+
+	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg cam_image_topic)" />
+		<remap from="camera_info"   to="$(arg cam_info_topic)" />
+	</node>
+	
+	<node name="usb_cam_node" pkg="usb_cam" type="usb_cam_node" respawn="false" output="screen">
+		<param name="video_device"           type="string" value="/dev/video2" />
+		<param name="pixel_format"           type="string" value="grey" />
+		<param name="camera_frame_id"        type="string" value="back_camera" />
+		<param name="camera_name"            type="string" value="back_camera" />
+
+		<remap from="/usb_cam_node/image_raw"    to="$(arg cam_image_topic)" />
+	    <remap from="/usb_cam_node/camera_info"  to="$(arg cam_info_topic)" />
+	</node>
+	
+	<node pkg="tf2_ros" type="static_transform_publisher" name="base_to_usb_publisher"
+                args="-0.14 0.0 0.58 1.57079632679 0 -2.75 arips_base back_camera" />  
+
+</launch>

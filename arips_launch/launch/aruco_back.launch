@@ -1,0 +1,26 @@
+<!-- Run the aruco_detect node -->
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="image_info_topic" default="/usb_cam/camera_info"/>
+  <arg name="image_topic" default="/usb_cam/image_raw"/>
+  <arg name="image_transport" default="raw"/>
+  <arg name="fiducial_len" default="0.12"/>
+  <arg name="dictionary" default="5"/>
+  <arg name="do_pose_estimation" default="true"/>
+  <arg name="ignore_fiducials" default="" />
+  <arg name="fiducial_len_override" default="" />
+
+  <node pkg="aruco_detect" name="aruco_detect"
+    type="aruco_detect" output="screen" respawn="false">
+    <param name="image_info_topic" value="$(arg image_info_topic)"/>
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="image_transport" value="$(arg image_transport)"/>
+    <param name="publish_images" value="true" />
+    <param name="fiducial_len" value="$(arg fiducial_len)"/>
+    <param name="dictionary" value="$(arg dictionary)"/>
+    <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
+    <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
+    <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
+  </node>
+</launch>
+

@@ -1,0 +1,34 @@
+<launch>
+  <arg name="rate"        default="10"/>
+  <arg name="approx_sync" default="true" /> <!-- true for freenect driver -->
+  <arg name="rgbd_sync"   default="true"/>
+  <arg name="camera"      default="kinect"/>
+
+  <!-- Use same nodelet used by Freenect/OpenNI -->
+  <group ns="$(arg camera)">
+    <node if="$(arg rgbd_sync)" pkg="nodelet" type="nodelet" name="rgbd_sync" args="load rtabmap_ros/rgbd_sync $(arg camera)_nodelet_manager" output="screen">
+      <param name="compressed_rate"  type="double" value="$(arg rate)"/>
+      <param name="rate"             type="double" value="$(arg rate)"/>
+      <param name="approx_sync"      type="bool"   value="$(arg approx_sync)"/>
+
+      <remap from="rgb/image"       to="rgb/image_rect_color"/>
+      <remap from="depth/image"     to="depth_registered/image_raw"/>
+      <remap from="rgb/camera_info" to="rgb/camera_info"/>
+
+      <remap from="rgbd_image"      to="rgbd_image"/>
+    </node>
+
+    <node unless="$(arg rgbd_sync)" pkg="nodelet" type="nodelet" name="data_throttle" args="load rtabmap_ros/data_throttle $(arg camera)_nodelet_manager" output="screen">
+      <param name="rate"         type="double" value="$(arg rate)"/>
+      <param name="approx_sync"  type="bool"   value="$(arg approx_sync)"/>
+
+      <remap from="rgb/imageIn"       to="rgb/image_rect_color"/>
+      <remap from="depth/imageIn"     to="depth_registered/image_raw"/>
+      <remap from="rgb/camera_infoIn" to="rgb/camera_info"/>
+
+      <remap from="rgb/image_out"       to="throttled/rgb/image_rect_color"/>
+      <remap from="depth/image_out"     to="throttled/depth_registered/image_raw"/>
+      <remap from="rgb/camera_info_out" to="throttled/rgb/camera_info"/>
+    </node>
+  </group>      
+</launch>
