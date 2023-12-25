@@ -1,5 +1,3 @@
-#pragma once
-
 #include "arips_navigation/utils/StepCostmapLayer.h"
 
 #include <arips_navigation/StepEdgeModule.h>
@@ -20,18 +18,18 @@ void StepCostmapLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
     };
 
     const auto& mapData = toponav_ros::StepEdgeModule::getMapData(mTopoMap.get());
-    for (const auto& step : mapData.steps) {
-
+    for (const auto& stepEntry : mapData.steps) {
+        const auto& step = *stepEntry.second;
         const auto off =
-            tf2::quatRotate(createQuaternionFromYaw(M_PI_2), step.second.end - step.second.start)
+            tf2::quatRotate(createQuaternionFromYaw(M_PI_2), step.end - step.start)
                 .normalized() *
             stepWidth*0.5;
 
         std::vector<geometry_msgs::Point> polygon{
-            toPoint(step.second.start + off),
-            toPoint(step.second.start - off),
-            toPoint(step.second.end - off),
-            toPoint(step.second.end + off),
+            toPoint(step.start + off),
+            toPoint(step.start - off),
+            toPoint(step.end - off),
+            toPoint(step.end + off),
         };
 
         master_grid.setConvexPolygonCost(polygon, costmap_2d::LETHAL_OBSTACLE);

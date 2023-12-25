@@ -4,7 +4,7 @@
 #include <geometry_msgs/Twist.h>
 #include <tf2_ros/transform_listener.h>
 
-#include <arips_navigation/utils/FloorStepTracker.h>
+// #include <arips_navigation/utils/FloorStepTracker.h>
 
 class NavigationContext {
 public:
@@ -18,7 +18,7 @@ private:
 public:
     costmap_2d::Costmap2DROS globalCostmap{"global_costmap", tf};
     costmap_2d::Costmap2DROS localCostmap{"local_costmap", tf};
-    FloorStepTracker floorStepTracker{tf, globalCostmap.getGlobalFrameID()};
+    // FloorStepTracker floorStepTracker{tf, globalCostmap.getGlobalFrameID()};
 
     explicit NavigationContext();
 

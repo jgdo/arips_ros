@@ -226,6 +226,7 @@ std::vector<DetectedFloorStep> FloorStepTracker::allSteps() const {
 }
 void FloorStepTracker::visualizeSteps() { mPimpl->visualizeSteps(); }
 
+
 FloorStepTracker::~FloorStepTracker() = default;
 
 struct SingleFloorStepTracker::Pimpl: public PimplBase {

@@ -34,8 +34,10 @@ struct DriveTo::Pimpl {
                 goal, mParent.mContext.globalCostmap.getGlobalFrameID());
 
             const auto planOk = mLocomotion.setGoal(
-                Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose),
-                              mParent.mContext.floorStepTracker.allSteps()},
+                Costmap2dView{mParent.mContext.globalCostmap, Pose2D::fromMsg(robotPose.pose)
+                              /* TODO , mParent.mContext.floorStepTracker.allSteps() */ },
+
+               
                 Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor));
 
             if (!planOk) {
@@ -43,8 +45,8 @@ struct DriveTo::Pimpl {
                 mParent.mContext.globalCostmap.resetLayers();
                 if (!mLocomotion.setGoal(
                         Costmap2dView{mParent.mContext.globalCostmap,
-                                      Pose2D::fromMsg(robotPose.pose),
-                                      mParent.mContext.floorStepTracker.allSteps()},
+                                      Pose2D::fromMsg(robotPose.pose)
+                                      /* TODO , mParent.mContext.floorStepTracker.allSteps() */ },
                         Pose2D::fromMsg(robotPose.pose), Pose2D::fromTf(poseOnFloor))) {
                     ROS_ERROR("Could not plan path to goal even after clearing the global costmap");
                     return false;
@@ -63,8 +65,8 @@ struct DriveTo::Pimpl {
         if (mParent.mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
             const auto robotPose = Pose2D::fromMsg(robotPoseMsg.pose);
             const auto optTwist = mLocomotion.computeVelocityCommands(
-                Costmap2dView{mParent.mContext.globalCostmap, robotPose,
-                              mParent.mContext.floorStepTracker.allSteps()},
+                Costmap2dView{mParent.mContext.globalCostmap, robotPose /* TODO,
+                              mParent.mContext.floorStepTracker.allSteps() */},
                 {robotPose, Pose2D::fromMsg(mLastOdom.twist.twist)}, 0.1); // TODO hardcoded time
 
             if (optTwist) {

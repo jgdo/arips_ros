@@ -1,0 +1,58 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/jgdo/catkin_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/amcl/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/arips_arm_ik_plugin/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/arips_arm_node/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/arips_navigation/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/arips_world_model/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/base_local_planner/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/carrot_planner/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/clear_costmap_recovery/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/robot_nav_tools/color_util/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/costmap_2d/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/costmap_queue/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/dlux_global_planner/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/dlux_plugins/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/dwa_local_planner/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/dwb_critics/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/dwb_local_planner/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/dwb_plugins/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/global_planner/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/global_planner_tests/include/**",
+                "/home/jgdo/catkin_ws/src/laser_line_extraction/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/locomotor/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/locomove_base/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/map_server/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/move_base/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/move_slow_and_clear/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_2d_utils/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/nav_core/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_core2/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_core_adapter/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_grid/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_grid_iterators/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_grid_pub_sub/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/nav_grid_server/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/navfn/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/robot_nav_tools/robot_nav_rviz_plugins/include/**",
+                "/home/jgdo/catkin_ws/src/robot_navigation/robot_nav_tools/robot_nav_viz_demos/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/rotate_recovery/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/toponav_core/include/**",
+                "/home/jgdo/catkin_ws/src/arips_ros/toponav_ros/include/**",
+                "/home/jgdo/catkin_ws/src/navigation/voxel_grid/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

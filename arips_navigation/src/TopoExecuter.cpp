@@ -149,7 +149,7 @@ void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* tra
 
     const auto& edgeData = toponav_ros::StepEdgeModule::getEdgeData(transition->topoEdge);
     const auto& stepData = toponav_ros::StepEdgeModule::getMapData(transition->topoEdge->getParentMap());
-    const auto& stepInfo = stepData.steps.at(edgeData.stepName);
+    const auto& stepInfo = *stepData.steps.at(edgeData.stepName);
 
 
     /*

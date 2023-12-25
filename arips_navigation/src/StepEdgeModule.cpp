@@ -13,6 +13,16 @@ namespace toponav_ros {
 
 using namespace toponav_core;
 
+std::string findFreeStepName(StepEdgeModule::MapStepData const& stepsData) {
+    size_t i = stepsData.steps.size();
+    std::string name;
+    do {
+        name = "Step_" + std::to_string(i);
+        i++; // FIXME: more efficient search
+    } while (stepsData.steps.find(name) != stepsData.steps.end());
+    return name;
+}
+
 GEN_COSTS_READER_WRITER(StepEdgeModuleCostsParser, BaseTraits<StepEdgeModule>::CostSettings,
                         {"time", &BaseTraits<StepEdgeModule>::CostSettings::time_costs},
                         {"energy", &BaseTraits<StepEdgeModule>::CostSettings::energy_costs},
@@ -24,6 +34,68 @@ using namespace interactive_markers;
 const std::string StepEdgeModule::className = "topo_nav::StepEdgeModule";
 
 static std::string edgeType = "step";
+
+StepEdgeModule::StepEdgeModule(PlanningContext& context) : ApproachExitVisualizer{context} {
+    ros::NodeHandle nh;
+    mFloorStepSub = nh.subscribe("floor_step", 10, &StepEdgeModule::onFloorStepCb, this);
+}
+
+void StepEdgeModule::onFloorStepCb(const geometry_msgs::PolygonStamped& msg) {
+    const auto trans =
+        tryLookupTransform(*_context.tfBuffer, _context.globalFrame, msg.header.frame_id);
+    if (!trans) {
+        return;
+    }
+
+    auto toP2d = [&trans](const geometry_msgs::Point32& p) {
+        const auto pTrans = (*trans)(tf2::Vector3{p.x, p.y, p.z});
+        return Point2d{pTrans.x(), pTrans.y()};
+    };
+
+    if (msg.polygon.points.size() == 4) {
+        clearArea({toP2d(msg.polygon.points.at(0)), toP2d(msg.polygon.points.at(1)),
+                   toP2d(msg.polygon.points.at(2)), toP2d(msg.polygon.points.at(3))});
+    } else if (msg.polygon.points.size() == 6) {
+        const FloorStep2d s{toP2d(msg.polygon.points.at(4)), toP2d(msg.polygon.points.at(5))};
+        trackStep(s, msg.header.stamp);
+    } else {
+        ROS_WARN_STREAM("FloorStepTracker received polygon with size "
+                        << msg.polygon.points.size() << ", but expected 4 or 6. Ignoring.");
+        return;
+    }
+}
+
+void StepEdgeModule::trackStep(const FloorStep2d& obsStep, ros::Time stamp) {
+    MapStepData& stepData = getMapData(_context.topoMap.get());
+
+    for (auto& stepEntry : stepData.steps) {
+        // iterate only over tracked steps
+        TrackedStepInfo* step = dynamic_cast<TrackedStepInfo*>(stepEntry.second.get());
+
+        if (step->isWithinTolerance(obsStep, TRACK_TOLERANCE_M)) {
+            step->track(obsStep);
+            _context.mapChanged();
+            return;
+        }
+    }
+
+    const auto newName = findFreeStepName(stepData);
+
+    ROS_INFO_STREAM("Adding new step: " << newName);
+
+    tf2::Stamped<tf2::Vector3> start(tf2::Vector3(obsStep[0].x(), obsStep[0].y(), 0.0), stamp, _context.globalFrame);
+    tf2::Stamped<tf2::Vector3> end(tf2::Vector3(obsStep[1].x(), obsStep[1].y(), 0.0), stamp, _context.globalFrame);
+
+    stepData.steps[newName] = std::make_shared<TrackedStepInfo>(
+        start, end, newName, stepData.defaultUpCosts, stepData.defaultDownCosts,
+        stepData.defaultCrossOverCosts, stepData.defaultCrossGravelCosts);
+    
+    _context.mapChanged();
+}
+
+void StepEdgeModule::clearArea(const std::vector<Point2d>& points) {
+    // Clearing not implemented yet ...
+}
 
 void StepEdgeModule::beginParsing(TopoMap* map, YAML::Node const& parserConfig) {
     currentMap = map;
@@ -75,15 +147,15 @@ void StepEdgeModule::beginParsing(TopoMap* map, YAML::Node const& parserConfig) 
         parser.parse(&crossGravelCosts, stepDef["costs_cross_gravel"], className,
                      "stairs '" + name + "'cross gravel costs");
 
-        currentStepData.steps[name] =
-            StepInfo{start, end, name, upCosts, downCosts, crossCosts, crossGravelCosts};
+        currentStepData.steps[name] = std::unique_ptr<StepInfo>(
+            new StepInfo{start, end, name, upCosts, downCosts, crossCosts, crossGravelCosts});
     }
 
     goal_properties.readFromParams("~/modules/" + edgeType);
 }
 
 void StepEdgeModule::endParsing() {
-    currentMap->propertyMap()[className] = currentStepData;
+    currentMap->propertyMap()[className] = std::move(currentStepData);
     currentMap = nullptr;
 }
 
@@ -117,7 +189,7 @@ StepEdgeModule::computeTransitionCost(const TopoMap::Edge* edge, const LocalPosi
                                       boost::any* pathData) {
     const MapStepData& mapData = getMapData(_context.topoMap.get());
     auto& data = getEdgeData(edge);
-    auto& entry = mapData.steps.at(data.stepName);
+    auto& entry = *mapData.steps.at(data.stepName);
     double costs = getCosts(selectCosts(entry, data.type));
 
     const PositionData& approach = *dynamic_cast<const PositionData*>(&approachPose);
@@ -195,7 +267,7 @@ void StepEdgeModule::beginMapVisualization() {
     MapStepData& stepData = getMapData(mapEditor->getMap());
 
     for (auto& entry : stepData.steps) {
-        visualizeMapStep(&entry.second);
+        visualizeMapStep(entry.second.get());
     }
 }
 
@@ -205,13 +277,9 @@ void StepEdgeModule::createNewMapStep(TopoMap* map, std::string name,
                                       tf2::Stamped<tf2::Vector3> const& start,
                                       const tf2::Stamped<tf2::Vector3>& end) {
     MapStepData& stepData = getMapData(map);
-    stepData.steps[name] = StepInfo{start,
-                                    end,
-                                    name,
-                                    stepData.defaultUpCosts,
-                                    stepData.defaultDownCosts,
-                                    stepData.defaultCrossOverCosts,
-                                    stepData.defaultCrossGravelCosts};
+    stepData.steps[name] = std::unique_ptr<StepInfo>{
+        new StepInfo{start, end, name, stepData.defaultUpCosts, stepData.defaultDownCosts,
+                     stepData.defaultCrossOverCosts, stepData.defaultCrossGravelCosts}};
 }
 
 void StepEdgeModule::initEdgeData(TopoMap::Edge* edge, std::string stepName,
@@ -243,16 +311,6 @@ void StepEdgeModule::selectMapStepCB(
 void StepEdgeModule::activate() {}
 
 void StepEdgeModule::deactivate() { vizState = IDLE; }
-
-std::string findFreeStepName(StepEdgeModule::MapStepData const& stepsData) {
-    size_t i = stepsData.steps.size();
-    std::string name;
-    do {
-        name = "Step_" + std::to_string(i);
-        i++; // FIXME: more efficient search
-    } while (stepsData.steps.find(name) != stepsData.steps.end());
-    return name;
-}
 
 void StepEdgeModule::poseCallback(geometry_msgs::PoseStamped const& msg) {
     if (vizState == CREATING_MAP_STEP) {
@@ -356,17 +414,18 @@ YAML::Node StepEdgeModule::beginSaving(TopoMap* map) {
     YAML::Node steps(YAML::NodeType::Sequence);
     for (auto& e : stepData.steps) {
         YAML::Node step;
+        const auto& stepInfo = *e.second;
 
-        step["name"] = e.second.name;
-        step["start"] = (tf2::Vector3&)e.second.start;
-        step["end"] = (tf2::Vector3&)e.second.end;
-        step["frame_id"] = e.second.start.frame_id_;
+        step["name"] = stepInfo.name;
+        step["start"] = (tf2::Vector3&)stepInfo.start;
+        step["end"] = (tf2::Vector3&)stepInfo.end;
+        step["frame_id"] = stepInfo.start.frame_id_;
 
-        parser.storeDiff(step, "costs_up", e.second.upCosts, stepData.defaultUpCosts);
-        parser.storeDiff(step, "costs_down", e.second.downCosts, stepData.defaultDownCosts);
-        parser.storeDiff(step, "costs_cross_over", e.second.crossOverCosts,
+        parser.storeDiff(step, "costs_up", stepInfo.upCosts, stepData.defaultUpCosts);
+        parser.storeDiff(step, "costs_down", stepInfo.downCosts, stepData.defaultDownCosts);
+        parser.storeDiff(step, "costs_cross_over", stepInfo.crossOverCosts,
                          stepData.defaultCrossOverCosts);
-        parser.storeDiff(step, "costs_cross_gravel", e.second.crossGravelCosts,
+        parser.storeDiff(step, "costs_cross_gravel", stepInfo.crossGravelCosts,
                          stepData.defaultCrossGravelCosts);
 
         steps.push_back(step);
@@ -577,7 +636,7 @@ void StepEdgeModule::setApproachFromStepCB(
     auto const& approach = getApproachData(edge);
     EdgeStepData const& edgeData = getEdgeData(edge);
     MapStepData& stepData = getMapData(mapEditor->getMap());
-    StepInfo const& stepInfo = stepData.steps.at(edgeData.stepName);
+    StepInfo const& stepInfo = *stepData.steps.at(edgeData.stepName);
 
     const double robotWidth2 = 0.4; // FIXME
     const double robotLength2 = 1.0;
@@ -612,7 +671,7 @@ void StepEdgeModule::setApproachFromStepCB(
 double StepEdgeModule::getHeuristics(TopoMap::Edge const* edge) {
     const MapStepData& mapData = getMapData(_context.topoMap.get());
     auto& data = getEdgeData(edge);
-    auto& entry = mapData.steps.at(data.stepName);
+    auto& entry = *mapData.steps.at(data.stepName);
 
     return getCosts(selectCosts(entry, data.type));
 }
@@ -627,7 +686,7 @@ void StepEdgeModule::parseEdgeInData(YAML::Node const& config, TopoMap::Edge* ed
     approach->getCenter();
     auto& data = getEdgeData(edge);
     auto exitPose =
-        getExitPoseFromApproach(currentStepData.steps.at(data.stepName), approach->getCenter());
+        getExitPoseFromApproach(*currentStepData.steps.at(data.stepName), approach->getCenter());
     setExitData(edge, std::make_shared<FixedPosition>(exitPose));
 }
 
@@ -669,7 +728,7 @@ void StepEdgeModule::onEdgeApproachChanged(const TopoMap::Edge* constEdge) {
 
     EdgeStepData const& edgeData = getEdgeData(edge);
     MapStepData& stepData = getMapData(mapEditor->getMap());
-    StepInfo const& stepInfo = stepData.steps.at(edgeData.stepName);
+    StepInfo const& stepInfo = *stepData.steps.at(edgeData.stepName);
 
     auto exitPose = getExitPoseFromApproach(stepInfo, approach->getCenter());
     setExitData(edge, std::make_shared<FixedPosition>(exitPose));
@@ -761,8 +820,8 @@ void StepEdgeModule::createBothStepEdgesCB(
     TopoMap::Node* nodeB = mapEditor->getMap()->getNode(gpB.node->getName());
 
     {
-        const auto nameAB = edgeType + "_" + std::to_string(mapEditor->getMap()->getNumEdges()) + "_" +
-                            gpA.node->getName() + "_" + gpB.node->getName();
+        const auto nameAB = edgeType + "_" + std::to_string(mapEditor->getMap()->getNumEdges()) +
+                            "_" + gpA.node->getName() + "_" + gpB.node->getName();
         auto edgeAB = mapEditor->getMap()->addEdge(nodeA, nodeB, nameAB, edgeType);
         setApproachData(edgeAB, ApproachLineArea::create(posA, posA, rotAB));
         setExitData(edgeAB, ApproachLineArea::create(posB, posB, rotAB));

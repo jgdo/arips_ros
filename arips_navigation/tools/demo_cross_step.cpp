@@ -1,5 +1,6 @@
 #include <arips_navigation/CrossFloorStep.h>
 #include <arips_navigation/NavigationContext.h>
+#include <arips_navigation/utils/FloorStepTracker.h>
 
 struct DemoNode {
     const ros::Rate mControlRate{10};

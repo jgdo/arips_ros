@@ -17,9 +17,10 @@
 
 #include <memory>
 
-#include "arips_navigation/utils/StepModuleFromTracker.h"
+// #include "arips_navigation/utils/StepModuleFromTracker.h"
 #include "arips_navigation/utils/StepCostmapLayer.h"
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include "arips_navigation/Navigation.h"
 
 using namespace toponav_ros;
 using namespace toponav_core;
@@ -40,9 +41,9 @@ Navigation::Navigation() {
         edgeContainer->addVisualizationModule("step", stepModule);
         costsModules->addModule(stepModule);
 
-        auto stepFromTracker = std::make_shared<StepModuleFromTracker>(
-            m_TopoPlanner.getContext(), mContext->floorStepTracker, *stepModule);
-        edgeContainer->addVisualizationModule("__stepFromTracker__", stepFromTracker);
+        // auto stepFromTracker = std::make_shared<StepModuleFromTracker>(
+        //     m_TopoPlanner.getContext(), mContext->floorStepTracker, *stepModule);
+        // edgeContainer->addVisualizationModule("__stepFromTracker__", stepFromTracker);
     }
 
     NodeModuleContainerPtr nodeContainer = std::make_shared<NodeModuleContainer>();
@@ -129,3 +130,4 @@ void Navigation::onDoorInfoReceived(const arips_navigation::CrossDoorInformation
     mCrossDoor->activate(doorInfo);
     mDrivingState = mCrossDoor.get();
 }
+

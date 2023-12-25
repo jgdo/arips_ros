@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node pkg="tf" type="static_transform_publisher" name="world_pubsdfsdf" args="0 0 0 0 0 0 global map 30"/>
+ <!-- <node pkg="tf" type="static_transform_publisher" name="world_pub" args="0 0 0 0 0 0 global world 30"/> -->
+
+     
+  <node pkg="arips_navigation" type="arips_navigation_node" respawn="false" name="arips_navigation_node" output="screen" clear_params="true">
+    <rosparam file="$(find arips_navigation)/config/lu/costmap_simple.yaml" command="load" />
+    <rosparam file="$(find arips_navigation)/config/config.yaml" command="load" />
+    <rosparam param="topo_planner/topo_map_file" subst_value="True">
+        $(find arips_navigation)/config/lu/topomap_simple.yaml
+    </rosparam>
+  </node>
+  
+</launch>

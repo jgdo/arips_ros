@@ -1,5 +1,7 @@
 #include <arips_navigation/CrossFloorStep.h>
 
+#include <arips_navigation/utils/FloorStepTracker.h>
+
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <arips_navigation/utils/transforms.h>

@@ -3,6 +3,8 @@
 #include "DrivingState.h"
 #include <memory>
 
+#include <arips_navigation/path_planning/PlanningMath.h>
+
 using FloorStep = std::array<Point2d, 2>;
 
 class CrossFloorStep: public DrivingState
