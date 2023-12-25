@@ -74,6 +74,18 @@ void StepEdgeModule::trackStep(const FloorStep2d& obsStep, ros::Time stamp) {
 
         if (step->isWithinTolerance(obsStep, TRACK_TOLERANCE_M)) {
             step->track(obsStep);
+
+            // collect edges of this step
+            mapEditor->getMap()->foreachEdge([&](TopoMap::Edge* edge) {
+                if (_context.isModuleType<StepEdgeModule>(edge)) {
+                    auto& edgeData = getEdgeData(edge);
+                    if (edgeData.stepName == step->name) {
+                        setApproachFromStep(edge);
+
+                    }
+                }
+            });
+
             _context.mapChanged();
             return;
         }
@@ -83,14 +95,16 @@ void StepEdgeModule::trackStep(const FloorStep2d& obsStep, ros::Time stamp) {
 
     ROS_INFO_STREAM("Adding new step: " << newName);
 
-    tf2::Stamped<tf2::Vector3> start(tf2::Vector3(obsStep[0].x(), obsStep[0].y(), 0.0), stamp, _context.globalFrame);
-    tf2::Stamped<tf2::Vector3> end(tf2::Vector3(obsStep[1].x(), obsStep[1].y(), 0.0), stamp, _context.globalFrame);
+    tf2::Stamped<tf2::Vector3> start(tf2::Vector3(obsStep[0].x(), obsStep[0].y(), 0.0), stamp,
+                                     _context.globalFrame);
+    tf2::Stamped<tf2::Vector3> end(tf2::Vector3(obsStep[1].x(), obsStep[1].y(), 0.0), stamp,
+                                   _context.globalFrame);
 
-    stepData.steps[newName] = std::make_shared<TrackedStepInfo>(
+    auto stepInfo = std::make_shared<TrackedStepInfo>(
         start, end, newName, stepData.defaultUpCosts, stepData.defaultDownCosts,
         stepData.defaultCrossOverCosts, stepData.defaultCrossGravelCosts);
-    
-    _context.mapChanged();
+    stepData.steps[newName] = stepInfo;
+    createBothStepEdges(stepInfo.get());
 }
 
 void StepEdgeModule::clearArea(const std::vector<Point2d>& points) {
@@ -233,7 +247,7 @@ void StepEdgeModule::visualizeEdge(const TopoMap::Edge* edge) {
                                  boost::bind(&StepEdgeModule::setEdgeUpDown, this, _1, edge));
             menu_handler->insert(
                 "Retrieve position from step",
-                boost::bind(&StepEdgeModule::setApproachFromStepCB, this, _1, edge));
+                boost::bind(&StepEdgeModule::setApproachFromStep, this, edge));
         }
 
         menu_handler->setCheckState(1, data.type == EdgeStepData::UP
@@ -628,9 +642,7 @@ auto static createQuaternionFromYaw(double yaw) {
     return q;
 }
 
-void StepEdgeModule::setApproachFromStepCB(
-    const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
-    const TopoMap::Edge* constEdge) {
+void StepEdgeModule::setApproachFromStep(const TopoMap::Edge* constEdge) {
     TopoMap::Edge* edge = _context.topoMap->getEdge(constEdge->getName());
 
     auto const& approach = getApproachData(edge);
@@ -639,7 +651,7 @@ void StepEdgeModule::setApproachFromStepCB(
     StepInfo const& stepInfo = *stepData.steps.at(edgeData.stepName);
 
     const double robotWidth2 = 0.4; // FIXME
-    const double robotLength2 = 1.0;
+    const double robotLength2 = 0.4;
 
     const auto diff =
         tf2::quatRotate(createQuaternionFromYaw(-M_PI_2), stepInfo.start - stepInfo.end);
@@ -776,6 +788,10 @@ void StepEdgeModule::deleteStepCB(
 void StepEdgeModule::createBothStepEdgesCB(
     const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, StepInfo* stepInfo) {
 
+    createBothStepEdges(stepInfo);
+}
+
+void StepEdgeModule::createBothStepEdges(StepInfo* stepInfo) {
     static constexpr auto distFromStep = 0.4;
 
     // get approach and exit points based on map step

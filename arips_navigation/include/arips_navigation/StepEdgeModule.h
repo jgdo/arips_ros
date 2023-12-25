@@ -247,9 +247,7 @@ private:
     void setEdgeUpDown(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
                        const toponav_core::TopoMap::Edge* data);
 
-    void
-    setApproachFromStepCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
-                          const toponav_core::TopoMap::Edge* data);
+    void setApproachFromStep(const toponav_core::TopoMap::Edge* data);
 
     void visualizeMapStep(StepInfo* stepInfo);
 
@@ -262,6 +260,8 @@ private:
     void
     createBothStepEdgesCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback,
                           StepInfo* stepInfo);
+
+    void createBothStepEdges(StepInfo* stepInfo);
 
     tf2::Stamped<tf2::Transform>
     getExitPoseFromApproach(StepInfo const& stepInfo,
