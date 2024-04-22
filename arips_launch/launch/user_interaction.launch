@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="arips_launch" type="rhasspy.sh" name="arips_launch" output="screen"/>
+    <node pkg="rhasspy_ros_interface" type="rhasspy_ros_node.py" name="rhasspy_ros_node" output="screen"/>
+    <node pkg="arips_user_interaction" type="user_interaction_node" name="user_interaction_node" />
+</launch>

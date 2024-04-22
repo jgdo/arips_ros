@@ -35,7 +35,8 @@ Navigation::Navigation() {
 
     EdgeModuleContainerPtr edgeContainer = std::make_shared<EdgeModuleContainer>();
     {
-        StepEdgeModulePtr stepModule = std::make_shared<StepEdgeModule>(m_TopoPlanner.getContext());
+        const bool dynamicStepsFromDetection = false;
+        StepEdgeModulePtr stepModule = std::make_shared<StepEdgeModule>(m_TopoPlanner.getContext(), dynamicStepsFromDetection);
         edgeContainer->addPlanningModule("step", stepModule);
         edgeContainer->addStorageModule("step", stepModule);
         edgeContainer->addVisualizationModule("step", stepModule);

@@ -65,6 +65,8 @@ class SceneIntentHandler(IntentHandler):
         print(f"pickup {slots}")
         objects = list(self.scene.get_objects([]).values())
 
+        # print(f"all objects:\n{objects}")
+
         color_filter = slots['color'] if 'color' in slots else ''
 
         if color_filter:
@@ -79,15 +81,14 @@ class SceneIntentHandler(IntentHandler):
                 self.ui.say("I see too many objects, please select the left or the right one")
                 return None, color_filter
             if slots['position'] == 'any':
-                pose = objects[0].primitive_poses[0]
+                selected_object = objects[0]
             elif len(objects) == 2 and slots['position'] != "the":
                 # sort objects
-                poses = [p.primitive_poses[0] for p in objects]
-                poses = sorted(poses, key=lambda x: x.position.y)
+                objects = sorted(objects, key=lambda x: x.pose.position.y)
                 if slots['position'] == 'left':
-                    pose = poses[0]
+                    selected_object = objects[0]
                 elif slots['position'] == 'right':
-                    pose = poses[1]
+                    selected_object = objects[1]
                 else:
                     self.ui.say(f"I don't know what the {slots['position']} object is, please choose left or right.")
                     return None, color_filter
@@ -95,13 +96,15 @@ class SceneIntentHandler(IntentHandler):
                 self.ui.say("I see too many objects, please pick one")
                 return None, color_filter
         else:
-            pose = objects[0].primitive_poses[0]
+            selected_object = objects[0]
         
-        pose.position.x += 0.01
-        pose.position.y += 0.02
-        pose.position.z += 0.005
+        pose = copy.deepcopy(selected_object.pose)
+        
+        pose.position.x += 0.00
+        pose.position.y += 0.01
+        pose.position.z -= 0.01
 
-        return pose, color_filter
+        return pose, selected_object.type.key
 
     def handle_pickup(self, msg):
         pose, color = self.select_object_pose(msg)

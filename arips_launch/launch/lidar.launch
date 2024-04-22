@@ -1,11 +1,12 @@
 <launch>
-  <arg name="scan_matcher" default="false"/> 
+  <arg name="scan_matcher" default="true"/> 
 
 
   <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="false" >
     <param name="port"         type="string" value="/dev/ydlidar"/>  
-    <param name="baudrate"     type="int"    value="128000"/>
+    <param name="baudrate"     type="int"    value="115200"/>
     <param name="frame_id"     type="string" value="laser_frame"/>
+    <param name="angle_fixed"  type="bool"   value="true"/>
     <param name="low_exposure"  type="bool"   value="false"/>
     <param name="resolution_fixed"    type="bool"   value="true"/>
     <param name="auto_reconnect"    type="bool"   value="true"/>
@@ -15,9 +16,9 @@
     <param name="range_min"    type="double" value="0.24" />
     <param name="range_max"    type="double" value="16.0" />
     <param name="ignore_array" type="string" value="" />
-    <param name="samp_rate"    type="int"    value="5000"/>
-    <param name="frequency"    type="double" value="10"/>
-    <param name="timestamp_offset"    type="double" value="0.0"/>
+    <param name="samp_rate"    type="int"    value="9"/>
+    <param name="frequency"    type="double" value="7"/>
+    <param name="timestamp_offset"    type="double" value="-0.91"/>
   </node>
   
   <!--node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"
@@ -25,12 +26,17 @@
     
     
     
-    <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.00 0.0 0.0 3.14159265 0 0 arips_base laser_frame" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"
+  args="0.00 0.0 0.0 3.14159265 0 0 arips_base laser_frame" />
     
      <!--- laser odometry -->
   <group if="$(arg scan_matcher)">
+    <node type="rosservice" name="rosservice"  pkg="rosservice" output="screen" respawn="false" args="call /publish_tf_arips_base 'data: false'" />
     <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
+  </group>
+
+   <group unless="$(arg scan_matcher)">
+    <node type="rosservice" name="rosservice"  pkg="rosservice" output="screen" respawn="false" args="call /publish_tf_arips_base 'data: true'" />
   </group>
     
 </launch>

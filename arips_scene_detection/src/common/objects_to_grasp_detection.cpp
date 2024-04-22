@@ -80,7 +80,7 @@ std::pair<cv::Mat, cv::Mat> projectPointsOntoImage(const pcl::PointCloud<pcl::Po
                                                    const pcl::Indices& indices,
                                                    const tf2::Transform& transform,
                                                    const cv::Rect2f& targetArea, float resolution,
-                                                   float heightResolution)
+                                                   float heightResolution, bool imshow)
 {
   const auto resolutionInverse = 1.0 / resolution;
   const auto heightResolutionInverse = 1.0 / heightResolution;
@@ -108,8 +108,11 @@ std::pair<cv::Mat, cv::Mat> projectPointsOntoImage(const pcl::PointCloud<pcl::Po
     }
   }
 
-  cv::imshow("projectedImageOrig", image);
-  cv::waitKey(1);
+  if (imshow)
+  {
+    cv::imshow("projectedImageOrig", image);
+    cv::waitKey(1);
+  }
 
   cv::Mat element5 = cv::getStructuringElement(cv::MorphShapes::MORPH_ELLIPSE, { 5, 5 });
   cv::morphologyEx(image, image, cv::MorphTypes::MORPH_CLOSE, element5);
@@ -174,7 +177,8 @@ static std_msgs::ColorRGBA extractObjectColor(const cv::Mat& projectedImage,
 }
 
 ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& input,
-                                              visualization_msgs::MarkerArray* markerArray)
+                                              visualization_msgs::MarkerArray* markerArray,
+                                              bool imshow)
 {
   // filter indices in dense cloud according to plane coefficients
   const auto planeCoefficients = getPlaneCoefficientsToCamera(input.modelCoefficients.values);
@@ -242,7 +246,7 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
   const auto [projectedImage, indexImage] =
       projectPointsOntoImage(*input.pointcloud, outsideGroundIndices, floorToCamera.inverse(),
-                             projectionAreaXY, projectionResolution, projectionResolution);
+                             projectionAreaXY, projectionResolution, projectionResolution, imshow);
 
   std::vector<std::vector<cv::Point>> contours;
   findContours(projectedImage, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
@@ -315,8 +319,11 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
     result.detectedObjects.emplace_back(std::move(info));
   }
 
-  cv::imshow("projectedImageMorphed", labeledMask);
-  cv::waitKey(1);
+  if (imshow)
+  {
+    cv::imshow("projectedImageMorphed", labeledMask);
+    cv::waitKey(1);
+  }
 
   if (markerArray)
   {

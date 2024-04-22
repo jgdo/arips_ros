@@ -76,8 +76,10 @@ class RgbdPipeline
       MySyncPolicy;
 
 public:
-  explicit RgbdPipeline(std::shared_ptr<tf2_ros::Buffer> tf) : mTfBuffer(std::move(tf))
+  explicit RgbdPipeline(std::shared_ptr<tf2_ros::Buffer> tf) : mTfBuffer(std::move(tf)), mNode{"~"}
   {
+    mNode.param<bool>("show_window", mParamShowWindow, true);
+
     mCameraInfoSub = mNode.subscribe<sensor_msgs::CameraInfo>(
         "/kinect/depth_registered/camera_info", 1, &RgbdPipeline::onCameraInfoReceived, this);
 
@@ -87,8 +89,8 @@ public:
 
     mPsm = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description",
                                                                           mTfBuffer);
-    mPsm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-                                       "/planning_scene");
+    mPsm->startPublishingPlanningScene(
+        planning_scene_monitor::PlanningSceneMonitor::UPDATE_GEOMETRY, "/planning_scene");
 
     // mPsm->startSceneMonitor();
   }
@@ -148,7 +150,7 @@ private:
     visualization_msgs::MarkerArray markers;
     const auto detectedObjects =
         detectObjectsInScene({ fullCloud, plane.modelCoefficients, cv_depth_ptr->image,
-                               cv_rgb_ptr->image, armTransformTf },
+                               cv_rgb_ptr->image, armTransformTf, mParamShowWindow },
                              &markers);
 
     mMarkerPub.publish(markers);
@@ -166,7 +168,8 @@ private:
         tf2::toMsg(detectedObjects.detectedObjects.at(i).position, objectPose);
         tf2::doTransform(objectPose, objectPose, arm_transform);
 
-        if ((objectPose.position.x * objectPose.position.x + objectPose.position.y * objectPose.position.y) > maxDist_m * maxDist_m ||
+        if ((objectPose.position.x * objectPose.position.x +
+             objectPose.position.y * objectPose.position.y) > maxDist_m * maxDist_m ||
             objectPose.position.z > 0.07)
         {
           ROS_DEBUG_STREAM("Ignoring object at " << objectPose);
@@ -207,7 +210,8 @@ private:
         /* Define a box to be attached */
         shape_msgs::SolidPrimitive primitive;
         primitive.type = primitive.BOX;
-        primitive.dimensions = { detectedObject.size.x(), detectedObject.size.y(), detectedObject.size.z() };
+        primitive.dimensions = { detectedObject.size.x(), detectedObject.size.y(),
+                                 detectedObject.size.z() };
 
         object.primitives.push_back(primitive);
 
@@ -218,7 +222,7 @@ private:
       }
     }
 
-    mPsm->triggerSceneUpdateEvent(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE);
+    mPsm->triggerSceneUpdateEvent(planning_scene_monitor::PlanningSceneMonitor::UPDATE_GEOMETRY);
   }
 
   void onCameraInfoReceived(const sensor_msgs::CameraInfoConstPtr& info_msg)
@@ -228,6 +232,8 @@ private:
 
   std::shared_ptr<tf2_ros::Buffer> mTfBuffer;
   ros::NodeHandle mNode;
+
+  bool mParamShowWindow = false;
 
   image_geometry::PinholeCameraModel mCameraModel;
 

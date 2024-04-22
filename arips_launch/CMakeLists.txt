@@ -91,6 +91,7 @@ catkin_package(
 ## in contrast to setup.py, you can choose the destination
  install(PROGRAMS
    scripts/shutdown.sh
+   scripts/rhasspy.sh
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

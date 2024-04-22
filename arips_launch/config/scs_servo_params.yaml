@@ -70,7 +70,8 @@ servo_4:
 
     ccw_dead: 1
     cw_dead: 1
-    
+
+# Arm Gripper
 servo_5:
     id: 6
     
@@ -80,14 +81,14 @@ servo_5:
     
     angle_factor: -1
 
-    max_torque: 64
+    max_torque: 100
     
 #  angle_offset: 0
 
 # ccw_dead: 1
 # cw_dead: 1
 
-# kinect
+# Kinect
 servo_6:
     id: 7
     
@@ -107,6 +108,7 @@ servo_6:
     
     max_torque: 128
 
+# Door Handle Gripper
 servo_7:
     id: 8
     

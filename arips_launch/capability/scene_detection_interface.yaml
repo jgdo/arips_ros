@@ -1,0 +1,5 @@
+name: scene_detection
+spec_version: 1
+spec_type: interface
+interface: {}
+

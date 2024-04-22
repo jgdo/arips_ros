@@ -5,6 +5,6 @@
           -configuration_basename arips_lidar_2d.lua" output="screen">
     </node>
     
-    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.025" />
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.02" />
     
 </launch>

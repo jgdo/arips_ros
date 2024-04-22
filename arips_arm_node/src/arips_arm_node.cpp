@@ -14,6 +14,8 @@
 
 #include "SCServo.h"
 
+#include <pthread.h>
+
 static const size_t NUM_JOINTS = 5;
 
 class RosSCSServo

@@ -1,0 +1,9 @@
+name: scene_detection_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/scene_detection
+launch_file: '../launch/scene_detection.launch'
+depends_on:
+  - arips_launch/arm
+  - arips_launch/Kinect
+

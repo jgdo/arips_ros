@@ -1,0 +1,8 @@
+name: user_interaction_impl
+spec_version: 1
+spec_type: provider
+implements: arips_launch/user_interaction
+launch_file: '../launch/user_interaction.launch'
+depends_on:
+  - arips_launch/arm
+

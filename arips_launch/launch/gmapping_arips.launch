@@ -5,22 +5,23 @@
 	    <param name="odom_frame" value="odom"/>
 	    <param name="base_frame" value="arips_base" />
         <param name="map_update_interval" value="2.0"/>
-        <param name="maxUrange" value="8.0"/>
-        <param name="sigma" value="0.005"/>
+        <param name="maxUrange" value="6.0"/>
+        <param name="sigma" value="0.05"/>
         <param name="kernelSize" value="1"/>
-        <param name="lstep" value="0.005"/>
-        <param name="astep" value="0.005"/>
-        <param name="iterations" value="10"/>
+        <param name="lstep" value="0.05"/>
+        <param name="astep" value="0.05"/>
+        <param name="iterations" value="5"/>
         <param name="lsigma" value="0.075"/>
-        <param name="ogain" value="1.0"/>
+        <param name="ogain" value="3.0"/>
         <param name="lskip" value="0"/>
-        <param name="srr" value="0.2"/>
-        <param name="srt" value="0.4"/>
-        <param name="str" value="0.2"/>
-        <param name="stt" value="0.4"/>
-        <param name="linearUpdate" value="0.05"/>
-        <param name="angularUpdate" value="0.1"/>
-        <param name="temporalUpdate" value="2.0"/>
+        <param name="minimumScore" value="50"/>
+        <param name="srr" value="0.1"/>
+        <param name="srt" value="0.2"/>
+        <param name="str" value="0.1"/>
+        <param name="stt" value="0.2"/>
+        <param name="linearUpdate" value="0.4"/>
+        <param name="angularUpdate" value="0.4"/>
+        <param name="temporalUpdate" value="0.5"/>
         <param name="resampleThreshold" value="0.5"/>
         <param name="particles" value="250"/>
         <param name="xmin" value="-1.0"/>

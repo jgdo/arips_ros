@@ -112,5 +112,19 @@
       <capability_provider>
         capability/back_camera_provider.yaml
       </capability_provider>
+      
+      <capability_interface>
+        capability/scene_detection_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/scene_detection_provider.yaml
+      </capability_provider>
+      
+      <capability_interface>
+        capability/user_interaction_interface.yaml
+      </capability_interface>
+      <capability_provider>
+        capability/user_interaction_provider.yaml
+      </capability_provider>
   </export>
 </package>

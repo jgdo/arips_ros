@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="arips_base_link_broadcaster" args="0.163 -0.006 0.055 -0.028 0 0.0 /arips_base /arm_base_link 20" />
+    
+    <node launch-prefix="nice -n -10" name="arips_arm_node" pkg="arips_arm_node" type="arips_arm_node" output="screen" clear_params="true" >
+        <rosparam file="$(find arips_launch)/config/scs_servo_params.yaml" command="load" ns="" />
+    </node>
+</launch>

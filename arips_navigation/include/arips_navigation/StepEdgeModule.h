@@ -157,7 +157,7 @@ public:
 
     static const std::string className;
 
-    explicit StepEdgeModule(PlanningContext& context);
+    StepEdgeModule(PlanningContext& context, bool dynamicStepsFromDetection);
 
     virtual void beginParsing(toponav_core::TopoMap* map, YAML::Node const& parserConfig) override;
 
@@ -224,6 +224,8 @@ private:
         CREATING_MAP_STEP,
         WAITING_STEP_SELECTION
     } vizState = IDLE;
+
+    bool mDynamicStepsFromDetection;
 
     // for parsing
     toponav_core::TopoMap* currentMap = nullptr;

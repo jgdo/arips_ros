@@ -1,0 +1,7 @@
+<launch>
+    <node launch-prefix="nice -n 5" pkg="arips_scene_detection" type="object_detection_node" name="object_detection_node" >
+    <rosparam>
+        show_window: false
+    </rosparam>
+    </node>
+</launch>

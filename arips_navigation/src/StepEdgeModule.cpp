@@ -35,7 +35,8 @@ const std::string StepEdgeModule::className = "topo_nav::StepEdgeModule";
 
 static std::string edgeType = "step";
 
-StepEdgeModule::StepEdgeModule(PlanningContext& context) : ApproachExitVisualizer{context} {
+StepEdgeModule::StepEdgeModule(PlanningContext& context, bool dynamicStepsFromDetection)
+    : ApproachExitVisualizer{context}, mDynamicStepsFromDetection{dynamicStepsFromDetection} {
     ros::NodeHandle nh;
     mFloorStepSub = nh.subscribe("floor_step", 10, &StepEdgeModule::onFloorStepCb, this);
 }
@@ -81,7 +82,6 @@ void StepEdgeModule::trackStep(const FloorStep2d& obsStep, ros::Time stamp) {
                     auto& edgeData = getEdgeData(edge);
                     if (edgeData.stepName == step->name) {
                         setApproachFromStep(edge);
-
                     }
                 }
             });
@@ -91,20 +91,22 @@ void StepEdgeModule::trackStep(const FloorStep2d& obsStep, ros::Time stamp) {
         }
     }
 
-    const auto newName = findFreeStepName(stepData);
+    if (mDynamicStepsFromDetection) {
+        const auto newName = findFreeStepName(stepData);
 
-    ROS_INFO_STREAM("Adding new step: " << newName);
+        ROS_INFO_STREAM("Adding new step: " << newName);
 
-    tf2::Stamped<tf2::Vector3> start(tf2::Vector3(obsStep[0].x(), obsStep[0].y(), 0.0), stamp,
-                                     _context.globalFrame);
-    tf2::Stamped<tf2::Vector3> end(tf2::Vector3(obsStep[1].x(), obsStep[1].y(), 0.0), stamp,
-                                   _context.globalFrame);
+        tf2::Stamped<tf2::Vector3> start(tf2::Vector3(obsStep[0].x(), obsStep[0].y(), 0.0), stamp,
+                                         _context.globalFrame);
+        tf2::Stamped<tf2::Vector3> end(tf2::Vector3(obsStep[1].x(), obsStep[1].y(), 0.0), stamp,
+                                       _context.globalFrame);
 
-    auto stepInfo = std::make_shared<TrackedStepInfo>(
-        start, end, newName, stepData.defaultUpCosts, stepData.defaultDownCosts,
-        stepData.defaultCrossOverCosts, stepData.defaultCrossGravelCosts);
-    stepData.steps[newName] = stepInfo;
-    createBothStepEdges(stepInfo.get());
+        auto stepInfo = std::make_shared<TrackedStepInfo>(
+            start, end, newName, stepData.defaultUpCosts, stepData.defaultDownCosts,
+            stepData.defaultCrossOverCosts, stepData.defaultCrossGravelCosts);
+        stepData.steps[newName] = stepInfo;
+        createBothStepEdges(stepInfo.get());
+    }
 }
 
 void StepEdgeModule::clearArea(const std::vector<Point2d>& points) {
@@ -245,9 +247,8 @@ void StepEdgeModule::visualizeEdge(const TopoMap::Edge* edge) {
                                  boost::bind(&StepEdgeModule::setEdgeUpDown, this, _1, edge));
             menu_handler->insert("Cross Gravel",
                                  boost::bind(&StepEdgeModule::setEdgeUpDown, this, _1, edge));
-            menu_handler->insert(
-                "Retrieve position from step",
-                boost::bind(&StepEdgeModule::setApproachFromStep, this, edge));
+            menu_handler->insert("Retrieve position from step",
+                                 boost::bind(&StepEdgeModule::setApproachFromStep, this, edge));
         }
 
         menu_handler->setCheckState(1, data.type == EdgeStepData::UP

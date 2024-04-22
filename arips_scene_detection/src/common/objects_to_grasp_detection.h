@@ -37,4 +37,4 @@ struct ObjectSegmentationOutput
 
 // will put some visualization hints into markerArray if not null
 ObjectSegmentationOutput detectObjectsInScene(
-    const ObjectSegmentationInput&, visualization_msgs::MarkerArray* markerArray = nullptr);
+    const ObjectSegmentationInput&, visualization_msgs::MarkerArray* markerArray = nullptr, bool imshow=false);
