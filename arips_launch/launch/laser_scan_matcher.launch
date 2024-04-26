@@ -1,5 +1,6 @@
 <launch>
   <arg name="publish_covariance" default="true"/>
+  <arg name="scan_topic"      default="scan"/>
     
   #### start the laser scan_matcher ##############################
 
@@ -12,6 +13,7 @@
     name="laser_scan_matcher_node" output="screen">
 
     <remap from="/imu/data" to="/imu"/>
+    <remap from="scan" to="$(arg scan_topic)"/>
 
     <param name="kf_dist_linear" value="0.2"/>
     <param name="kf_dist_angular" value="0.3"/>

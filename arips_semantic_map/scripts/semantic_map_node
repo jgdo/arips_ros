@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+from arips_semantic_map.semantic_map import SemanticMap
+import rospy
+
+def main():
+    rospy.init_node('semantic_map_server')
+
+    map_server = SemanticMap()
+    map_server.load("/root/catkin_ws/map.yaml")
+    # map_server.save("/root/catkin_ws/map.yaml")
+    rospy.loginfo("Semantic map server ready.")
+    
+    rospy.spin()
+
+if __name__ == '__main__':
+    main()

@@ -1,6 +1,6 @@
 <launch>
   <arg name="scan_matcher" default="true"/> 
-
+  <arg name="scan_topic"      default="scan"/>
 
   <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="false" >
     <param name="port"         type="string" value="/dev/ydlidar"/>  
@@ -32,7 +32,9 @@
      <!--- laser odometry -->
   <group if="$(arg scan_matcher)">
     <node type="rosservice" name="rosservice"  pkg="rosservice" output="screen" respawn="false" args="call /publish_tf_arips_base 'data: false'" />
-    <include file="$(find arips_launch)/launch/laser_scan_matcher.launch" />
+    <include file="$(find arips_launch)/launch/laser_scan_matcher.launch">
+        <arg name="scan_topic" value="$(arg scan_topic)" />
+    </include>
   </group>
 
    <group unless="$(arg scan_matcher)">
