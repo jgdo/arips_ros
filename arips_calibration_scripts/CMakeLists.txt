@@ -161,6 +161,7 @@ include_directories(
  install(PROGRAMS
    scripts/get_robot_marker_pose.py
    scripts/calibrate_kinect_to_robot_base.py
+   scripts/filter_laser_scan.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
