@@ -9,7 +9,7 @@ class MapTransformer {
 public:
   template<class PM, typename... Args>
   static void
-  createLocalMap(TopoMap const &topoMap, PM &planningMap, RoomPlanningInterfacePtr const &nodePlanner,
+  createLocalMap(TopoMap const &topoMap, PM &planningMap,
                   const DoorPlanningInterfacePtr &edgePlanner, typename PM::Node::State initialState, Args&&... args) {
     planningMap.clear();
   
