@@ -33,15 +33,19 @@ TEST(TopoMap, DummyPlanning) {
     auto* r2 = map.addNode("r2");
     auto* r3 = map.addNode("r3");
 
-    map.addEdge(r1, r2, "door_12");
-    map.addEdge(r2, r3, "door_23");
+    auto* door_12 = map.addEdge(r1, r2, "door_12");
+    door_12->_approachPose = Pose2D{{2.0, 0.0}, 2.0};
+    door_12->_exitPose = Pose2D{{3.0, 0.0}, 3.0};
+    auto* door_23 = map.addEdge(r2, r3, "door_23");
+    door_23->_approachPose = Pose2D{{4.0, 0.0}, 4.0};
+    door_23->_exitPose = Pose2D{{5.0, 0.0}, 5.0};
 
     auto roomPlanner = std::make_shared<DummyRoomPlanner>();
     auto doorPlanner = std::make_shared<DummyDoorPlanner>();
 
     DijkstraTopoPlanner planner{roomPlanner, doorPlanner};
 
-    auto optPlan = planner.plan(GlobalPose2D{r1, {{0.0, 0.0}, 0.0}}, GlobalPose2D{r3, {{2.0, 0.0}, 0.0}});
+    auto optPlan = planner.plan(&map, GlobalPose2D{r1, {{1.0, 0.0}, 1.0}}, GlobalPose2D{r3, {{6.0, 0.0}, 6.0}});
 
     EXPECT_TRUE(optPlan.has_value());
 }

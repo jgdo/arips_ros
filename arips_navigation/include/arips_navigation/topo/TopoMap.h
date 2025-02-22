@@ -108,7 +108,7 @@ public:
         return _exitPose;
     }
 
-protected:
+// TODO protected:
     TopoMap* _parentMap;
     TopoRoom *_src, *_dst;
     std::string _name; // unique name

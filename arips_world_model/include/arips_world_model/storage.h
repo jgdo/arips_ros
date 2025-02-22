@@ -1,4 +1,4 @@
-#include <arips_world_model/WorldModel.h>
+#include <arips_world_model/world_model.h>
 
 
 WorldModel loadModel(const std::string& path);

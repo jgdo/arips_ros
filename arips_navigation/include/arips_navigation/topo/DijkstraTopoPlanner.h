@@ -36,16 +36,18 @@ protected:
             bool backDijkstraVisited = false;
 
             struct PredEntry {
-                // at least one of localPosition or predEdge must not be null !!!
+                // If predEdge is null, this is a start node
 
-                std::optional<Pose2D> localPosition; // if null, it means the real costs are not computed yet
+                Pose2D localPosition; // if null, it means the real costs are not computed yet
                 double costFromStart;
                 ParentEdge* predEdge;
 
-                inline PredEntry(std::optional<Pose2D> pos, double costs, ParentEdge* pred)
+                inline PredEntry(Pose2D pos, double costs, ParentEdge* pred)
                     : localPosition(pos), costFromStart(costs), predEdge(pred) {}
 
-                inline bool areCostsReal() const { return localPosition.has_value(); }
+                bool areCostsReal() const { 
+                    return !predEdge || predEdge->costsState == LocalEdge::REAL; 
+                }
             };
 
             std::map<double, PredEntry> predMap;

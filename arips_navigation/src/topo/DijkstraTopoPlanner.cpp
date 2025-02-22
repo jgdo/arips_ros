@@ -55,7 +55,7 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, Global
 
     // localMap.saveToDot("after.dot");
 
-    if (localMap.getEndNode()->state = LocalNode::VISITED) {
+    if (localMap.getEndNode()->state != LocalNode::VISITED) {
         ROS_INFO_STREAM("No topo plan found");
         return {};
     }
@@ -85,14 +85,14 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, Global
         if (predEntry.predEdge->isSameRegion()) {
             plan.pathElements.push_back(std::make_unique<TopoPath::Movement>(
                 GlobalPose2D(predEntry.predEdge->topoNode,
-                             predEntry.predEdge->a->predMap.begin()->second.localPosition.value()),
-                GlobalPose2D(predEntry.predEdge->topoNode, predEntry.localPosition.value()),
+                             predEntry.predEdge->a->predMap.begin()->second.localPosition),
+                GlobalPose2D(predEntry.predEdge->topoNode, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart()));
         } else {
             plan.pathElements.push_back(std::make_unique<TopoPath::Transition>(
                 GlobalPose2D(predEntry.predEdge->a->region,
-                             predEntry.predEdge->a->predMap.begin()->second.localPosition.value()),
-                GlobalPose2D(predEntry.predEdge->b->region, predEntry.localPosition.value()),
+                             predEntry.predEdge->a->predMap.begin()->second.localPosition),
+                GlobalPose2D(predEntry.predEdge->b->region, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart(),
                 predEntry.predEdge->topoEdge));
         }
@@ -172,7 +172,7 @@ bool DijkstraTopoPlanner::updateCostAndPred(DijkstraTopoPlanner::LocalEdge* v, b
         if (v->isTransitionEdge()) { // transition edge -> recompute exit pose and costs based on
                                      // current approach pose
             auto maybeCosts = edgePlanner->computeTransitionCost(
-                v->topoEdge, *v->a->predMap.begin()->second.localPosition);
+                v->topoEdge, v->a->predMap.begin()->second.localPosition);
 
             v->cost = maybeCosts.value_or(std::numeric_limits<double>::max());
 
@@ -185,7 +185,7 @@ bool DijkstraTopoPlanner::updateCostAndPred(DijkstraTopoPlanner::LocalEdge* v, b
             transitionCostsCount.second++;
         } else {
             auto maybeCosts = nodePlanner->computeCostsOnRegion(
-                v->b->region, *v->a->predMap.begin()->second.localPosition, v->b->pose);
+                v->b->region, v->a->predMap.begin()->second.localPosition, v->b->pose);
 
             v->cost = maybeCosts.value_or(std::numeric_limits<double>::max());
 

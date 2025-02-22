@@ -77,6 +77,8 @@
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 
+  <test_depend>rosunit</test_depend>
+
   <depend>toponav_core</depend>
   <depend>toponav_ros</depend>
   <depend>global_planner</depend>

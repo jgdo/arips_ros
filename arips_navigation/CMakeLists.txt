@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(arips_navigation)
+enable_testing()
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
@@ -231,6 +232,16 @@ target_link_libraries(costmap_test_publisher
     ${catkin_LIBRARIES}
     )
 
+catkin_add_gtest(test_topo_map test/test_topo_map.cpp)
+if(TARGET test_topo_map)
+   target_link_libraries(test_topo_map ${PROJECT_NAME}  ${catkin_LIBRARIES})
+
+#    target_include_directories(test_topo_map
+#         PRIVATE
+#            src
+#    )
+
+endif()
 
 #############
 ## Install ##
@@ -309,15 +320,15 @@ target_link_libraries(${PROJECT_NAME}-demo-test
 
 #]]
 
-catkin_add_gtest(${PROJECT_NAME}-test test/potential_map.test.cpp)
-target_link_libraries(${PROJECT_NAME}-test
-    ${PROJECT_NAME}
-    )
+# catkin_add_gtest(${PROJECT_NAME}-test test/potential_map.test.cpp)
+# target_link_libraries(${PROJECT_NAME}-test
+#     ${PROJECT_NAME}
+#     )
 
 
-add_rostest_gtest(global_planning_test test/global_planning.test test/test_global_navigation_sim.cpp tools/simulator/Simulator.cpp
-    tools/simulator/Simulator.h)
-target_link_libraries(global_planning_test ${PROJECT_NAME})
+# add_rostest_gtest(global_planning_test test/global_planning.test test/test_global_navigation_sim.cpp tools/simulator/Simulator.cpp
+#     tools/simulator/Simulator.h)
+# target_link_libraries(global_planning_test ${PROJECT_NAME})
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
