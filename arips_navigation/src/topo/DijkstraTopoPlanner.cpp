@@ -11,8 +11,8 @@ DijkstraTopoPlanner::DijkstraTopoPlanner(RoomPlanningInterfacePtr roomPlanner,
                                          DijkstraTopoPlanner::Config const& config)
     : _config(config), nodePlanner(std::move(roomPlanner)), edgePlanner(std::move(doorPlanner)) {}
 
-std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, GlobalPose2D start,
-                                                  GlobalPose2D end,
+std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, TopoPose2D start,
+                                                  TopoPose2D end,
                                                   PlanningStatistics* statisticsOutput) {
     double now = get_cpu_time();
     initLocalMap(topoMap, start, end);
@@ -84,15 +84,15 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, Global
 
         if (predEntry.predEdge->isSameRegion()) {
             plan.pathElements.push_back(std::make_unique<TopoPath::Movement>(
-                GlobalPose2D(predEntry.predEdge->topoNode,
+                TopoPose2D(predEntry.predEdge->topoNode,
                              predEntry.predEdge->a->predMap.begin()->second.localPosition),
-                GlobalPose2D(predEntry.predEdge->topoNode, predEntry.localPosition),
+                TopoPose2D(predEntry.predEdge->topoNode, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart()));
         } else {
             plan.pathElements.push_back(std::make_unique<TopoPath::Transition>(
-                GlobalPose2D(predEntry.predEdge->a->region,
+                TopoPose2D(predEntry.predEdge->a->region,
                              predEntry.predEdge->a->predMap.begin()->second.localPosition),
-                GlobalPose2D(predEntry.predEdge->b->region, predEntry.localPosition),
+                TopoPose2D(predEntry.predEdge->b->region, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart(),
                 predEntry.predEdge->topoEdge));
         }
@@ -118,8 +118,8 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, Global
     return plan;
 }
 
-void DijkstraTopoPlanner::initLocalMap(TopoMap const* topoMap, GlobalPose2D start,
-                                       GlobalPose2D end) {
+void DijkstraTopoPlanner::initLocalMap(TopoMap const* topoMap, TopoPose2D start,
+                                       TopoPose2D end) {
     mainQueue.clear();
     regionCostsCount = {};
     transitionCostsCount = {};

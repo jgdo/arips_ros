@@ -7,7 +7,7 @@ def main():
     rospy.init_node('semantic_map_server')
 
     map_server = SemanticMap()
-    map_server.load("/root/catkin_ws/map.yaml")
+    map_server.load("/home/jgdo/catkin_ws/map.yaml")
     # map_server.save("/root/catkin_ws/map.yaml")
     rospy.loginfo("Semantic map server ready.")
     

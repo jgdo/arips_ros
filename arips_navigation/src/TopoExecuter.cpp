@@ -9,8 +9,6 @@
 
 #include <memory>
 
-#include <arips_navigation/local_planner/arips_planner_ros.h>
-
 #include <arips_navigation/utils/FlatPathData.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 

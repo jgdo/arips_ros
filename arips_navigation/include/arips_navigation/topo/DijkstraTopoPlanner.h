@@ -24,7 +24,7 @@ public:
     DijkstraTopoPlanner(RoomPlanningInterfacePtr roomPlanner, DoorPlanningInterfacePtr doorPlanner,
                         DijkstraTopoPlanner::Config const& config = defaultConfig());
 
-    std::optional<TopoPath> plan(TopoMap const* topoMap, GlobalPose2D start, GlobalPose2D end,
+    std::optional<TopoPath> plan(TopoMap const* topoMap, TopoPose2D start, TopoPose2D end,
                                  PlanningStatistics* statisticsOutput=nullptr);
 
 protected:
@@ -87,7 +87,7 @@ protected:
     std::pair<size_t, size_t> regionCostsCount; // number of computeCostsOnRegion() calls counter
     std::pair<size_t, size_t> transitionCostsCount; // number of computeTransitionCost() calls counter (heuristic, real)
 
-    void initLocalMap(TopoMap const* topoMap, GlobalPose2D start, GlobalPose2D end);
+    void initLocalMap(TopoMap const* topoMap, TopoPose2D start, TopoPose2D end);
 
     LocalNode* getAndRemoveLowestCostNode();
 

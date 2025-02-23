@@ -11,23 +11,24 @@ class DummyRoomPlanner : public RoomPlanningInterface {
 public:
     std::optional<double> computeCostsOnRegion(const TopoRoom* node, Pose2D start,
                                                Pose2D end) override {
-        return (end.point - start.point).norm();
+        const auto dist = (end.point - start.point).norm();
+        if (dist < 1.1)
+            return dist;
+        return {};
     }
 };
 
 class DummyDoorPlanner : public DoorPlanningInterface {
-    public:
+public:
     std::optional<double> computeTransitionCost(const TopoDoor* edge,
-                                                        Pose2D approachPose) override {
-                                                            return 1.0;
-                                                        }
-
-    bool areEdgesCoupled(const TopoDoor* edgeA, const TopoDoor* edgeB) override {
-        return false;
+                                                Pose2D approachPose) override {
+        return 1.0;
     }
+
+    bool areEdgesCoupled(const TopoDoor* edgeA, const TopoDoor* edgeB) override { return false; }
 };
 
-TEST(TopoMap, DummyPlanning) {
+TEST(TopoMap, DummyPlanning3Nodes) {
     TopoMap map;
     auto* r1 = map.addNode("r1");
     auto* r2 = map.addNode("r2");
@@ -45,7 +46,30 @@ TEST(TopoMap, DummyPlanning) {
 
     DijkstraTopoPlanner planner{roomPlanner, doorPlanner};
 
-    auto optPlan = planner.plan(&map, GlobalPose2D{r1, {{1.0, 0.0}, 1.0}}, GlobalPose2D{r3, {{6.0, 0.0}, 6.0}});
+    auto optPlan = planner.plan(&map, TopoPose2D{r1, {{1.0, 0.0}, 1.0}},
+                                TopoPose2D{r3, {{6.0, 0.0}, 6.0}});
+
+    EXPECT_TRUE(optPlan.has_value());
+}
+
+TEST(TopoMap, DummyPlanning1Node) {
+    TopoMap map;
+    auto* r1 = map.addNode("r1");
+
+    auto* door_12 = map.addEdge(r1, r1, "door_12");
+    door_12->_approachPose = Pose2D{{2.0, 0.0}, 2.0};
+    door_12->_exitPose = Pose2D{{3.0, 0.0}, 3.0};
+    auto* door_23 = map.addEdge(r1, r1, "door_23");
+    door_23->_approachPose = Pose2D{{4.0, 0.0}, 4.0};
+    door_23->_exitPose = Pose2D{{5.0, 0.0}, 5.0};
+
+    auto roomPlanner = std::make_shared<DummyRoomPlanner>();
+    auto doorPlanner = std::make_shared<DummyDoorPlanner>();
+
+    DijkstraTopoPlanner planner{roomPlanner, doorPlanner};
+
+    auto optPlan = planner.plan(&map, TopoPose2D{r1, {{1.0, 0.0}, 1.0}},
+                                TopoPose2D{r1, {{6.0, 0.0}, 6.0}});
 
     EXPECT_TRUE(optPlan.has_value());
 }

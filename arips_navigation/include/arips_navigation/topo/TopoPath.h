@@ -53,9 +53,9 @@ public:
 	
 	class Movement: public PathSegment{
 	public:
-		GlobalPose2D start, goal;
+		TopoPose2D start, goal;
 		
-		Movement(GlobalPose2D start, GlobalPose2D goal, double costs) :
+		Movement(TopoPose2D start, TopoPose2D goal, double costs) :
         PathSegment(costs), start(start), goal(goal) { }
 		
 		virtual void visitPlanVisitor(PathVisitor* visitor) override;
@@ -63,10 +63,10 @@ public:
 	
 	class Transition: public PathSegment {
 	public:
-		GlobalPose2D approachPoint, exitPoint;
+		TopoPose2D approachPoint, exitPoint;
 		const TopoDoor* topoEdge;
 				
-		Transition(GlobalPose2D approachPoint, GlobalPose2D exitPoint, double costs, const TopoDoor *topoEdge) 
+		Transition(TopoPose2D approachPoint, TopoPose2D exitPoint, double costs, const TopoDoor *topoEdge) 
 		: PathSegment(costs), approachPoint(approachPoint), exitPoint(exitPoint), topoEdge(topoEdge){ }
 		
 		virtual void visitPlanVisitor(PathVisitor* visitor) override;

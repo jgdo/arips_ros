@@ -115,6 +115,7 @@ public:
 
     Pose2D _approachPose;
     Pose2D _exitPose;
+    TopoDoor* _otherDoorEdge = nullptr;
     // TODO additional edge data
 };
 
@@ -224,11 +225,11 @@ protected:
 
 }; // class TopoMap
 
-struct GlobalPose2D {
+struct TopoPose2D {
     const TopoRoom* room;
     Pose2D pose;
 
-    GlobalPose2D(const TopoRoom* room, Pose2D pose):
+    TopoPose2D(const TopoRoom* room, Pose2D pose):
         room{room}, pose{pose} {}
 };
 
