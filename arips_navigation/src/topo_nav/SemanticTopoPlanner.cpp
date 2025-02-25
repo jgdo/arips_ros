@@ -22,14 +22,15 @@ public:
     RoomPlanner(Locomotion& locomotion, const Costmap& costmap)
         : mLocomotion{locomotion}, mCostmap{costmap} {}
 
-    std::optional<double> computeCostsOnRegion(const TopoRoom* node, Pose2D start,
-                                               Pose2D goal) override {
+    std::pair<std::optional<double>, std::optional<std::vector<Pose2D>>>
+    computeCostsOnRegion(const TopoRoom* node, Pose2D start, Pose2D goal) override {
         const auto potmap = mLocomotion.makePlan(mCostmap, start, goal);
 
         if (!potmap) {
             return {};
         }
-        return potmap->atPos(potmap->goal().point);
+
+        return {potmap->atPos(potmap->goal().point), potmap->traceCurrentPath(start)};
     }
 
     Locomotion& mLocomotion;
@@ -37,7 +38,7 @@ public:
 };
 
 struct SemanticTopoPlanner::Pimpl {
-    Pimpl(Locomotion& locomotion) : mLocomotion{locomotion} {}
+    explicit Pimpl(Locomotion& locomotion) : mLocomotion{locomotion} {}
 
     std::optional<TopoPath> plan(const Costmap& costmap,
                                  const arips_semantic_map_msgs::SemanticMap& semanticMap,
@@ -80,8 +81,8 @@ struct SemanticTopoPlanner::Pimpl {
     std::shared_ptr<DoorPlanner> mDoorPlanner = std::make_shared<DoorPlanner>();
 };
 
-SemanticTopoPlanner::SemanticTopoPlanner(Locomotion& locomotion) {
-}
+SemanticTopoPlanner::SemanticTopoPlanner(Locomotion& locomotion)
+    : mPimpl{std::make_unique<Pimpl>(locomotion)} {}
 
 SemanticTopoPlanner::~SemanticTopoPlanner() = default;
 

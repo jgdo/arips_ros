@@ -99,6 +99,8 @@ public:
       cost = Node::infCosts;
       costsState = UNKNOWN;
     }
+
+      std::optional<std::vector<Pose2D>> pathPoints; // optionally store path
   };
   
   typedef std::shared_ptr<Node> NodePtr;

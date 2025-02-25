@@ -7,6 +7,7 @@
 
 class RoomPlanningInterface {
 public:
+    virtual ~RoomPlanningInterface() = default;
     typedef std::shared_ptr<RoomPlanningInterface> Ptr;
 
     /**
@@ -19,10 +20,10 @@ public:
      * @param node topo node representing the region
      * @param start start position
      * @param end goal area
-     * @return costs. Null if no path was found
+     * @return costs and optionally the path points. nullopt if no path was found
      */
-    virtual std::optional<double> computeCostsOnRegion(const TopoRoom* node, Pose2D start,
-                                                       Pose2D end) = 0;
+    virtual std::pair<std::optional<double>, std::optional<std::vector<Pose2D>>>
+    computeCostsOnRegion(const TopoRoom* node, Pose2D start, Pose2D end) = 0;
 
     /**
      * @brief Compute minimum costs between two areas.
@@ -45,6 +46,7 @@ typedef RoomPlanningInterface::Ptr RoomPlanningInterfacePtr;
 
 class DoorPlanningInterface {
 public:
+    virtual ~DoorPlanningInterface() = default;
     typedef DoorPlanningInterface BaseClass;
     typedef std::shared_ptr<DoorPlanningInterface> Ptr;
 

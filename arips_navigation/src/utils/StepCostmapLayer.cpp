@@ -3,7 +3,10 @@
 #include <arips_navigation/StepEdgeModule.h>
 #include <arips_navigation/utils/transforms.h>
 
-StepCostmapLayer::StepCostmapLayer(toponav_core::TopoMapPtr topoMap) : mTopoMap{std::move(topoMap)} {}
+StepCostmapLayer::StepCostmapLayer(SemanticMapTracker& mapTracker) : mMapTracker{mapTracker} {
+    enabled_ = true;
+
+}
 void StepCostmapLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j,
                                    int max_i, int max_j) {
 
@@ -17,19 +20,22 @@ void StepCostmapLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
         return msg;
     };
 
-    const auto& mapData = toponav_ros::StepEdgeModule::getMapData(mTopoMap.get());
-    for (const auto& stepEntry : mapData.steps) {
-        const auto& step = *stepEntry.second;
+    const auto semanticMap = mMapTracker.getLastSemanticMap();
+    // ROS_INFO_STREAM("StepCostmapLayer plugin update: num doors: " << semanticMap.doors.size());
+
+    for (const auto& door : semanticMap.doors) {
+        const tf2::Vector3 start{door.pivot.x, door.pivot.y, 0.0};
+        const tf2::Vector3 end{door.extent.x, door.extent.y, 0.0};
+
         const auto off =
-            tf2::quatRotate(createQuaternionFromYaw(M_PI_2), step.end - step.start)
-                .normalized() *
-            stepWidth*0.5;
+            tf2::quatRotate(createQuaternionFromYaw(M_PI_2), end - start).normalized() * stepWidth *
+            0.5;
 
         std::vector<geometry_msgs::Point> polygon{
-            toPoint(step.start + off),
-            toPoint(step.start - off),
-            toPoint(step.end - off),
-            toPoint(step.end + off),
+            toPoint(start + off),
+            toPoint(start - off),
+            toPoint(end - off),
+            toPoint(end + off),
         };
 
         master_grid.setConvexPolygonCost(polygon, costmap_2d::LETHAL_OBSTACLE);

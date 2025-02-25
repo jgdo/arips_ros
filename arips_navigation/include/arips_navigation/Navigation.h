@@ -9,17 +9,20 @@
 #include <arips_navigation/NavigationContext.h>
 
 // #include <arips_navigation/AutoDocker.h>
+#include <arips_navigation/topo_nav/SemanticMapTracker.h>
+
 #include <arips_navigation/CostsPlanners.h>
 #include <arips_navigation/CrossDoor.h>
 #include <arips_navigation/DriveTo.h>
+#include <arips_navigation/DriveUntilCollision.h>
 #include <arips_navigation/DrivingState.h>
 #include <arips_navigation/OpenDoor.h>
 #include <arips_navigation/TopoExecuter.h>
 #include <arips_navigation/local_planner/HPNav.h>
 #include <toponav_ros/TopoPlannerROS.h>
-#include <arips_navigation/DriveUntilCollision.h>
 
 #include <arips_navigation/path_planning/Locomotion.h>
+#include <arips_navigation/topo_nav/SemanticTopoPlanner.h>
 
 class Navigation {
 public:
@@ -28,7 +31,11 @@ public:
 private:
     std::shared_ptr<NavigationContext> mContext = std::make_shared<NavigationContext>();
 
+    SemanticMapTracker mSemanticMapTracker;
+
     Locomotion mLocomotion;
+
+    SemanticTopoPlanner mSemanticTopoPlanner{mLocomotion};
 
     toponav_ros::AripsFlatPlanner mAripsPlanner{*mContext, mLocomotion};
 
@@ -37,16 +44,17 @@ private:
     DrivingState* mDrivingState = nullptr;
 
     ros::Publisher mActivePub;
+    ros::Publisher mTopoPathPub;
 
     std::unique_ptr<TopoExecuter> m_TopoExec;
     // AutoDocker mAutoDocker{m_LocalCostmap, mCmdVelPub};
     //  HPNav mHPNav{&m_tfBuffer, mCmdVelPub};
-    DriveUntilCollision mDriveUntilCollision {*mContext};
+    DriveUntilCollision mDriveUntilCollision{*mContext};
     OpenDoor mOpenDoor{*mContext, mDriveUntilCollision};
     std::unique_ptr<DriveTo> mDriveTo;
     std::unique_ptr<CrossDoor> mCrossDoor;
 
-    CrossFloorStep mCrossStep {*mContext};
+    CrossFloorStep mCrossStep{*mContext};
 
     ros::Subscriber psub_nav, hp_sub, clicked_sub, door_info_sub;
 

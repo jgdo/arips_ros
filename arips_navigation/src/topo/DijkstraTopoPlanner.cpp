@@ -83,15 +83,21 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, TopoPo
         auto& predEntry = n->predMap.begin()->second;
 
         if (predEntry.predEdge->isSameRegion()) {
+            if (!predEntry.predEdge->pathPoints) {
+                ROS_ERROR_STREAM("No path points found for path segment");
+                return {};
+            }
+
             plan.pathElements.push_back(std::make_unique<TopoPath::Movement>(
                 TopoPose2D(predEntry.predEdge->topoNode,
-                             predEntry.predEdge->a->predMap.begin()->second.localPosition),
+                           predEntry.predEdge->a->predMap.begin()->second.localPosition),
                 TopoPose2D(predEntry.predEdge->topoNode, predEntry.localPosition),
-                predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart()));
+                predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart(),
+                *predEntry.predEdge->pathPoints));
         } else {
             plan.pathElements.push_back(std::make_unique<TopoPath::Transition>(
                 TopoPose2D(predEntry.predEdge->a->region,
-                             predEntry.predEdge->a->predMap.begin()->second.localPosition),
+                           predEntry.predEdge->a->predMap.begin()->second.localPosition),
                 TopoPose2D(predEntry.predEdge->b->region, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart(),
                 predEntry.predEdge->topoEdge));
@@ -118,8 +124,7 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, TopoPo
     return plan;
 }
 
-void DijkstraTopoPlanner::initLocalMap(TopoMap const* topoMap, TopoPose2D start,
-                                       TopoPose2D end) {
+void DijkstraTopoPlanner::initLocalMap(TopoMap const* topoMap, TopoPose2D start, TopoPose2D end) {
     mainQueue.clear();
     regionCostsCount = {};
     transitionCostsCount = {};
@@ -184,8 +189,9 @@ bool DijkstraTopoPlanner::updateCostAndPred(DijkstraTopoPlanner::LocalEdge* v, b
 
             transitionCostsCount.second++;
         } else {
-            auto maybeCosts = nodePlanner->computeCostsOnRegion(
+            auto [maybeCosts, pathPoints] = nodePlanner->computeCostsOnRegion(
                 v->b->region, v->a->predMap.begin()->second.localPosition, v->b->pose);
+            v->pathPoints = pathPoints;
 
             v->cost = maybeCosts.value_or(std::numeric_limits<double>::max());
 
