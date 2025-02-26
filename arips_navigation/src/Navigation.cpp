@@ -75,7 +75,13 @@ Navigation::Navigation() {
 
     {
         auto layerPlugin = boost::make_shared<StepCostmapLayer>(mSemanticMapTracker);
-        mContext->globalCostmap.getLayeredCostmap()->addPlugin(layerPlugin);
+        auto& plugins = *mContext->globalCostmap.getLayeredCostmap()->getPlugins();
+        // insert before last, since last is the inflation layer
+        plugins.insert(plugins.end() - 1, layerPlugin);
+
+        for (const auto& plugin : plugins) {
+            ROS_INFO_STREAM("Costmap plugin: " << plugin->getName());
+        }
     }
 
     ros::Duration(0.5).sleep();
