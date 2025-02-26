@@ -2,6 +2,8 @@
 
 #include <arips_navigation/topo/MapTransformer.h>
 
+#include <geometry_msgs/PoseArray.h>
+
 #include <ctime>
 
 static double get_cpu_time() { return (double)clock() / CLOCKS_PER_SEC; }
@@ -18,6 +20,19 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, TopoPo
     initLocalMap(topoMap, start, end);
     double initTime = get_cpu_time() - now;
     ROS_INFO_STREAM("local map init took " << initTime);
+
+    static ros::NodeHandle nh;
+    static auto pub = nh.advertise<geometry_msgs::PoseArray>("planning_map_poses", 1);
+
+    // geometry_msgs::PoseArray mapPoses;
+    // mapPoses.header.stamp = ros::Time::now();
+    // mapPoses.header.frame_id = "global";
+    //
+    // for (const auto& n: localMap.getNodes()) {
+    //     mapPoses.poses.push_back(n->pose.toPoseMsg());
+    // }
+    // pub.publish(mapPoses);
+    // ros::spinOnce();
 
     now = get_cpu_time();
     while (localMap.getEndNode()->state == LocalNode::DISCOVERED && !mainQueue.empty()) {

@@ -26,8 +26,8 @@ void StepCostmapLayer::updateBounds(double robot_x, double robot_y, double robot
     };
 
     const auto semanticMap = mMapTracker.getLastSemanticMap();
-    //ROS_INFO_STREAM(
-    //    "StepCostmapLayer plugin updateBounds: num doors: " << semanticMap.doors.size());
+    // ROS_INFO_STREAM(
+    //     "StepCostmapLayer plugin updateBounds: num doors: " << semanticMap.doors.size());
 
     mLastPolygons.reserve(semanticMap.doors.size());
     for (const auto& door : semanticMap.doors) {
@@ -63,7 +63,8 @@ void StepCostmapLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
         return;
     }
 
-    // ROS_INFO_STREAM("StepCostmapLayer plugin updateCosts: num polygons: " << mLastPolygons.size());
+    // ROS_INFO_STREAM("StepCostmapLayer plugin updateCosts: num polygons: " <<
+    // mLastPolygons.size());
 
     for (const auto& polygon : mLastPolygons) {
 

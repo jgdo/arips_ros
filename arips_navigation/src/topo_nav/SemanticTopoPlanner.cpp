@@ -3,7 +3,7 @@
 #include <arips_navigation/topo/DijkstraTopoPlanner.h>
 #include <arips_navigation/topo/TopoMap.h>
 
-static constexpr auto ApproachPointDist_m = 1.05;
+static constexpr auto ApproachPointDist_m = 0.5;
 
 class DoorPlanner : public DoorPlanningInterface {
 public:
@@ -54,13 +54,17 @@ struct SemanticTopoPlanner::Pimpl {
 
             const Vector2d extent{doorMsg.extent.x, doorMsg.extent.y};
             const Vector2d pivot{doorMsg.pivot.x, doorMsg.pivot.y};
-            const auto d = extent - pivot;
-            const auto center = pivot + d * 0.5;
-            const auto approachDiff = Vector2d{-d.y(), d.x()}.normalized() * ApproachPointDist_m;
-            const auto approachA = center + approachDiff;
-            const auto approachB = center - approachDiff;
+            // For whatever reason, auto does not work here and produces completely wrong results!!
+            const Vector2d d = extent - pivot;
+            const Vector2d center = pivot + d * 0.5;
+            const Vector2d approachDiff = Vector2d{-d.y(), d.x()}.normalized() * ApproachPointDist_m;
+            const Vector2d approachA = center + approachDiff;
+            const Vector2d approachB = center - approachDiff;
             const auto angleA = atan2(-approachDiff.y(), -approachDiff.x());
             const auto angleB = atan2(approachDiff.y(), approachDiff.x());
+
+            // ROS_INFO_STREAM("approachA :" << approachA.x() << " " << approachA.y());
+            // ROS_INFO_STREAM("approachB :" << approachB.x() << " " << approachB.y());
 
             doorA->_approachPose = Pose2D{approachA, angleA};
             doorA->_exitPose = Pose2D{approachB, angleA};
