@@ -174,7 +174,7 @@ class SemanticMap:
         line.color.a = 1.0
 
         angle_rad = math.radians(door.open_angle_deg)
-        num_steps = int(angle_rad / math.radians(15))
+        num_steps = int(abs(angle_rad) / math.radians(15))
         stepsize = angle_rad / num_steps
 
         line.points = [to_point(get_door_open_extent(door, i*stepsize)) for i in range(0, num_steps+1)]

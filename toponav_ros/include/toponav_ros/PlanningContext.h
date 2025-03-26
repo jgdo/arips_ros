@@ -46,5 +46,5 @@ protected:
   PlanningContext& _context;
 };
 
-} // namespace topo_nav 
+} // namespace topo_nav
 

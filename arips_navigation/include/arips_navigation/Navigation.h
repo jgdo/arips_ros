@@ -44,7 +44,6 @@ private:
     DrivingState* mDrivingState = nullptr;
 
     ros::Publisher mActivePub;
-    ros::Publisher mTopoPathPub;
 
     std::unique_ptr<TopoExecuter> m_TopoExec;
     // AutoDocker mAutoDocker{m_LocalCostmap, mCmdVelPub};

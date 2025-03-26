@@ -71,6 +71,12 @@ struct SemanticTopoPlanner::Pimpl {
             doorB->_approachPose = Pose2D{approachB, angleB};
             doorB->_exitPose = Pose2D{approachA, angleB};
 
+            doorA->pivotPoint = pivot;
+            doorA->extentPoint = extent;
+
+            doorB->pivotPoint = pivot;
+            doorB->extentPoint = extent;
+
             doorA->_otherDoorEdge = doorB;
             doorB->_otherDoorEdge = doorA;
         }

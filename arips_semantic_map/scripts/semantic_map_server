@@ -2,12 +2,19 @@
 
 from arips_semantic_map.semantic_map import SemanticMap
 import rospy
+import sys
 
 def main():
-    rospy.init_node('semantic_map_server')
+    args = rospy.myargv(argv=sys.argv)
+    if len(args) < 2:
+        rospy.logerr(f"Missing map file path.\nUsage: {args[0]} <map_file.yaml>")
+        sys.exit(1)
+    map_file = args[1]
 
+    rospy.init_node('semantic_map_server')
+    rospy.loginfo(f"Using map file: {map_file}")
     map_server = SemanticMap()
-    map_server.load("/home/jgdo/catkin_ws/map.yaml")
+    map_server.load(map_file)
     # map_server.save("/root/catkin_ws/map.yaml")
     rospy.loginfo("Semantic map server ready.")
     

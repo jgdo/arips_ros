@@ -18,7 +18,7 @@
     <param name="ignore_array" type="string" value="" />
     <param name="samp_rate"    type="int"    value="9"/>
     <param name="frequency"    type="double" value="7"/>
-    <param name="timestamp_offset"    type="double" value="-0.91"/>
+    <param name="timestamp_offset"    type="double" value="-0.05"/>
   </node>
   
   <!--node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser"

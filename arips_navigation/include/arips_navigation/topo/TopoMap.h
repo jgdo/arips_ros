@@ -115,6 +115,9 @@ public:
 
     Pose2D _approachPose;
     Pose2D _exitPose;
+    Point2d pivotPoint;
+    Point2d extentPoint;
+
     TopoDoor* _otherDoorEdge = nullptr;
     // TODO additional edge data
 };

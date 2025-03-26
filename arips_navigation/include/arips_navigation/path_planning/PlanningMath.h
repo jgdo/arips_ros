@@ -35,7 +35,6 @@ struct Pose2D {
         return {{trans.getOrigin().x(), trans.getOrigin().y()}, tf2::getYaw(trans.getRotation())};
     }
 
-
     [[nodiscard]] double x() const { return point.x(); }
 
     [[nodiscard]] double y() const { return point.y(); }
@@ -58,9 +57,7 @@ struct Pose2D {
 
     Pose2D operator*(double scale) const { return {point * scale, theta * scale}; }
 
-    [[nodiscard]] double distance(const Point2d & other) const {
-        return (point - other).norm();
-    }
+    [[nodiscard]] double distance(const Point2d& other) const { return (point - other).norm(); }
 
     geometry_msgs::Twist toTwistMsg() const {
         geometry_msgs::Twist msg;
@@ -76,6 +73,11 @@ struct Pose2D {
         pose.position.y = point.y();
         pose.orientation = createQuaternionMsgFromYaw(theta);
         return pose;
+    }
+
+    tf2::Transform toTf() const {
+        return tf2::Transform{createQuaternionFromYaw(theta),
+                              tf2::Vector3{point.x(), point.y(), 0}};
     }
 };
 

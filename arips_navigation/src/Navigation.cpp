@@ -92,8 +92,8 @@ Navigation::Navigation() {
 
     mCrossDoor = std::make_unique<CrossDoor>(*mContext, *mDriveTo, mOpenDoor);
 
-    m_TopoExec = std::make_unique<TopoExecuter>(*mContext, *mDriveTo, m_TopoPlanner, *mCrossDoor,
-                                                mCrossStep);
+    m_TopoExec = std::make_unique<TopoExecuter>(*mContext, *mDriveTo, mSemanticTopoPlanner,
+                                                mSemanticMapTracker, *mCrossDoor, mCrossStep);
 
     psub_nav = nh.subscribe("/topo_planner/nav_goal", 1, &Navigation::poseCallbackNavGoal, this);
     // hp_sub = nh.subscribe("/hp_goal", 1, &Navigation::poseCallbackHpGoal, this);
@@ -101,61 +101,13 @@ Navigation::Navigation() {
     door_info_sub = nh.subscribe("/cross_door_info", 1, &Navigation::onDoorInfoReceived, this);
 
     mActivePub = nh.advertise<std_msgs::Bool>("/arips_navigation_active", 1, false);
-    mTopoPathPub = nh.advertise<nav_msgs::Path>("/new_topo_path", 1);
 
     mControlTimer = nh.createTimer(ros::Duration(0.1), &Navigation::timerCallback, this);
 }
 
 void Navigation::poseCallbackNavGoal(const geometry_msgs::PoseStamped& goal) {
-    // m_TopoExec->activate(msg);
-    // mDrivingState = m_TopoExec.get();
-
-    geometry_msgs::PoseStamped robotPose;
-    if (!mContext->globalCostmap.getRobotPose(robotPose)) {
-        ROS_WARN_STREAM("poseCallbackNavGoal(): Could not get robot pose");
-        return;
-    }
-
-    try {
-        const auto poseOnFloor =
-            mContext->tf.transform(goal, mContext->globalCostmap.getGlobalFrameID());
-
-        const auto topoPlan = mSemanticTopoPlanner.plan(
-            Costmap2dView(mContext->globalCostmap), mSemanticMapTracker.getLastSemanticMap(),
-            Pose2D::fromMsg(robotPose.pose), Pose2D::fromMsg(poseOnFloor.pose));
-
-        if (topoPlan) {
-            ROS_INFO_STREAM("topo planning passed");
-
-            nav_msgs::Path navPath;
-
-            navPath.header.frame_id = mContext->globalCostmap.getGlobalFrameID();
-            navPath.header.stamp = ros::Time::now();
-
-            ::LambdaPlanVisitor visitor(
-                [&, this](::TopoPath::Movement const* mov) {
-                    for (const auto& p : mov->pathPoints) {
-                        geometry_msgs::PoseStamped poseStampedMsg;
-                        poseStampedMsg.pose = p.toPoseMsg();
-                        poseStampedMsg.header = navPath.header;
-                        navPath.poses.push_back(poseStampedMsg);
-                    }
-                },
-                [&, this](::TopoPath::Transition const* trans) {
-
-                });
-
-            topoPlan->visitPlan(visitor);
-
-            mTopoPathPub.publish(navPath);
-        }
-
-        else {
-            ROS_INFO_STREAM("topo planning failed");
-        }
-    } catch (const tf2::TransformException& ex) {
-        ROS_WARN_STREAM("poseCallbackNavGoal(): " << ex.what());
-    }
+    m_TopoExec->activate(goal);
+    mDrivingState = m_TopoExec.get();
 }
 
 /*

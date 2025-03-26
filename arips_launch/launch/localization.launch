@@ -2,8 +2,9 @@
   <!-- Run the map server -->
   <arg name="map_file" default="$(find arips_maps)/maps/2024-04-22/hector_2cm_clean.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  <node name="filter_laser_scan" pkg="arips_calibration_scripts" type="filter_laser_scan.py" />
 
-  <arg name="scan_topic"      default="scan"/> 
+  <arg name="scan_topic"      default="scan_filtered_semantic"/> 
   <arg name="initial_pose_x"  default="0.0"/>
   <arg name="initial_pose_y"  default="0.0"/>
   <arg name="initial_pose_a"  default="0.0"/>

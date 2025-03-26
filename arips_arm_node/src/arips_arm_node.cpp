@@ -391,7 +391,38 @@ private:
       if (!useCorrected)
       {
         // publish kinect tf
-        const float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
+        float kinectAngle_rad = kinectAngle_deg * mKinectAngleFactor;
+        
+        // if gripper marker (21) is visible, corect kinect rotation
+        try
+        {
+          tf::StampedTransform T_kinect_gt, T_kinect_marker;
+
+          mTFListener.lookupTransform("/kinect_link", "/marker_21_true", ros::Time(0), T_kinect_gt);
+          mTFListener.lookupTransform("/kinect_link", "/ar_marker_21", ros::Time(0), T_kinect_marker);
+          if ((ros::Time::now() - T_kinect_marker.stamp_).toSec() < 1.0)
+          {
+            const float x1 = T_kinect_marker.getOrigin()[2], y1 = T_kinect_marker.getOrigin()[0];
+            const float x2 = T_kinect_gt.getOrigin()[2], y2 = T_kinect_gt.getOrigin()[0];
+            // https://stackoverflow.com/questions/14066933/direct-way-of-computing-the-clockwise-angle-between-two-vectors
+            const float dot = x1 * x2 + y1 * y2;           // Dot product between[x1, y1] and [ x2, y2 ]
+            const float det = x1 * y2 - y1 * x2;           // Determinant
+            const float angleDiff = std::atan2(det, dot);  // atan2(sin, cos)
+
+            mListKinectCorrectionAngle += angleDiff * 0.2;
+            //ROS_INFO_STREAM("angleDiff marker21: " << angleDiff << ", mListKinectCorrectionAngle: " << mListKinectCorrectionAngle);
+          
+            kinectAngle_rad += mListKinectCorrectionAngle;
+          }
+          else
+          {
+            mListKinectCorrectionAngle = 0.0;
+          }
+        }
+        catch (const tf::TransformException& ex)
+        {
+          mListKinectCorrectionAngle = 0.0;
+        }
 
         transform.setRotation(tf::createQuaternionFromRPY(0, kinectAngle_rad, 0));
         transform.setOrigin(transform * tf::Vector3(0.02, 0, 0.025));
@@ -488,11 +519,6 @@ private:
     {
       mServoDevice.writeByte(servo.getId(), P_LOCK, 1);
     }
-  }
-
-  void onKinectCorrectionAngle(const std_msgs::Float32& msg)
-  {
-    mListKinectCorrectionAngle += msg.data * 0.1F;
   }
 };
 

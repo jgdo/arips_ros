@@ -13,7 +13,7 @@ import math
 class LaserFilter:
     def __init__(self) -> None:
         self.listener = tf.TransformListener()
-        self.pub = rospy.Publisher("scan_filtered", LaserScan, queue_size=5)
+        self.pub = rospy.Publisher("scan_filtered_semantic", LaserScan, queue_size=5)
         self.laser_sub = rospy.Subscriber("scan", LaserScan, self.laser_callback, queue_size=5)
         self.sem_map_sub = rospy.Subscriber("semantic_map", SemanticMap, self.semantic_map_callback, queue_size=1)
 
@@ -56,7 +56,7 @@ class LaserFilter:
         self.semantic_map = map
 
 
-if __name__ == "__main__":
+def main():
     rospy.init_node("laser_filter")
     filter = LaserFilter()
 
@@ -64,3 +64,6 @@ if __name__ == "__main__":
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
+
+if __name__ == "__main__":
+    main()

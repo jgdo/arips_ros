@@ -9,21 +9,21 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
-#include <toponav_core/TopoPath.h>
 
+#include "CrossFloorStep.h"
+#include "topo_nav/SemanticMapTracker.h"
 #include <arips_navigation/CrossDoor.h>
 #include <arips_navigation/DriveTo.h>
 #include <arips_navigation/DrivingState.h>
-#include <toponav_ros/TopoPlannerROS.h>
-#include "CrossFloorStep.h"
+#include <arips_navigation/topo_nav/SemanticTopoPlanner.h>
 
 /**
  * Responsible for executing a planned topo path
  */
-class TopoExecuter : public DrivingStateProto, private toponav_core::TopoPath::PathVisitor {
+class TopoExecuter : public DrivingStateProto, private TopoPath::PathVisitor {
 public:
-    TopoExecuter(NavigationContext& context, DriveTo& driveTo,
-                 toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor, CrossFloorStep& crossStep);
+    TopoExecuter(NavigationContext& context, DriveTo& driveTo, SemanticTopoPlanner& topoPlanner,
+                 SemanticMapTracker& mapTracker, CrossDoor& crossDoor, CrossFloorStep& crossStep);
 
     void activate(const geometry_msgs::PoseStamped& goalMsg);
 
@@ -31,7 +31,7 @@ public:
      * Set new plan for execution. Assumes that current state is idle.
      * @param plan
      */
-    void setNewPlan(const toponav_core::TopoPath& plan);
+    void setNewPlan(const TopoPath& plan);
 
     /**
      * Safely stop the robot. This might need a view control cycles to finish.
@@ -62,19 +62,24 @@ private:
         bool runCycle(TopoExecuter*) override;
     };
 
+    void visualizePath(const TopoPath& path) const;
+
     DriveTo& mDriveTo;
 
-    std::unique_ptr<toponav_core::TopoPath> mCurrentPlan;
-    std::vector<toponav_core::TopoPath::PathSegment::Ptr>::iterator
+    std::unique_ptr<TopoPath> mCurrentPlan;
+    std::vector<TopoPath::PathSegment::Ptr>::iterator
         mCurrentPlanIter; /// only valid if mCurrentPlan valid
 
-    void visitRegionMovement(toponav_core::TopoPath::RegionMovement const* movement) override;
-    void visitTransition(toponav_core::TopoPath::Transition const* transition) override;
+    void visitMovement(TopoPath::Movement const* movement) override;
+    void visitTransition(TopoPath::Transition const* transition) override;
 
     std::unique_ptr<SegmentExecuter> mSegmentExec;
 
-    toponav_ros::TopoPlannerROS& mTopoPlanner;
+    SemanticTopoPlanner& mTopoPlanner;
+    SemanticMapTracker& mMapTracker;
 
     CrossDoor& mCrossDoor;
     CrossFloorStep& mCrossStep;
+
+    ros::Publisher mTopoPathPub;
 };

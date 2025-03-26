@@ -115,7 +115,8 @@ std::optional<TopoPath> DijkstraTopoPlanner::plan(TopoMap const* topoMap, TopoPo
                            predEntry.predEdge->a->predMap.begin()->second.localPosition),
                 TopoPose2D(predEntry.predEdge->b->region, predEntry.localPosition),
                 predEntry.costFromStart - predEntry.predEdge->a->minCostsFromStart(),
-                predEntry.predEdge->topoEdge));
+                predEntry.predEdge->topoEdge->pivotPoint,
+                predEntry.predEdge->topoEdge->extentPoint));
         }
     }
 

@@ -20,6 +20,9 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_marker_robot"
     args="0.02899872 -0.00244824  0.2262814 0.004716940725737462, -0.00792501660806366, -0.005779259606137305 arips_base corrected_robot_marker" />  
 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker_21_to_kinect_base"
+    args="-0.01 0  0.167 0 0 0  kinect_base marker_21_true" />
+
 
   <!-- "camera" should uniquely identify the device. All topics are pushed down
        into the "camera" namespace, and it is prepended to tf frame ids. -->
@@ -47,8 +50,8 @@
   <!-- Laserscan topic -->
   <arg name="scan_topic" default="scan"/>
   
-  <param name="$(arg camera)/driver/image_mode"  value="2" />
-  <param name="$(arg camera)/driver/depth_mode"  value="2" />
+  <param name="$(arg camera)/driver/image_mode"  value="5" />
+  <param name="$(arg camera)/driver/depth_mode"  value="5" />
 
   <param name="$(arg camera)/depth_registered/hw_registered/image_rect_raw/compressedDepth/format"  value="rvl" />
   <param name="$(arg camera)/depth_registered/hw_registered/image_rect_raw/compressedDepth/png_level"  value="3" />

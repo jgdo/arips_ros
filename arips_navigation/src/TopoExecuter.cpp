@@ -3,6 +3,9 @@
 //
 
 #include "arips_navigation/TopoExecuter.h"
+
+#include "arips_navigation/path_planning/Costmap2dView.h"
+
 #include <arips_navigation/StepEdgeModule.h>
 
 #include <arips_navigation/utils/transforms.h>
@@ -11,9 +14,6 @@
 
 #include <arips_navigation/utils/FlatPathData.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
-using namespace toponav_ros;
-using namespace toponav_core;
 
 // from https://github.com/strawlab/navigation/blob/master/move_base/src/move_base.cpp
 static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
@@ -34,67 +34,48 @@ static bool isQuaternionValid(const tf2::Quaternion& tf_q) {
 }
 
 TopoExecuter::TopoExecuter(NavigationContext& context, DriveTo& driveTo,
-                           toponav_ros::TopoPlannerROS& topoPlanner, CrossDoor& crossDoor, CrossFloorStep& crossStep)
-    : DrivingStateProto{context}, mDriveTo{driveTo},
-      mTopoPlanner(topoPlanner), mCrossDoor{crossDoor},  mCrossStep{crossStep} {}
+                           SemanticTopoPlanner& topoPlanner, SemanticMapTracker& mapTracker,
+                           CrossDoor& crossDoor, CrossFloorStep& crossStep)
+    : DrivingStateProto{context}, mTopoPlanner{topoPlanner}, mMapTracker{mapTracker},
+      mDriveTo{driveTo}, mCrossDoor{crossDoor}, mCrossStep{crossStep} {
+    ros::NodeHandle nh;
+    mTopoPathPub = nh.advertise<nav_msgs::Path>("new_topo_path", 1);
+}
 
 void TopoExecuter::activate(const geometry_msgs::PoseStamped& goalMsg) {
-    tf2::Stamped<tf2::Transform> pose;
-    tf2::fromMsg(goalMsg, pose);
+    mCurrentPlan.reset();
 
-    if (!isQuaternionValid(pose.getRotation()))
-        return;
+    geometry_msgs::PoseStamped robotPoseMsg;
+    if (!mContext.globalCostmap.getRobotPose(robotPoseMsg)) {
+        ROS_ERROR("Could not get robot pose. Cannot execute topo plan");
+    }
+
+    const Pose2D startPose = Pose2D::fromMsg(robotPoseMsg.pose);
 
     try {
-        geometry_msgs::TransformStamped startTransform;
-        startTransform =
-            tf().lookupTransform("map", "arips_base", ros::Time(0), ros::Duration(0.5));
-        geometry_msgs::PoseStamped startPose;
-        startPose.header = startTransform.header;
-        startPose.pose.position.x = startTransform.transform.translation.x;
-        startPose.pose.position.y = startTransform.transform.translation.y;
-        startPose.pose.position.z = startTransform.transform.translation.z;
-        startPose.pose.orientation = startTransform.transform.rotation;
+        const auto robotPose =
+            mContext.tf.transform(goalMsg, mContext.globalCostmap.getGlobalFrameID());
+        const Pose2D goalPose = Pose2D::fromMsg(robotPose.pose);
 
-        GlobalPosition start =
-            mTopoPlanner.getContext()
-                .poseService->findGlobalPose(startPose, *mTopoPlanner.getContext().topoMap)
-                .first;
-        ROS_INFO_STREAM("found start node for robot pose: "
-                        << (start.node ? start.node->getName() : std::string("<NOT FOUND>")));
+        const auto optPlan =
+            mTopoPlanner.plan(Costmap2dView(mContext.globalCostmap),
+                              mMapTracker.getLastSemanticMap(), startPose, goalPose);
 
-        GlobalPosition goal =
-            mTopoPlanner.getContext()
-                .poseService->findGlobalPose(pose, *mTopoPlanner.getContext().topoMap)
-                .first;
-        ROS_INFO_STREAM("found goal node for pose: " << (goal.node ? goal.node->getName()
-                                                                   : std::string("<NOT FOUND>")));
-
-        if (start.node && goal.node) {
-            try {
-                TopoPath lastPlan;
-                if (mTopoPlanner.getContext().pathPlanner->plan(
-                        mTopoPlanner.getContext().topoMap.get(), start, goal, &lastPlan, nullptr)) {
-                    mTopoPlanner.getPathViz().visualizePath(lastPlan);
-                    setNewPlan(lastPlan);
-                    return;
-                }
-            } catch (const std::exception& e) {
-                ROS_ERROR_STREAM("Exception when calling plan: " << e.what());
-            }
+        if (optPlan) {
+            ROS_INFO("Found topo plan");
+            visualizePath(*optPlan);
+            setNewPlan(*optPlan);
+        } else {
+            ROS_WARN("Could not find topo plan");
         }
-
     } catch (const tf2::TransformException& ex) {
         ROS_WARN("poseCallbackNavGoal(): %s", ex.what());
     }
-
-    // on success the function already returned
-    mCurrentPlan.reset();
 }
 
-void TopoExecuter::setNewPlan(const toponav_core::TopoPath& plan) {
+void TopoExecuter::setNewPlan(const TopoPath& plan) {
     // TODO make sure that stopped
-    mCurrentPlan = std::make_unique<toponav_core::TopoPath>(plan);
+    mCurrentPlan = std::make_unique<TopoPath>(plan);
     mCurrentPlanIter = mCurrentPlan->pathElements.begin();
     (*mCurrentPlanIter)->visitPlanVisitor(this);
 }
@@ -132,24 +113,14 @@ void TopoExecuter::runCycle() {
 
 bool TopoExecuter::isActive() { return mCurrentPlan.operator bool(); }
 
-void TopoExecuter::visitRegionMovement(const toponav_core::TopoPath::RegionMovement* mov) {
-    assert(mov->start.node->getRegionType() == "flat");
-
-    const auto pathData = boost::any_cast<FlatPathData>(&mov->pathData);
-    assert(pathData);
-
-    mDriveTo.driveTo(pathData->actualApproachPose);
+void TopoExecuter::visitMovement(const TopoPath::Movement* mov) {
+    const tf2::Stamped<tf2::Transform> tfGoal{mov->goal.pose.toTf(), ros::Time::now(),
+                                              mContext.globalCostmap.getGlobalFrameID()};
+    mDriveTo.driveTo(tfGoal);
     mSegmentExec = std::make_unique<MovementExecuter>();
 }
 
-void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* transition) {
-    assert(transition->topoEdge->getTransitionType() == "step");
-
-    const auto& edgeData = toponav_ros::StepEdgeModule::getEdgeData(transition->topoEdge);
-    const auto& stepData = toponav_ros::StepEdgeModule::getMapData(transition->topoEdge->getParentMap());
-    const auto& stepInfo = *stepData.steps.at(edgeData.stepName);
-
-
+void TopoExecuter::visitTransition(const TopoPath::Transition* transition) {
     /*
     const auto diff = stepInfo.end - stepInfo.start;
     const double yaw = atan2(diff.y(), diff.x());
@@ -160,23 +131,27 @@ void TopoExecuter::visitTransition(const toponav_core::TopoPath::Transition* tra
     tf2::toMsg(startTrans, doorInfo.pivotPose.pose);
     doorInfo.pivotPose.header.frame_id = stepInfo.start.frame_id_;
 
-    auto closeApproach = toponav_ros::StepEdgeModule::getApproachData(transition->topoEdge)->getCenter();
-    closeApproach.setOrigin(closeApproach.getOrigin() * 0.25 + (stepInfo.start + stepInfo.end) *0.5 * 0.75);
-    tf2::toMsg(closeApproach, doorInfo.approachPose);
+    auto closeApproach =
+    toponav_ros::StepEdgeModule::getApproachData(transition->topoEdge)->getCenter();
+    closeApproach.setOrigin(closeApproach.getOrigin() * 0.25 + (stepInfo.start + stepInfo.end) *0.5
+    * 0.75); tf2::toMsg(closeApproach, doorInfo.approachPose);
 
     mCrossDoor.activate(doorInfo);
      */
 
-    const auto trans = tryLookupTransform(tf(), localCostmap().getGlobalFrameID(), globalCostmap().getGlobalFrameID());
-    if(!trans) {
+    const auto trans = tryLookupTransform(tf(), localCostmap().getGlobalFrameID(),
+                                          globalCostmap().getGlobalFrameID());
+    if (!trans) {
         ROS_WARN_STREAM("TopoExecuter::visitTransition cannot transform global to local frame");
         return;
     }
 
-    const auto stepA = (*trans)(stepInfo.start);
-    const auto stepB = (*trans)(stepInfo.end);
+    const auto stepA =
+        (*trans)(tf2::Vector3{transition->doorPivot.x(), transition->doorPivot.y(), 0});
+    const auto stepB =
+        (*trans)(tf2::Vector3{transition->doorExtent.x(), transition->doorExtent.y(), 0});
 
-    mCrossStep.activate({Point2d {stepA.x(), stepA.y()}, Point2d{stepB.x(), stepB.y()}});
+    mCrossStep.activate({Point2d{stepA.x(), stepA.y()}, Point2d{stepB.x(), stepB.y()}});
 
     mSegmentExec = std::make_unique<TransitionExecuter>();
 }
@@ -210,12 +185,35 @@ bool TopoExecuter::TransitionExecuter::runCycle(TopoExecuter* parent) {
     }
      */
 
-
-    if(parent->mCrossStep.isActive()) {
+    if (parent->mCrossStep.isActive()) {
         parent->mCrossStep.runCycle();
         return false;
     } else {
         parent->publishCmdVel({});
         return true;
     }
+}
+
+void TopoExecuter::visualizePath(const TopoPath& path) const {
+    nav_msgs::Path navPath;
+
+    navPath.header.frame_id = mContext.globalCostmap.getGlobalFrameID();
+    navPath.header.stamp = ros::Time::now();
+
+    ::LambdaPlanVisitor visitor(
+        [&, this](::TopoPath::Movement const* mov) {
+            for (const auto& p : mov->pathPoints) {
+                geometry_msgs::PoseStamped poseStampedMsg;
+                poseStampedMsg.pose = p.toPoseMsg();
+                poseStampedMsg.header = navPath.header;
+                navPath.poses.push_back(poseStampedMsg);
+            }
+        },
+        [&, this](::TopoPath::Transition const* trans) {
+
+        });
+
+    path.visitPlan(visitor);
+
+    mTopoPathPub.publish(navPath);
 }

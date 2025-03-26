@@ -1,5 +1,8 @@
 <launch>
   <!-- Run the map server -->
+  <arg name="map_file" default="$(find arips_maps)/maps/2024-04-22/hector_2cm_clean.yaml"/>
   <arg name="semantic_map_file" default="$(find arips_maps)/semantic_maps/lu.yaml"/>
+  
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
   <node name="semantic_map_server" pkg="arips_semantic_map" type="semantic_map_server" args="$(arg semantic_map_file)" output="screen"/>
 </launch>

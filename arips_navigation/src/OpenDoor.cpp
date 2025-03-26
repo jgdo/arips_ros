@@ -76,7 +76,7 @@ struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
     std::optional<geometry_msgs::Pose> getApproachPoseFromBase() const {
         try {
             geometry_msgs::PoseStamped currentPose = tf().transform(
-                mDoorApproachPose, "arips_base", ros::Time::now(), "odom", ros::Duration(0.1));
+                mDoorApproachPose, "arips_base", ros::Time::now(), "odom", ros::Duration(0.5));
 
             return currentPose.pose;
         } catch (const tf2::TransformException& ex) {

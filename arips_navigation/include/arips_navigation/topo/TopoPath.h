@@ -13,7 +13,7 @@ public:
 
     class PathVisitor {
     public:
-        typedef std::unique_ptr<PathVisitor> Ptr;
+        typedef std::shared_ptr<PathVisitor> Ptr;
 
         virtual ~PathVisitor() {}
 
@@ -23,7 +23,7 @@ public:
 
     class MovementVisitor {
     public:
-        typedef std::unique_ptr<MovementVisitor> Ptr;
+        typedef std::shared_ptr<MovementVisitor> Ptr;
 
         virtual ~MovementVisitor() {}
 
@@ -32,7 +32,7 @@ public:
 
     class TransitionVisitor {
     public:
-        typedef std::unique_ptr<TransitionVisitor> Ptr;
+        typedef std::shared_ptr<TransitionVisitor> Ptr;
 
         virtual ~TransitionVisitor() {}
 
@@ -43,7 +43,7 @@ public:
     public:
         const double costs;
 
-        typedef std::unique_ptr<PathSegment> Ptr;
+        typedef std::shared_ptr<PathSegment> Ptr;
 
         PathSegment(double costs) : costs(costs) {}
         virtual ~PathSegment() {}
@@ -65,18 +65,17 @@ public:
     class Transition : public PathSegment {
     public:
         TopoPose2D approachPoint, exitPoint;
-        const TopoDoor* topoEdge;
+        Point2d doorPivot, doorExtent;
 
         Transition(TopoPose2D approachPoint, TopoPose2D exitPoint, double costs,
-                   const TopoDoor* topoEdge)
+                   const Point2d& doorPivot, const Point2d& doorExtent)
             : PathSegment(costs), approachPoint(approachPoint), exitPoint(exitPoint),
-              topoEdge(topoEdge) {}
+              doorPivot(doorPivot), doorExtent{doorExtent} {}
 
         virtual void visitPlanVisitor(PathVisitor* visitor) override;
     };
 
     std::vector<PathSegment::Ptr> pathElements;
-
     double totalCosts;
 
     void visitPlan(PathVisitor& visitor) const;
