@@ -92,15 +92,15 @@ servo_5:
 servo_6:
     id: 7
     
-    angles: [-90, 0 ]
-    raws: [355, 661 ]
+    angles: [-110, -90, 0 ]
+    raws: [308, 368, 661 ]
 
     
     angle_offset: 0
     angle_factor: 1
     
-    ccw_dead: 1
-    cw_dead: 1
+    ccw_dead: 0
+    cw_dead: 0
     
     kp: 15
     ki: 7

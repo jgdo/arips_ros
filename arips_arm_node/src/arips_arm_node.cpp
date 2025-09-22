@@ -63,6 +63,7 @@ public:
     }
 
     mPosPub = nh.advertise<std_msgs::Float32>("pos_deg", 3);
+    mRawPosPub = nh.advertise<std_msgs::Float32>("pos_raw", 3);
     mPosSub = nh.subscribe("setpoint_deg", 1, &RosSCSServo::onSetposReceived, this);
     mRawPosSub = nh.subscribe("setpoint_raw", 1, &RosSCSServo::onSetposRawReceived, this);
   }
@@ -75,6 +76,9 @@ public:
     std_msgs::Float32 msg;
     msg.data = pos;
     mPosPub.publish(msg);
+
+    msg.data = raw;
+    mRawPosPub.publish(msg);
     return pos;
   }
 
@@ -121,7 +125,7 @@ private:
   std::vector<int> mRawTable;         // same size as mRawTable
 
   ros::Subscriber mPosSub, mRawPosSub;
-  ros::Publisher mPosPub;
+  ros::Publisher mPosPub, mRawPosPub;
 
   float mLastPose = 0;
 
