@@ -21,8 +21,6 @@ struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
 
     VelocityPlanner mVelPlanner{0.01, 0.03};
 
-    const float DoorAngleOffset = std::asin(0.25F / 0.7F);
-
     float mLastServoPos = 0;
 
     DriveUntilCollision& mDriveUntilCollision;
@@ -102,8 +100,12 @@ struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
 
             tf2::Quaternion handleQuat;
             tf2::fromMsg(pose.pose.orientation, handleQuat);
+
+
+
             const tf2::Quaternion newHandleQuat =
-                tf2::Quaternion(tf2::Vector3(0, 0, 1), DoorAngleOffset) * handleQuat;
+                tf2::Quaternion(tf2::Vector3(0, 0, 1), angles::from_degrees(mConfig.door_handle_approach_yaw_offset_deg)) 
+                * handleQuat;
             mDoorApproachPose.pose.orientation = tf2::toMsg(newHandleQuat);
 
             mApproachPosePub.publish(mDoorApproachPose);
@@ -195,14 +197,14 @@ struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
             const auto handleAngle = std::atan2(handleDirVec.y(), handleDirVec.x());
 
             const auto angleDiff = angles::normalize_angle(handleAngle);
-            const auto angleThres = angles::from_degrees(5);
+            const auto angleThres = angles::from_degrees(mConfig.approch_angle_thres_deg);
 
-            ROS_INFO_STREAM("angleDiff: " << angleDiff);
+            ROS_INFO_STREAM("angleDiff: " << angles::to_degrees(angleDiff));
 
             if (angleDiff > angleThres) {
-                cmd_vel.angular.z = 0.2;
+                cmd_vel.angular.z = mConfig.approch_final_rotation_angular_speed;
             } else if (angleDiff < -angleThres) {
-                cmd_vel.angular.z = -0.2;
+                cmd_vel.angular.z = -mConfig.approch_final_rotation_angular_speed;
             } else {
                 setState(&Pimpl::pullHandle);
             }
@@ -224,11 +226,11 @@ struct OpenDoor::Pimpl : public StateExecutor<Pimpl, DrivingStateProto> {
     }
 
     void pullHandle() {
-        setServo(100);
-        if (mLastServoPos > 90.0) {
+        setServo(mConfig.hook_servo_angle);
+        if (mLastServoPos > mConfig.hook_servo_angle-10.0) {
             geometry_msgs::Twist cmd_vel;
-            cmd_vel.linear.x = 0.2;
-            cmd_vel.angular.z = 0.3;
+            cmd_vel.linear.x = mConfig.drive_open_linear_speed;
+            cmd_vel.angular.z = mConfig.drive_open_angular_speed;
             mDriveUntilCollision.activate(cmd_vel, mConfig.drive_open_wall_dist, ros::Duration{5});
             execState(&mDriveUntilCollision, &Pimpl::clearAfterPulling);
         }

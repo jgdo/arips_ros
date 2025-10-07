@@ -9,3 +9,7 @@ DijkstraTopoPlanner:
 
 PathRepairTopoPlanner: []
 
+OpenDoor:
+  door_handle_approach_x_offset: 0.14
+  door_handle_approach_y_offset: 0.02
+  hook_servo_angle: 100
