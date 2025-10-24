@@ -92,8 +92,8 @@ servo_5:
 servo_6:
     id: 7
     
-    angles: [-110, -90, 0 ]
-    raws: [308, 368, 661 ]
+    angles: [-110, -90, 0, 45 ]
+    raws: [308, 368, 661, 785 ]
 
     
     angle_offset: 0

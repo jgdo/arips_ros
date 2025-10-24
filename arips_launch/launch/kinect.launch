@@ -38,7 +38,7 @@
   <!-- Processing Modules -->
   <arg name="rgb_processing"                  default="true"/>
   <arg name="ir_processing"                   default="true"/>
-  <arg name="depth_processing"                default="true"/>
+  <arg name="depth_processing"                default="false"/>
   <arg name="depth_registered_processing"     default="true"/>
   <arg name="disparity_processing"            default="false"/>
   <arg name="disparity_registered_processing" default="false"/>

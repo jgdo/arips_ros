@@ -22,7 +22,7 @@
   <arg name="depth_camera_info_url" default="" />
 
   <!-- Use OpenNI's factory-calibrated depth->RGB registration? -->
-  <arg name="depth_registration" default="false" />
+  <arg name="depth_registration" default="true" />
 
   <!-- Arguments for remapping all device namespaces -->
   <arg name="rgb"                       default="rgb" />
@@ -45,7 +45,7 @@
   <arg name="disparity_processing"            default="true"/>
   <arg name="disparity_registered_processing" default="true"/>
   <arg name="hw_registered_processing"        default="true" />
-  <arg name="sw_registered_processing"        default="true" />
+  <arg name="sw_registered_processing"        default="false" />
 
   <!-- Disable bond topics by default -->
   <arg name="bond" default="false" /> <!-- DEPRECATED, use respawn arg instead -->
