@@ -240,10 +240,10 @@ private:
   message_filters::Subscriber<sensor_msgs::Image> subscriber_depth{ mNode,
                                                                     "/kinect/depth_registered/"
                                                                     "hw_registered/image_rect_raw",
-                                                                    1 };
+                                                                  3 };
   message_filters::Subscriber<sensor_msgs::Image> subscriber_rgb{ mNode,
                                                                   "/kinect/rgb/image_rect_color",
-                                                                  1 };
+                                                                  3 };
   message_filters::Synchronizer<MySyncPolicy> sync{ MySyncPolicy(10), subscriber_rgb,
                                                     subscriber_depth };
   ros::Subscriber mCameraInfoSub;

@@ -50,8 +50,8 @@
   <!-- Laserscan topic -->
   <arg name="scan_topic" default="scan"/>
   
-  <param name="$(arg camera)/driver/image_mode"  value="5" />
-  <param name="$(arg camera)/driver/depth_mode"  value="5" />
+  <param name="$(arg camera)/driver/image_mode"  value="2" />
+  <param name="$(arg camera)/driver/depth_mode"  value="2" />
 
   <param name="$(arg camera)/depth_registered/hw_registered/image_rect_raw/compressedDepth/format"  value="rvl" />
   <param name="$(arg camera)/depth_registered/hw_registered/image_rect_raw/compressedDepth/png_level"  value="3" />

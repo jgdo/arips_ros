@@ -152,8 +152,12 @@ static std_msgs::ColorRGBA extractObjectColor(const cv::Mat& projectedImage,
                                               const cv::Mat& indexImage, const cv::Mat& colorImage,
                                               const std::vector<cv::Point>& contour)
 {
-  const auto boundingBox = cv::boundingRect(contour);
-  pcl::CentroidPoint<pcl::RGB> colorCentroid;
+  auto boundingBox = cv::boundingRect(contour);
+  boundingBox.x += boundingBox.width / 4;
+  boundingBox.width /= 2;
+  boundingBox.y += boundingBox.height / 4;
+  boundingBox.height /= 2;
+  pcl::CentroidPoint<pcl::PointXYZ> colorCentroid;
   for (int y = boundingBox.y; y < boundingBox.y + boundingBox.height; y++)
   {
     for (int x = boundingBox.x; x < boundingBox.x + boundingBox.width; x++)
@@ -161,18 +165,18 @@ static std_msgs::ColorRGBA extractObjectColor(const cv::Mat& projectedImage,
       if (projectedImage.at<uint8_t>(y, x) > 0)
       {
         const auto& pointColor = colorImage.at<cv::Vec3b>(indexImage.at<int32_t>(y, x));
-        colorCentroid.add(pcl::RGB(pointColor[2], pointColor[1], pointColor[0]));
+        colorCentroid.add(pcl::PointXYZ(pointColor[2]/ 255.f, pointColor[1] / 255.f, pointColor[0] / 255.f));
       }
     }
   }
-  pcl::RGB objectColor;
+  pcl::PointXYZ objectColor;
   colorCentroid.get(objectColor);
 
   std_msgs::ColorRGBA res;
   res.a = 1.0;
-  res.r = objectColor.r / 255.f;
-  res.g = objectColor.g / 255.f;
-  res.b = objectColor.b / 255.f;
+  res.r = objectColor.x*2;
+  res.g = objectColor.y*2;
+  res.b = objectColor.z*2;
   return res;
 }
 
@@ -191,11 +195,21 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
   if (markerArray)
   {
+   // first delete old markers
+    {
+      visualization_msgs::Marker marker;
+      marker.header = pcl_conversions::fromPCL(input.pointcloud->header);
+      marker.action = visualization_msgs::Marker::DELETEALL;
+      markerArray->markers.push_back(marker);
+    }
+  }
+  if (markerArray)
+  {
     visualization_msgs::Marker marker;
     marker.header = pcl_conversions::fromPCL(input.pointcloud->header);
     marker.ns = "plane";
     marker.id = 0;
-    marker.type = visualization_msgs::Marker::POINTS;
+    marker.type = visualization_msgs::Marker::LINE_LIST;
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1;
     marker.scale.x = 0.005;
@@ -207,8 +221,8 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
     geometry_msgs::Point pointMsg;
 
     color.r = 1;
-    color.g = 1;
-    color.b = 1;
+    color.g = 0;
+    color.b = 0;
     color.a = 1;
     tf2::toMsg(floorToCamera(tf2::Vector3{ 0, 0, 0 }), pointMsg);
     marker.points.emplace_back(pointMsg);
@@ -226,7 +240,23 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
     color.g = 1;
     color.b = 0;
     color.a = 1;
+    tf2::toMsg(floorToCamera(tf2::Vector3{ 0, 0, 0 }), pointMsg);
+    marker.points.emplace_back(pointMsg);
+    marker.colors.emplace_back(color);
+
+    color.r = 0;
+    color.g = 1;
+    color.b = 0;
+    color.a = 1;
     tf2::toMsg(floorToCamera(tf2::Vector3{ 0, 0.1, 0 }), pointMsg);
+    marker.points.emplace_back(pointMsg);
+    marker.colors.emplace_back(color);
+
+    color.r = 0;
+    color.g = 0;
+    color.b = 1;
+    color.a = 1;
+    tf2::toMsg(floorToCamera(tf2::Vector3{ 0, 0, 0 }), pointMsg);
     marker.points.emplace_back(pointMsg);
     marker.colors.emplace_back(color);
 
@@ -327,16 +357,6 @@ ObjectSegmentationOutput detectObjectsInScene(const ObjectSegmentationInput& inp
 
   if (markerArray)
   {
-    // first delete old markers
-    {
-      visualization_msgs::Marker marker;
-      marker.header = pcl_conversions::fromPCL(input.pointcloud->header);
-      marker.ns = "objects_to_grasp";
-      marker.type = visualization_msgs::Marker::CUBE;
-      marker.action = visualization_msgs::Marker::DELETEALL;
-      markerArray->markers.push_back(marker);
-    }
-
     for (const auto& obj : result.detectedObjects)
     {
       visualization_msgs::Marker marker;
